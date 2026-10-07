@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sponge Look Prototypes</title>
+<!--
+  PROTOTYPE — throwaway. Question: what should the cartoon sponge and its world look like?
+  Round 2, based on the user's reference stills. Three variants, switch with ?variant=A|B|C, the bottom bar, or ←/→.
+  Same camera in all: the sponge walks toward the viewer at a diagonal, the road moves away behind it.
+-->
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:system-ui,sans-serif}
+#bar{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;background:#111;color:#fff;padding:8px 12px;border-radius:999px;box-shadow:0 6px 20px #000a;z-index:9;font-size:14px;white-space:nowrap}
+#bar button{background:#333;color:#fff;border:0;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:16px}
+#bar button:hover{background:#555}
+#info{position:fixed;top:12px;left:12px;background:#000b;color:#fff;padding:10px 14px;border-radius:12px;max-width:min(380px,calc(100vw - 48px));font-size:13px;line-height:1.4}
+#info b{font-size:15px}
+</style>
+</head>
+<body>
+<div id="info"></div>
+<div id="bar"><button id="prev" aria-label="Previous variant">◀</button><span id="label"></span><button id="next" aria-label="Next variant">▶</button></div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- shared setup ----------
+const YAW=0.35;                      // walk direction vs camera: toward you, at an angle
+const ZMIN=-50,SPAN=66;              // roadside props recycle between z=-50 and z=16 (road-local)
+const INK='#1c1c1c',YEL='#fff25a',HOLE='#c2c23a',SIDE='#d6cf3c',SIDEHOLE='#9fa22c';
+const rnd=(a,b)=>a+Math.random()*(b-a),V=(x,y,z)=>new THREE.Vector3(x,y,z);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(2,devicePixelRatio));renderer.shadowMap.enabled=true;
+document.body.prepend(renderer.domElement);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(38,1,.1,250);
+camera.position.set(0,2.9,10);camera.lookAt(0,1.9,0);
+const world=new THREE.Group();world.rotation.y=YAW;scene.add(world);   // road + sponge; local +z = walk direction
+
+function canvasTex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.lineCap=x.lineJoin='round';draw(x,w,h);
+ const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;return t}
+const bg=()=>canvasTex(2,256,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#27a9dc');g.addColorStop(.6,'#5cc9ea');g.addColorStop(1,'#a8e7f3');x.fillStyle=g;x.fillRect(0,0,w,h)});
+function scroll(o,v){o.position.z-=v;if(o.position.z<ZMIN)o.position.z+=SPAN}
+function roadside(o,half,far=8){const s=Math.random()<.5?-1:1;o.position.set(s*(half+rnd(.6,far)),0,rnd(ZMIN,ZMIN+SPAN));world.add(o);return o}
+
+// ---------- drawn textures (the cartoon look lives here) ----------
+const holes=(x,list,col)=>{x.fillStyle=col;list.forEach(([a,b,rx,ry,r=0])=>{x.beginPath();x.ellipse(a,b,rx,ry,r,0,7);x.fill()})};
+function faceTex(){return canvasTex(512,608,(x,w,h)=>{
+ x.fillStyle=YEL;x.fillRect(0,0,w,h);
+ holes(x,[[58,58,28,20],[452,80,22,30],[62,530,30,24,.4],[452,520,26,20],[34,300,14,24],[480,330,16,28],[300,575,24,14],[150,580,16,12],[260,30,18,11],[380,560,12,10]],HOLE);
+ x.strokeStyle=INK;x.lineWidth=7;
+ for(const ex of[180,332]){                                    // big round eyes, touching
+  x.fillStyle='#fff';x.beginPath();x.ellipse(ex,212,78,86,0,0,7);x.fill();x.stroke();
+  x.fillStyle='#4aa6ea';x.beginPath();x.arc(ex+(ex<256?12:-8),222,31,0,7);x.fill();x.lineWidth=4;x.stroke();
+  x.fillStyle=INK;x.beginPath();x.arc(ex+(ex<256?12:-8),222,14,0,7);x.fill();
+  x.lineWidth=7;for(const a of[-2.0,-1.57,-1.14]){x.beginPath();x.moveTo(ex+78*Math.cos(a),212+86*Math.sin(a));x.lineTo(ex+110*Math.cos(a),212+118*Math.sin(a));x.stroke()}}
+ x.fillStyle='rgba(255,110,110,.45)';for(const cx of[92,420]){x.beginPath();x.ellipse(cx,312,34,24,0,0,7);x.fill()}
+ x.fillStyle='#d4553a';for(const cx of[92,420])for(const [dx,dy] of[[-12,-4],[6,-10],[10,8]]){x.beginPath();x.arc(cx+dx,312+dy,4,0,7);x.fill()}
+ x.fillStyle='#fff';x.lineWidth=5;for(const tx of[220,258]){x.fillRect(tx,398,34,44);x.strokeRect(tx,398,34,44)}  // buck teeth
+ x.lineWidth=8;x.beginPath();x.moveTo(108,322);x.quadraticCurveTo(256,488,404,322);x.stroke();                     // grin
+ x.lineWidth=6;x.beginPath();x.moveTo(96,302);x.quadraticCurveTo(100,330,122,336);x.stroke();
+ x.beginPath();x.moveTo(416,302);x.quadraticCurveTo(412,330,390,336);x.stroke();
+ x.strokeStyle='#d9534f';x.lineWidth=4;x.beginPath();for(let i=0;i<=8;i++){const px=220+i*9,py=468+(i%2?5:-3);i?x.lineTo(px,py):x.moveTo(px,py)}x.stroke();  // chin squiggle
+})}
+const sideTex=()=>canvasTex(256,320,(x,w,h)=>{x.fillStyle=SIDE;x.fillRect(0,0,w,h);holes(x,Array.from({length:9},()=>[rnd(20,236),rnd(20,300),rnd(10,24),rnd(12,28)]),SIDEHOLE)});
+const pantsTex=()=>canvasTex(256,96,(x,w,h)=>{x.fillStyle='#9a5a28';x.fillRect(0,0,w,h);x.fillStyle=INK;for(let i=0;i<w;i+=42)x.fillRect(i+6,10,28,16);x.fillStyle='#7d4618';x.fillRect(0,h-6,w,6)});
+function flowerTex(col){return canvasTex(256,256,(x,w,h)=>{x.translate(128,128);x.strokeStyle=col;x.lineWidth=11;const n=5+(Math.random()<.4);
+ x.beginPath();for(let i=0;i<=360;i++){const a=i/360*Math.PI*2,r=48+62*Math.pow(Math.abs(Math.sin(a*n/2)),.6);i?x.lineTo(r*Math.cos(a),r*Math.sin(a)):x.moveTo(r,0)}
+ x.globalAlpha=.12;x.fillStyle=col;x.fill();x.globalAlpha=1;x.stroke();x.lineWidth=8;x.beginPath();x.arc(0,0,22,0,7);x.stroke()})}
+function skyFlowers(n=11){const cols=['#8a4fd8','#ff6f61','#4fc98a','#f5d94a','#3a5fd8','#ff8fd0'],arr=[];
+ for(let i=0;i<n;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:flowerTex(cols[i%cols.length]),fog:false,transparent:true,depthWrite:false}));
+  sp.position.set(rnd(-45,45),rnd(9,26),rnd(-75,-40));sp.scale.setScalar(rnd(4,8));sp.userData.p=rnd(0,6);scene.add(sp);arr.push(sp)}
+ return t=>arr.forEach(s=>{s.material.rotation=Math.sin(t*.3+s.userData.p)*.25;s.position.x+=Math.sin(t*.2+s.userData.p)*.004})}
+const specks=(base,cols,n,w=256,h=256,extra)=>canvasTex(w,h,(x)=>{x.fillStyle=base;x.fillRect(0,0,w,h);if(extra)extra(x,w,h);for(let i=0;i<n;i++){x.fillStyle=cols[i%cols.length];x.beginPath();x.arc(rnd(0,w),rnd(0,h),rnd(1,2.6),0,7);x.fill()}});
+
+// ---------- materials / outline ----------
+function gradient(steps){const d=new Uint8Array(steps.flatMap(s=>[s,s,s,255]));const t=new THREE.DataTexture(d,steps.length,1);t.minFilter=t.magFilter=THREE.NearestFilter;t.needsUpdate=true;return t}
+const matFactory=(kind,grad)=>v=>{const o=v&&v.isTexture?{map:v}:{color:v};return kind==='flat'?new THREE.MeshBasicMaterial(o):new THREE.MeshToonMaterial({...o,gradientMap:grad})};
+const inkMat=new THREE.MeshBasicMaterial({color:INK,side:THREE.BackSide});
+const outliner=w=>m=>{if(!m.geometry)return;m.geometry.computeBoundingBox();const s=new THREE.Vector3();m.geometry.boundingBox.getSize(s);const c=new THREE.Vector3();m.geometry.boundingBox.getCenter(c);
+ const o=new THREE.Mesh(m.geometry,inkMat);o.userData.line=true;const k=[s.x,s.y,s.z].map(d=>d>1e-3?1+2*w/d:1);o.scale.set(...k);o.position.copy(c).multiply(V(1-k[0],1-k[1],1-k[2]));m.add(o)};
+function inkTube(curve,r,mat,w,seg=20){const g=new THREE.Group();g.add(new THREE.Mesh(new THREE.TubeGeometry(curve,seg,r,10),mat));
+ if(w){const o=new THREE.Mesh(new THREE.TubeGeometry(curve,seg,r+w,10),inkMat);o.userData.line=true;g.add(o)}return g}
+
+// ---------- the sponge ----------
+function spongeGeo(w,h,d){const g=new THREE.BoxGeometry(w,h,d,10,12,2),p=g.attributes.position;
+ for(let i=0;i<p.count;i++){let x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+  const ex=Math.abs(Math.abs(x)-w/2)<1e-4,ey=Math.abs(Math.abs(y)-h/2)<1e-4;
+  const wx=ex?Math.sign(x)*Math.sin(y*11+z*4)*.035:0,wy=ey?Math.sign(y)*Math.sin(x*10+z*4)*.03:0;
+  p.setXYZ(i,(x+wx)*(1+.12*y/h),y+wy,z)}                        // wavy edges, wider at the top
+ g.computeVertexNormals();return g}
+
+function makeTorso(M,ol){
+ const root=new THREE.Group(),body=new THREE.Group();root.add(body);
+ const add=(m,x,y,z,p=body)=>{m.position.set(x,y,z);p.add(m);ol(m);return m};
+ const side=M(sideTex());
+ add(new THREE.Mesh(spongeGeo(1.6,1.9,.74),[side,side,side,side,M(faceTex()),side]),0,2.62,0);
+ add(new THREE.Mesh(new THREE.BoxGeometry(1.5,.2,.7),M(0xffffff)),0,1.57,0);
+ add(new THREE.Mesh(new THREE.BoxGeometry(1.52,.36,.72),M(pantsTex())),0,1.29,0);
+ [-1,1].forEach(s=>{const c=add(new THREE.Mesh(new THREE.ConeGeometry(.15,.26,3),M(0xffffff)),s*.17,1.62,.37);c.rotation.set(Math.PI/2,0,s*-.7)});
+ const tie=new THREE.Group();tie.position.set(0,1.6,.4);body.add(tie);
+ add(new THREE.Mesh(new THREE.BoxGeometry(.14,.1,.05),M(0xe33a2c)),0,0,0,tie);
+ const blade=add(new THREE.Mesh(new THREE.ConeGeometry(.13,.36,4),M(0xe33a2c)),0,-.23,0,tie);blade.rotation.x=Math.PI;
+ const nose=new THREE.CatmullRomCurve3([V(0,2.76,.34),V(0,2.73,.58),V(0,2.6,.74)]);
+ body.add(inkTube(nose,.075,M(YEL),ol===NOOP?0:.022,12));
+ const tip=add(new THREE.Mesh(new THREE.SphereGeometry(.078,12,10),M(YEL)),0,2.6,.74);
+ return {root,body,tie,add}}
+const NOOP=()=>{};
+
+function shoe(M,ol){const g=new THREE.Group();const s=new THREE.Mesh(new THREE.SphereGeometry(.2,22,16),M(0x161616));s.scale.set(1,.62,1.65);s.position.z=.12;g.add(s);ol(s);
+ const hl=new THREE.Mesh(new THREE.SphereGeometry(.2,12,8),new THREE.MeshBasicMaterial({color:0xffffff}));hl.scale.set(.32,.12,.45);hl.position.set(.04,.11,.26);g.add(hl);return g}
+function hand(M,ol){const g=new THREE.Group();const p=new THREE.Mesh(new THREE.SphereGeometry(.085,14,10),M(YEL));g.add(p);ol(p);
+ const f=new THREE.Mesh(new THREE.CapsuleGeometry(.028,.13,4,8),M(YEL));f.position.y=-.13;g.add(f);ol(f);
+ const t=new THREE.Mesh(new THREE.CapsuleGeometry(.024,.06,4,8),M(YEL));t.position.set(.07,-.05,.03);t.rotation.z=.8;g.add(t);ol(t);return g}
+
+// segmented legs/arms (variants A and B)
+function segLimb(l1,l2,r,mat,ol){const root=new THREE.Group(),knee=new THREE.Group();
+ const up=new THREE.Mesh(new THREE.CylinderGeometry(r,r,l1,10),mat);up.position.y=-l1/2;root.add(up);ol(up);
+ knee.position.y=-l1;root.add(knee);const lo=new THREE.Mesh(new THREE.CylinderGeometry(r,r,l2,10),mat);lo.position.y=-l2/2;knee.add(lo);ol(lo);
+ return {root,knee}}
+function makeSegSponge(M,ol){const t=makeTorso(M,ol);const skin=M(YEL);
+ t.legs=[-.38,.38].map(x=>{const l=segLimb(.56,.56,.05,skin,ol);l.root.position.set(x,1.13,0);t.body.add(l.root);
+  const pant=new THREE.Mesh(new THREE.CylinderGeometry(.17,.15,.24,12),M(0x9a5a28));pant.position.y=-.06;l.root.add(pant);ol(pant);
+  const sock=new THREE.Mesh(new THREE.CylinderGeometry(.075,.07,.36,12),M(0xffffff));sock.position.y=-.38;l.knee.add(sock);ol(sock);
+  [[0xe33a2c,-.24],[0x2f6fe0,-.3]].forEach(([c,y])=>{const r=new THREE.Mesh(new THREE.CylinderGeometry(.079,.079,.035,12),M(c));r.position.y=y;l.knee.add(r)});
+  const s=shoe(M,ol);s.position.y=-.6;l.knee.add(s);return l});
+ t.arms=[-1,1].map(s=>{const a=segLimb(.42,.42,.045,skin,ol);a.root.position.set(s*.76,1.56,0);t.body.add(a.root);
+  const sl=new THREE.Mesh(new THREE.CylinderGeometry(.15,.12,.24,12),M(0xffffff));sl.position.y=-.07;a.root.add(sl);ol(sl);
+  const h=hand(M,ol);h.position.y=-.47;a.knee.add(h);return a});
+ t.root.traverse(o=>{if(o.isMesh&&!o.userData.line)o.castShadow=true});return t}
+
+// ---------- walks ----------
+const lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t*t*(3-2*t);
+// A: long cocky strides, finger pointing up on the forward-leg side (reference stills 1–3)
+function walkStride(r,ph){const s=Math.sin(ph),c=Math.cos(ph);
+ r.legs.forEach((l,i)=>{const p=i?-s:s,swing=Math.max(0,i?-c:c);
+  l.root.rotation.x=-p*.72;l.knee.rotation.x=.05+Math.max(0,-p)*.45+swing*.85;l.root.rotation.z=(i?1:-1)*-.04});
+ r.arms.forEach((a,i)=>{const side=i?1:-1,p=i?-s:s,up=ease(Math.max(0,p));
+  a.root.rotation.z=side*lerp(1.2,.85,up);a.knee.rotation.z=side*lerp(-1.15,2.15,up);a.root.rotation.x=lerp(0,-.35,up);a.knee.rotation.x=Math.sin(ph*2+i)*.15});
+ r.body.position.y=(1-Math.abs(s))*.16;r.body.rotation.y=s*.16;r.body.rotation.z=-s*.05;r.body.rotation.x=-.04;
+ r.tie.rotation.x=-.15-Math.abs(c)*.35;r.tie.rotation.z=s*.25}
+// B: quick little shuffle toward camera, arms hanging (reference still 6)
+function walkShuffle(r,ph){ph*=1.5;const s=Math.sin(ph),c=Math.cos(ph);
+ r.legs.forEach((l,i)=>{const p=i?-s:s,swing=Math.max(0,i?-c:c);l.root.rotation.x=-p*.35-swing*.35;l.knee.rotation.x=.05+swing*1.1;l.root.rotation.z=0});
+ r.arms.forEach((a,i)=>{const side=i?1:-1,p=i?s:-s;a.root.rotation.z=side*(.18+Math.abs(c)*.08);a.root.rotation.x=-p*.3;a.knee.rotation.z=side*.1;a.knee.rotation.x=-.25});
+ r.body.position.y=Math.abs(c)*.1;r.body.rotation.z=s*.07;r.body.rotation.y=s*.06;r.body.rotation.x=0;
+ r.tie.rotation.x=-.1-Math.abs(c)*.2;r.tie.rotation.z=s*.15}
+
+// ---------- Variant A: Toon Classic ----------
+function buildA(){
+ const M=matFactory('toon',gradient([150,255])),ol=outliner(.03);
+ scene.background=bg();scene.fog=new THREE.Fog(0x9fe0f0,26,75);
+ scene.add(new THREE.HemisphereLight(0xffffff,0xd6c79a,1.6));
+ const sun=new THREE.DirectionalLight(0xffffff,1.8);sun.position.set(-3,9,8);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-6,right:6,top:6,bottom:-6});sun.shadow.bias=-.0006;scene.add(sun);
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(260,260),M(0xead9a2));floor.rotation.x=-Math.PI/2;floor.position.y=-.45;floor.receiveShadow=true;scene.add(floor);
+ // crowned grey road: a sliver of a big cylinder lying along the walk direction
+ const R=12,roadTex=specks('#8f999f',['#7c868c','#a3acb1','#6f797e'],180,128,128);roadTex.wrapS=roadTex.wrapT=THREE.RepeatWrapping;roadTex.repeat.set(1,40);
+ const road=new THREE.Mesh(new THREE.CylinderGeometry(R,R,160,60,1,true,Math.PI-.15,.3),M(roadTex));road.rotation.x=Math.PI/2;road.position.y=-R+.02;road.receiveShadow=true;world.add(road);
+ [-1,1].forEach(s=>{const e=new THREE.Mesh(new THREE.CylinderGeometry(R+.01,R+.01,160,60,1,true,Math.PI+s*.15-.006,.012),new THREE.MeshBasicMaterial({color:INK}));e.rotation.x=Math.PI/2;e.position.y=-R+.02;world.add(e)});
+ const props=[];const cols=[0x9b59d0,0xff8c42,0xff6fa8,0x4fc98a];
+ for(let i=0;i<46;i++){const o=new THREE.Group();const m=M(cols[i%4]);
+  if(i%3){const n=3+(Math.random()*3|0);for(let j=0;j<n;j++){const b=new THREE.Mesh(new THREE.CylinderGeometry(.07,.1,rnd(.6,1.4),8),m);b.position.set(rnd(-.3,.3),.4,rnd(-.3,.3));b.rotation.set(rnd(-.5,.5),0,rnd(-.6,.6));ol(b);o.add(b);
+   const tip=new THREE.Mesh(new THREE.SphereGeometry(.11,10,8),m);tip.position.copy(b.position).add(V(0,.45,0));ol(tip);o.add(tip)}}
+  else{const r=new THREE.Mesh(new THREE.DodecahedronGeometry(rnd(.35,.7)),M(0xb8a98d));r.scale.y=.55;ol(r);o.add(r)}
+  o.position.y=-.45;props.push(roadside(o,1.9));o.position.y=-.45}
+ const fl=skyFlowers();
+ const rig=makeSegSponge(M,ol);
+ return {rig,walk:walkStride,update(dt,t,v){roadTex.offset.y+=v*40/160;props.forEach(o=>scroll(o,v));fl(t)}}}
+
+// ---------- Variant B: Flat Painted ----------
+function buildB(){
+ const M=matFactory('flat'),ol=outliner(.042);renderer.shadowMap.enabled=false;
+ scene.background=bg();scene.fog=new THREE.Fog(0xa8e7f3,24,70);
+ const groundTex=specks('#e4dcae',['#e05050','#3fae5a','#3a6fd8','#e6b030','#b07ad8','#c9bd8a'],420,256,256,(x,w,h)=>{x.strokeStyle='#cfc595';x.lineWidth=3;for(let y=20;y<h;y+=46){x.beginPath();x.moveTo(0,y);for(let i=0;i<=w;i+=16)x.lineTo(i,y+Math.sin(i*.05+y)*5);x.stroke()}});
+ groundTex.wrapS=groundTex.wrapT=THREE.RepeatWrapping;groundTex.repeat.set(10,40);
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(60,160),M(groundTex));ground.rotation.x=-Math.PI/2;ground.position.y=-.01;world.add(ground);
+ const roadTex=canvasTex(128,128,(x,w,h)=>{x.fillStyle='#4f7fa8';x.fillRect(0,0,w,h);for(let i=0;i<60;i++){x.fillStyle='rgba(20,40,70,.25)';x.beginPath();x.arc(rnd(0,w),rnd(0,h),rnd(1,3),0,7);x.fill()}x.fillStyle=INK;x.fillRect(0,0,5,h);x.fillRect(w-5,0,5,h)});
+ roadTex.wrapS=roadTex.wrapT=THREE.RepeatWrapping;roadTex.repeat.set(1,40);
+ const road=new THREE.Mesh(new THREE.PlaneGeometry(3.6,160),M(roadTex));road.rotation.x=-Math.PI/2;road.position.y=.01;world.add(road);
+ const blob=new THREE.Mesh(new THREE.CircleGeometry(.9,32),new THREE.MeshBasicMaterial({color:0x1a3550,transparent:true,opacity:.28}));blob.rotation.x=-Math.PI/2;blob.position.y=.02;blob.scale.set(1,.55,1);world.add(blob);
+ const props=[];const cols=[0x7a5ad8,0x3a5fd8,0xff6f61,0x4fc98a];
+ for(let i=0;i<46;i++){const o=new THREE.Group();const m=M(cols[i%4]);
+  if(i%3){for(let j=0;j<4;j++){const b=new THREE.Mesh(new THREE.CapsuleGeometry(.08,rnd(.4,1.2),4,8),m);b.position.set(rnd(-.35,.35),.5,rnd(-.3,.3));b.rotation.z=rnd(-.7,.7);ol(b);o.add(b)}}
+  else{const k=new THREE.Mesh(new THREE.CapsuleGeometry(.1,rnd(1.5,3),4,8),M(0x3fae5a));k.position.y=1;ol(k);o.add(k);o.userData.sway=rnd(0,6)}
+  props.push(roadside(o,2))}
+ const fl=skyFlowers();
+ const rig=makeSegSponge(M,ol);
+ return {rig,walk:walkShuffle,update(dt,t,v){[roadTex,groundTex].forEach(tx=>tx.offset.y-=v*tx.repeat.y/160);
+  props.forEach(o=>{scroll(o,v);if(o.userData.sway!==undefined)o.rotation.z=Math.sin(t*1.5+o.userData.sway)*.12});fl(t)}}}
+
+// ---------- Variant C: Rubber Hose on a rolling hill ----------
+// Sky dome: colour depends on view height, and the horizon colour equals the fog colour, so ground fades into sky with no seam.
+function skyDome(top,horizon){const m=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,
+ uniforms:{top:{value:new THREE.Color(top)},hor:{value:new THREE.Color(horizon)}},
+ vertexShader:'varying vec3 vW;void main(){vW=(modelMatrix*vec4(position,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(vW,1.);}',
+ fragmentShader:'uniform vec3 top;uniform vec3 hor;varying vec3 vW;void main(){float h=normalize(vW-cameraPosition).y;gl_FragColor=vec4(mix(hor,top,smoothstep(0.,.6,h)),1.);\n#include <colorspace_fragment>\n}'});
+ const s=new THREE.Mesh(new THREE.SphereGeometry(200,32,16),m);s.renderOrder=-1;scene.add(s)}
+
+// Tube whose vertices are rewritten in place every frame (no geometry allocation per frame).
+const _P=V(0,0,0),_T=V(0,0,0),_N=V(0,0,0),_B=V(0,0,0),_X=V(1,0,0),_Y=V(0,1,0);
+function fillTube(geo,curve,a,b,r,seg,rad){const pos=geo.attributes.position.array,nor=geo.attributes.normal.array;let k=0;
+ for(let i=0;i<=seg;i++){const u=a+(b-a)*i/seg;curve.getPoint(u,_P);curve.getTangent(u,_T).normalize();
+  if(i===0)_N.crossVectors(_T,Math.abs(_T.x)<.9?_X:_Y).normalize();else _N.addScaledVector(_T,-_N.dot(_T)).normalize();   // parallel transport, no twisting
+  _B.crossVectors(_T,_N);
+  for(let j=0;j<=rad;j++){const v=j/rad*Math.PI*2,s=Math.sin(v),c=-Math.cos(v),nx=c*_N.x+s*_B.x,ny=c*_N.y+s*_B.y,nz=c*_N.z+s*_B.z;
+   nor[k]=nx;nor[k+1]=ny;nor[k+2]=nz;pos[k]=_P.x+r*nx;pos[k+1]=_P.y+r*ny;pos[k+2]=_P.z+r*nz;k+=3}}
+ geo.attributes.position.needsUpdate=geo.attributes.normal.needsUpdate=true}
+function hose(parent,mat,r,ink,a=0,b=1,seg=14,rad=8){
+ const mk=(rr,m)=>{const me=new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(V(0,0,0),V(0,-1,0)),seg,rr,rad),m);me.frustumCulled=false;parent.add(me);return me};
+ const main=mk(r,mat);main.castShadow=true;const line=ink?mk(r+ink,inkMat):null;if(line)line.userData.line=true;
+ return curve=>{fillTube(main.geometry,curve,a,b,r,seg,rad);if(line)fillTube(line.geometry,curve,a,b,r+ink,seg,rad)}}
+
+function buildC(){
+ const M=matFactory('toon',gradient([110,190,255])),ol=outliner(.026);
+ const HORIZON=0xaee6f2;skyDome(0x1a95d0,HORIZON);scene.fog=new THREE.Fog(HORIZON,12,46);
+ scene.add(new THREE.HemisphereLight(0xffffff,0xd6c79a,1.4));
+ const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(-4,10,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.radius=3;Object.assign(sun.shadow.camera,{left:-3,right:3,top:4,bottom:-2});sun.shadow.bias=-.0006;scene.add(sun);
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(400,400),M(0xe8d79e));floor.rotation.x=-Math.PI/2;floor.position.y=-4;scene.add(floor);
+ // the road is the top of a giant drum that rolls away from the camera
+ const R=14,L=40,drumTex=canvasTex(1024,1024,(x,w,h)=>{x.fillStyle='#ead9a0';x.fillRect(0,0,w,h);
+  const half=1.8/L*h;x.fillStyle='#8c979d';x.fillRect(0,h/2-half,w,half*2);
+  for(let i=0;i<2500;i++){const y=rnd(0,h),onRoad=Math.abs(y-h/2)<half;x.fillStyle=onRoad?(Math.random()<.5?'#7a858b':'#a2abb0'):['#d9c88d','#f3e6b8','#e05050','#3a6fd8'][Math.random()*4|0];x.beginPath();x.arc(rnd(0,w),y,rnd(1,3),0,7);x.fill()}
+  x.fillStyle=INK;x.fillRect(0,h/2-half-4,w,5);x.fillRect(0,h/2+half-1,w,5)});
+ drumTex.wrapS=THREE.RepeatWrapping;drumTex.repeat.set(3,1);
+ const drumG=new THREE.Group();drumG.position.y=-R;world.add(drumG);
+ const drum=new THREE.Mesh(new THREE.CylinderGeometry(R,R,L,120,1),M(drumTex));drum.rotation.z=Math.PI/2;drum.receiveShadow=true;drumG.add(drum);
+ const cols=[0x9b59d0,0xff8c42,0xff6fa8,0x4fc98a];
+ for(let i=0;i<60;i++){const th=rnd(0,Math.PI*2),o=new THREE.Group();const m=M(cols[i%4]);
+  if(i%2){for(let j=0;j<3;j++){const b=new THREE.Mesh(new THREE.CylinderGeometry(.1,.14,rnd(.6,1.5),8),m);b.position.set(rnd(-.3,.3),.4,rnd(-.3,.3));b.rotation.z=rnd(-.5,.5);ol(b);o.add(b)}}
+  else{const r=new THREE.Mesh(new THREE.DodecahedronGeometry(rnd(.3,.7)),M(0xb8a98d));r.scale.y=.55;ol(r);o.add(r)}
+  const side=Math.random()<.5?-1:1;o.position.set(side*rnd(2.6,9),R*Math.cos(th),R*Math.sin(th));o.rotation.x=th;drumG.add(o)}
+ const fl=skyFlowers();
+
+ // rubber-hose sponge: bezier-arc limbs, geometry reused every frame
+ const t=makeTorso(M,ol),root=t.root;const skin=M(YEL),white=M(0xffffff),red=M(0xe33a2c),blue=M(0x2f6fe0),brown=M(0x9a5a28);brown.side=THREE.DoubleSide;   // pant legs are open tubes: render the inside too
+ const bez=()=>new THREE.QuadraticBezierCurve3(V(0,0,0),V(0,0,0),V(0,0,0));
+ function cartoonHand(){   // show-style hand: small flat palm, three chunky two-joint fingers with round tips, separate thumb
+  const g=new THREE.Group(),sk=M(YEL);
+  const part=(geo,x,y,z,parent)=>{const m=new THREE.Mesh(geo,sk);m.position.set(x,y,z);parent.add(m);ol(m);m.castShadow=true;return m};
+  const palm=part(new THREE.SphereGeometry(.088,16,12),0,-.07,0,g);palm.scale.set(1.1,.95,.5);
+  const digit=(parent,x,y,z,r,l1,l2)=>{const k1=new THREE.Group();k1.position.set(x,y,z);parent.add(k1);
+   part(new THREE.CapsuleGeometry(r,l1,4,8),0,-l1/2-r*.3,0,k1);
+   const k2=new THREE.Group();k2.position.y=-l1-r*.3;k1.add(k2);part(new THREE.CapsuleGeometry(r,l2,4,8),0,-l2/2-r*.3,0,k2);
+   return [k1,k2]};
+  const index=digit(g,.058,-.13,0,.034,.06,.055),middle=digit(g,0,-.14,0,.034,.06,.055),ring=digit(g,-.056,-.13,0,.032,.05,.05);
+  const thumbBase=new THREE.Group();thumbBase.position.set(.08,-.05,.03);thumbBase.rotation.set(-.3,0,.9);g.add(thumbBase);
+  const thumb=digit(thumbBase,0,0,0,.032,.045,.04);
+  return {g,index,curled:[middle,ring],thumb}}
+ const legs=[0,1].map(()=>{const s=shoe(M,ol);root.add(s);return {curve:bez(),shoe:s,parts:[hose(root,skin,.05,.022),hose(root,brown,.15,.02,0,.27),hose(root,white,.075,.02,.62,1),hose(root,red,.08,0,.66,.71),hose(root,blue,.08,0,.74,.79)]}});
+ const arms=[0,1].map((_,i)=>{const h=cartoonHand();h.g.scale.x=i?-1:1;root.add(h.g);return {curve:bez(),hand:h.g,index:h.index,curled:h.curled,thumb:h.thumb,pos:null,parts:[hose(root,skin,.045,.022),hose(root,white,.14,.02,0,.13)]}});
+ [-1,1].forEach(s=>{const sh=new THREE.Mesh(new THREE.SphereGeometry(.17,18,14),white);sh.scale.set(1,.9,1.05);sh.position.set(s*.8,1.58,0);t.body.add(sh);ol(sh)});   // round shirt shoulders, part of the body
+ root.traverse(o=>{if(o.isMesh&&!o.userData.line)o.castShadow=true});
+ const A=.46,LIFT=.34,LEG=1.12,OMEGA=5.2;                 // stride half-length, foot lift, rest leg length, steps speed
+ const tie={z:0,vz:0,x:0,vx:0},inv=new THREE.Matrix4(),loc=V(0,0,0);
+ const tgt=V(0,0,0),mid=V(0,0,0),bx=V(0,0,0),by_=V(0,0,0),bz=V(0,0,0),basis=new THREE.Matrix4(),BM=t.body.matrix;
+ function walkHose(r,ph,dt){
+  const c2=Math.cos(2*ph),by=(1-c2)*.08;                  // down on contact, up on passing
+  const sq=.06*Math.pow(Math.max(0,c2),8);                // quick squash right at foot contact
+  t.body.position.set(Math.sin(ph)*.05,by,0);t.body.scale.set(1+sq*.7,1-sq,1+sq*.7);
+  t.body.rotation.set(-.05,-Math.sin(ph)*.1,Math.sin(ph)*.06);t.body.updateMatrix();
+  const legZ=[];let stepSide=0,stepFwd=0;
+  [-1,1].forEach((side,i)=>{const u=((ph+i*Math.PI)/(2*Math.PI))%1,L=legs[i];let z,y,pitch;
+   if(u<.5){z=A-4*A*u;y=0;pitch=0}                       // stance: foot moves back at exactly road speed, so it stays planted
+   else{const s=(u-.5)*2;z=-A+2*A*ease(s);y=Math.sin(Math.PI*s)*LIFT;pitch=.55*Math.sin(2*Math.PI*s);stepSide+=side*Math.sin(Math.PI*s);stepFwd+=Math.sin(Math.PI*s)}   // swing: toe-off, then toe-up before contact
+   legZ[i]=z;
+   const H=L.curve.v0.set(side*.36,1.27,0).applyMatrix4(BM),F=L.curve.v2.set(side*.4,.205+y-z*z/(2*R),z);   // ankle height so the shoe sole sits on the road, following the hill's curve
+   const d=H.distanceTo(F),bulge=.6*Math.sqrt(Math.max(.01,LEG*LEG-d*d));       // knee bends more when the leg is shorter
+   L.curve.v1.copy(mid.addVectors(H,F).multiplyScalar(.5)).add(tgt.set(side*.05,0,bulge));
+   L.parts.forEach(f=>f(L.curve));L.shoe.position.set(F.x,F.y-.08,F.z+.04);L.shoe.rotation.x=pitch});
+  // Tie: swings opposite to the foot that is stepping (right foot steps -> tie flaps left), on a spring so it lags and overshoots.
+  const k=140,damp=9,h=Math.min(dt,1/30);
+  tie.vz+=(k*(-.55*stepSide-tie.z)-damp*tie.vz)*h;tie.z+=tie.vz*h;
+  tie.vx+=(k*(-.1-.35*stepFwd*(1-c2)/2-tie.x)-damp*tie.vx)*h;tie.x+=tie.vx*h;   // flips up a little as the body rises
+  t.tie.rotation.set(tie.x,0,tie.z);
+  [-1,1].forEach((side,i)=>{const a=-legZ[i]/A,up=ease(Math.max(0,a)),Ar=arms[i];       // arm swings opposite its leg, forward arm rises into a point
+   tgt.set(side*lerp(1.0,1.05,up),lerp(.88,2.0,up)+Math.sin(ph*4)*.03*up,lerp(.12+a*.32,.55,up));   // hanging arm swings straight fore/aft along the side
+   tgt.applyMatrix4(BM);
+   if(!Ar.pos)Ar.pos=tgt.clone();else Ar.pos.lerp(tgt,1-Math.exp(-dt*12));               // springy follow-through
+   // keep the hand outside sponge + pants, checked in body space after the spring (body sways/twists under it)
+   inv.copy(BM).invert();loc.copy(Ar.pos).applyMatrix4(inv);
+   {const hw=(loc.y>1.6?.8*(1+.12*(loc.y-2.62)/1.9):.78)+.2;if(loc.y>.85&&loc.y<3.65&&Math.abs(loc.z)<.6&&Math.abs(loc.x)<hw){loc.x=side*hw;Ar.pos.copy(loc).applyMatrix4(BM)}}
+   const S=Ar.curve.v0.set(side*.84,1.56,0).applyMatrix4(BM);Ar.curve.v2.copy(Ar.pos);
+   Ar.curve.v1.copy(mid.addVectors(S,Ar.pos).multiplyScalar(.5)).add(tgt.set(side*lerp(.05,.45,up),lerp(.04,-.1,up),lerp(-.06,0,up)));
+   Ar.parts.forEach(f=>f(Ar.curve));Ar.hand.position.copy(Ar.pos);
+   // orient hand along the arm, thumb toward the front; index straightens as the arm comes up
+   Ar.curve.getTangent(1,_T);by_.copy(_T).normalize().negate();bz.set(0,0,1).addScaledVector(by_,-by_.z).normalize();bx.crossVectors(by_,bz);
+   Ar.hand.quaternion.setFromRotationMatrix(basis.makeBasis(bx,by_,bz));// hanging: all fingers loosely curled (limp wrist); pointing: index straight, others in a fist, thumb tucked
+   Ar.index[0].rotation.x=lerp(.55,-.05,up);Ar.index[1].rotation.x=lerp(.7,0,up);
+   Ar.curled.forEach(([k1,k2])=>{k1.rotation.x=lerp(.6,1.35,up);k2.rotation.x=lerp(.75,1.5,up)});
+   Ar.thumb[0].rotation.x=lerp(.2,.7,up);Ar.thumb[1].rotation.x=lerp(.3,.9,up)});
+ }
+ return {rig:{root,body:t.body},walk:walkHose,omega:OMEGA,speed:2*A*OMEGA/Math.PI,update(dt,t2,v){drumG.rotation.x-=v/R;fl(t2)}}}
+
+// ---------- switcher ----------
+const VARIANTS={
+ A:{name:'Toon Classic',desc:'Cel shading (2 tones) with ink outlines and a hand-drawn face. Long cocky strides with a finger pointing up, like your stills 1–3. Grey road with a rounded crown, purple/orange coral, outline flowers in the sky.',build:buildA},
+ B:{name:'Flat Painted',desc:'No lighting at all: pure flat colours and thick ink, like a 2D cel painted onto 3D. Quick little shuffle with hanging arms, like still 6. Blue-grey road, speckled seafloor (still 5), blob shadow.',build:buildB},
+ C:{name:'Rubber Hose',desc:'Bendy noodle limbs, planted feet that move with the road, squash on each footstep, springy arms that swing up into a point. The road is the top of a giant rolling hill; the sand fades softly into the sky.',build:buildC},
+};
+const keys=Object.keys(VARIANTS);
+let key=new URLSearchParams(location.search).get('variant');if(!VARIANTS[key])key='A';
+const go=d=>{const u=new URL(location);u.searchParams.set('variant',keys[(keys.indexOf(key)+d+keys.length)%keys.length]);location.replace(u)};
+document.getElementById('prev').onclick=()=>go(-1);document.getElementById('next').onclick=()=>go(1);
+addEventListener('keydown',e=>{if(e.target.closest('input,textarea,[contenteditable]'))return;if(e.key==='ArrowLeft')go(-1);if(e.key==='ArrowRight')go(1)});
+const VV=VARIANTS[key];
+document.getElementById('label').textContent=`${key} · ${VV.name}  (${keys.indexOf(key)+1}/${keys.length})`;
+document.getElementById('info').innerHTML=`<b>Variant ${key}: ${VV.name}</b><br>${VV.desc}`;
+
+window.DBG={camera,scene};   // prototype debug handle
+const env=VV.build();world.add(env.rig.root);
+function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=camera.aspect<1?58:38;camera.updateProjectionMatrix()}
+addEventListener('resize',resize);resize();
+const clock=new THREE.Clock();let phase=0;
+renderer.setAnimationLoop(()=>{const dt=Math.min(.1,clock.getDelta()),t=clock.elapsedTime;
+ phase+=dt*(env.omega||4.6);env.walk(env.rig,phase,dt);env.update(dt,t,dt*(env.speed||2.6));renderer.render(scene,camera)});
+</script>
+</body>
+</html>
