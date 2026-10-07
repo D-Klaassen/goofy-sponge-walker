@@ -25,7 +25,10 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 #achCount{background:#1c1c1c;color:#fff25a;border-radius:999px;padding:4px 12px;font-weight:700;white-space:nowrap}
 #achBar{height:14px;border:3px solid #1c1c1c;border-radius:999px;background:#fff;overflow:hidden;margin:6px 0 16px}
 #achBar i{display:block;height:100%;background:repeating-linear-gradient(45deg,#ffd23f 0 10px,#ffbf1f 10px 20px);transition:width .4s}
-#achList{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+#achList{display:flex;flex-direction:column;gap:16px}
+.achCat h3{display:flex;justify-content:space-between;align-items:center;margin:0 0 8px;font-size:1.15rem}
+.achCat h3 span{font-size:.85rem;background:#fff25a;border:2px solid #1c1c1c;border-radius:999px;padding:1px 10px}
+.achGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 .card{display:flex;gap:12px;align-items:center;background:#fff;border:3px solid #1c1c1c;border-radius:16px;padding:10px 12px;box-shadow:3px 3px 0 #1c1c1c}
 .card .medal{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:1.5rem;border:3px solid #1c1c1c;background:#ffd23f}
 .card b{display:block;font-size:1rem}
@@ -88,7 +91,16 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 // ---------- Idle game state ----------
 const UPS=[];   // upgrades removed for now; sps()=0 and spc()=1 until they come back
-const ACH=[[100,'First Squeak'],[1000,'Down the Lagoon'],[10000,'Jellyfish Fields'],[100000,'Across the Reef'],[1e6,'Sea Legs'],[1e7,'Goofiest Gait'],[1e8,'Walked the Whole Ocean'],[Math.ceil(40075000/0.3),'🌍 U Walked the Earth']];
+const STEP_M=.3;   // metres per step
+const fmtDist=m=>m<1000?Math.floor(m)+' m':(m/1000).toLocaleString('en',{maximumFractionDigits:m<1e4?2:m<1e5?1:0})+' km';
+const fmtTime=s=>s<60?Math.floor(s)+' s':s<3600?Math.floor(s/60)+' min '+String(Math.floor(s%60)).padStart(2,'0')+' s':(s/3600).toFixed(1)+' h';
+// Three separate achievement tracks; each reads its own total from the save
+const ACH_CATS=[
+ {id:'steps',title:'👣 Steps taken',val:()=>S.total,goal:n=>`Take ${fmt(n)} steps`,list:[[100,'First Squeak'],[1000,'Down the Lagoon'],[1e4,'Jellyfish Fields'],[1e5,'Across the Reef'],[1e6,'Sea Legs'],[1e7,'Goofiest Gait']]},
+ {id:'dist',title:'🗺️ Distance walked',val:()=>S.total*STEP_M,goal:m=>`Walk ${fmtDist(m)}`,list:[[100,'Warm-up Waddle'],[1000,'Kilometre Krawl'],[1e4,'Reef Ramble'],[42195,'Marathon Sponge'],[1e6,'Ocean Crosser'],[40075000,'🌍 U Walked the Earth']]},
+ {id:'uber',title:'🤪 Uber Goober time',val:()=>S.uberTime||0,goal:s=>`Be Uber Goober for ${fmtTime(s)}`,list:[[12,'First Goober'],[60,'Goober Minute'],[300,'Goober Habit'],[900,'Goober Lifestyle'],[3600,'Goober Legend']]},
+];
+const ACH=ACH_CATS.flatMap(c=>c.list.map(([n,t])=>({cat:c,n,t})));
 const QUIPS=["I'm ready! I'm ready! I'm ready!","Squeak. Squeak. Squeak.","Knees? Never heard of 'em.","A fish stares. You strut harder.","Your shoes are 60% squeak by now.","Is it cardio if you're underwater?","Left, right, wiggle, wiggle, right!","Somewhere, a grumpy neighbor sighs."];
 let S={steps:0,total:0,owned:{}};
 try{Object.assign(S,JSON.parse(localStorage.getItem('goofysponge')||'{}'))}catch(e){}
@@ -101,8 +113,11 @@ const gain=n=>{S.steps+=n;S.total+=n};
 const say=t=>$('msg').textContent=t;
 UPS.forEach(u=>{const b=document.createElement('button');b.className='up';b.id='u_'+u.id;
  b.onclick=e=>{e.stopPropagation();const c=cost(u);if(S.steps>=c){S.steps-=c;S.owned[u.id]=cnt(u.id)+1;say(`Got ${u.name}!`);render()}};$('ups').appendChild(b)});
-ACH.forEach(([n,t],i)=>{const c=document.createElement('div');c.className='card locked';c.id='a'+i;
- c.innerHTML=`<div class="medal">🔒</div><div style="flex:1;min-width:0"><b>${t}</b><small>Walk ${fmt(n)} steps</small><div class="prog"><i></i></div></div>`;$('achList').appendChild(c)});
+ACH_CATS.forEach(cat=>{const sec=document.createElement('section');sec.className='achCat';
+ sec.innerHTML=`<h3>${cat.title}<span id="achCat_${cat.id}"></span></h3><div class="achGrid"></div>`;$('achList').appendChild(sec)});
+ACH.forEach((a,i)=>{const c=document.createElement('div');c.className='card locked';c.id='a'+i;
+ c.innerHTML=`<div class="medal">🔒</div><div style="flex:1;min-width:0"><b>${a.t}</b><small>${a.cat.goal(a.n)}</small><div class="prog"><i></i></div></div>`;
+ $('achCat_'+a.cat.id).parentElement.nextElementSibling.appendChild(c)});
 const overlay=$('achOverlay');
 const toggleAch=open=>{overlay.classList.toggle('open',open??!overlay.classList.contains('open'));render()};
 addEventListener('keydown',e=>{if(e.repeat)return;if(e.key==='q'||e.key==='Q')toggleAch();else if(e.key==='Escape')toggleAch(false)});
@@ -110,12 +125,13 @@ overlay.addEventListener('pointerdown',e=>{if(e.target===overlay)toggleAch(false
 let gotBefore=null;
 function render(){
  $('steps').textContent=fmt(S.steps);
- $('dist').textContent=(S.total*0.3).toFixed(0)+' m';
+ $('dist').textContent=fmtDist(S.total*STEP_M);
  UPS.forEach(u=>{const b=$('u_'+u.id),c=cost(u);b.disabled=S.steps<c;
   b.innerHTML=`<b>${u.name}</b> ×${cnt(u.id)}<small>${u.desc}</small><span class="cost">${fmt(c)} steps</span>`});
- let got=0;ACH.forEach(([n,t],i)=>{const c=$('a'+i),done=S.total>=n;got+=done;
-  if(done&&!c.classList.contains('got')){c.classList.replace('locked','got');c.querySelector('.medal').textContent='🏅';if(gotBefore!==null)say(`🏅 Achievement unlocked: ${t}! (press Q)`)}
-  c.querySelector('.prog i').style.width=Math.min(100,S.total/n*100)+'%'});
+ let got=0;ACH.forEach((a,i)=>{const c=$('a'+i),v=a.cat.val(),done=v>=a.n;got+=done;
+  if(done&&!c.classList.contains('got')){c.classList.replace('locked','got');c.querySelector('.medal').textContent='🏅';if(gotBefore!==null)say(`🏅 Achievement unlocked: ${a.t}! (press Q)`)}
+  c.querySelector('.prog i').style.width=Math.min(100,v/a.n*100)+'%'});
+ ACH_CATS.forEach(cat=>{const v=cat.val();$('achCat_'+cat.id).textContent=`${cat.list.filter(([n])=>v>=n).length} / ${cat.list.length}`});
  gotBefore=got;$('achCount').textContent=`${got} / ${ACH.length}`;$('achBar').firstElementChild.style.width=got/ACH.length*100+'%';
 }
 
@@ -409,16 +425,16 @@ function popText(x,y,text,size=22){const d=document.createElement('div');d.textC
 
 // ---------- Key rush: press the keys that pop up to fill the goofy meter; full meter = Uber Goober mode ----------
 const KEYS='ASDFGHJKLZXCVBNUIOPERTYW';      // no Q (achievements) or M (model viewer)
-const UBER_TIME=12,HIT_FILL=12,FALL_TIME=2.6;
+const UBER_TIME=12,HIT_FILL=4,KEY_SLOW=1.9,KEY_FAST=.8,FALL_TIME=2.6;
 const rush={meter:0,level:0,uber:0,cur:null,next:1.5,fall:0};
 gameGoofy=()=>rush.level;
-function syncLevel(){const l=rush.uber>0?6:Math.min(5,Math.floor(rush.meter/20));
+function syncLevel(){const l=rush.uber>0?6:Math.min(5,Math.floor(rush.meter*6/100));
  if(l!==rush.level){rush.level=l;if(!viewer.on)env.setGoofy(l)}
  $('mName').textContent=`${l} · ${env.goofyNames[l]}`;$('mFill').style.width=(rush.uber>0?rush.uber/UBER_TIME:rush.meter/100)*100+'%'}
 function spawnKey(){const k=KEYS[Math.random()*KEYS.length|0],el=document.createElement('button');el.className='key';el.setAttribute('aria-label',`Press ${k}`);
  el.innerHTML=`${k}<span class="time"><i></i></span>`;
  el.style.left=rnd(24,innerWidth-110)+'px';el.style.top=rnd(110,Math.max(120,innerHeight-260))+'px';
- const life=Math.max(.85,1.9-rush.level*.15)*(rush.uber>0?.8:1);       // keys get quicker as the sponge gets goofier
+ const life=rush.uber>0?KEY_FAST:KEY_SLOW-(KEY_SLOW-KEY_FAST)*rush.meter/100;   // keys get quicker as the meter fills, never faster than in Uber mode
  el.addEventListener('pointerdown',e=>{e.stopPropagation();if(rush.cur&&rush.cur.el===el)hitKey()});
  $('prompts').appendChild(el);rush.cur={k,el,t:life,life}}
 function clearKey(cls){const c=rush.cur;if(!c)return;c.el.classList.add(cls);c.el.style.pointerEvents='none';setTimeout(()=>c.el.remove(),400);rush.cur=null;rush.next=rnd(.3,1)}
@@ -440,7 +456,7 @@ addEventListener('keydown',e=>{if(viewer.on||e.repeat||!rush.cur||e.metaKey||e.c
  if(k.length!==1||!KEYS.includes(k))return;if(k===rush.cur.k)hitKey();else missKey()});
 function rushTick(dt){if(viewer.on||overlay.classList.contains('open'))return;                     // paused while viewing or reading achievements
  if(rush.fall>0){rush.fall=Math.max(0,rush.fall-dt);fallPose();return}                              // no keys while he's on the ground
- if(rush.uber>0){rush.uber-=dt;if(rush.uber<=0){rush.uber=0;rush.meter=0;document.body.classList.remove('uber');say('Phew… back to normal walking.')}syncLevel()}
+ if(rush.uber>0){S.uberTime=(S.uberTime||0)+Math.min(dt,rush.uber);rush.uber-=dt;if(rush.uber<=0){rush.uber=0;rush.meter=0;document.body.classList.remove('uber');say('Phew… back to normal walking.')}syncLevel()}
  const c=rush.cur;if(c){c.t-=dt;c.el.querySelector('.time i').style.width=Math.max(0,c.t/c.life*100)+'%';c.el.classList.toggle('hurry',c.t<c.life*.35);if(c.t<=0)missKey()}
  else if((rush.next-=dt)<=0)spawnKey()}
 syncLevel();
