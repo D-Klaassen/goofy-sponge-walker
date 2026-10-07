@@ -365,7 +365,8 @@ function buildC(){
    Ar.thumb[0].rotation.x=lerp(.2,.7,up);Ar.thumb[1].rotation.x=lerp(.3,.9,up)});
  }
  return {rig:{root,body:t.body},pose:P,walk:walkHose,omega:OMEGA,get speed(){return 2*stanceA*OMEGA/Math.PI},
-  goofyNames:GOOFY_NAMES,setFace:t.setFace,setGoofy(l){goofyLevel=Math.max(0,Math.min(GOOFY_NAMES.length-1,l|0))},
+  goofyNames:GOOFY_NAMES,setFace(m){t.setFace(m);const sel=document.getElementById('dvFace');if(sel)sel.value=m},   // keep the model viewer's Face setting in sync
+  setGoofy(l){goofyLevel=Math.max(0,Math.min(GOOFY_NAMES.length-1,l|0))},
   update(dt,t2,v){drumG.rotation.x-=v/R;fl(t2)}}}
 
 // ---------- Game loop ----------
@@ -446,7 +447,7 @@ const KEYS='ASDFGHJKLZXCVBNUIOPERTYW';      // no Q (achievements) or M (model v
 const UBER_TIME=12,HIT_FILL=4,KEY_SLOW=1.9,KEY_FAST=.8,FALL_TIME=3;
 const rush={meter:0,level:0,uber:0,cur:null,next:1.5,fall:0};
 gameGoofy=()=>rush.level;
-function syncLevel(){const l=rush.uber>0?6:Math.min(5,Math.floor(rush.meter*6/100));if(l>=1)env.setFace('happy');   // sad after a fall until he's goofy again
+function syncLevel(){const l=rush.uber>0?6:Math.min(5,Math.floor(rush.meter*6/100));
  if(l!==rush.level){rush.level=l;if(!viewer.on)env.setGoofy(l)}
  $('mName').textContent=`${l} · ${env.goofyNames[l]}`;$('mFill').style.width=(rush.uber>0?rush.uber/UBER_TIME:rush.meter/100)*100+'%'}
 function spawnKey(){const k=KEYS[Math.random()*KEYS.length|0],el=document.createElement('button');el.className='key';el.setAttribute('aria-label',`Press ${k}`);
@@ -457,10 +458,12 @@ function spawnKey(){const k=KEYS[Math.random()*KEYS.length|0],el=document.create
  $('prompts').appendChild(el);rush.cur={k,el,t:life,life}}
 function clearKey(cls){const c=rush.cur;if(!c)return;c.el.classList.add(cls);c.el.style.pointerEvents='none';setTimeout(()=>c.el.remove(),400);rush.cur=null;rush.next=rnd(.3,1)}
 function hitKey(){const r=rush.cur.el.getBoundingClientRect();popText(r.left+10,r.top-10,['Nice!','Goofy!','Yes!','Wheee!'][Math.random()*4|0],26);boost=1;   // keys only fill the meter, no steps
+ env.setFace('happy');   // any hit cheers him up
  if(rush.uber<=0){rush.meter=Math.min(100,rush.meter+HIT_FILL);if(rush.meter>=100){rush.uber=UBER_TIME;document.body.classList.add('uber');say('🤪 UBER GOOBER MODE!')}}
  clearKey('hit');syncLevel();render()}
 // a miss resets everything: meter to 0, Uber mode ends, and the sponge falls over and has to get back up
-function missKey(){clearKey('miss');if(rush.meter<=0&&rush.uber<=0)return;   // empty meter: nothing to lose, no fall
+function missKey(){clearKey('miss');if(rush.meter<=0&&rush.uber<=0)return;   // empty meter: nothing to lose
+ if(rush.level<1&&rush.uber<=0){rush.meter=0;say('Missed! Goofy meter reset.');syncLevel();return}   // below level 1: meter resets, but he keeps his feet
  rush.meter=0;if(rush.uber>0){rush.uber=0;document.body.classList.remove('uber')}
  rush.fall=FALL_TIME;rush.next=.6;env.setFace('scared');say('Whoops! 💫 Goofy meter reset…');syncLevel()}
 // dizzy stars that circle the head while he's down
@@ -483,10 +486,14 @@ $('dvFace')?.addEventListener('change',e=>env.setFace(e.target.value));   // dev
 $('dvFall')?.addEventListener('click',()=>{rush.fall=FALL_TIME;env.setFace('scared')});   // dev viewer: preview the fall
 addEventListener('keydown',e=>{if(viewer.on||e.repeat||!rush.cur||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toUpperCase();
  if(k.length!==1||!KEYS.includes(k))return;if(k===rush.cur.k)hitKey();else missKey()});
+// dev only: press 1 to toggle auto mode, which hits every key for you
+const DEV=new URLSearchParams(location.search).get('developer-mode')==='true';let autoPlay=false;
+if(DEV)addEventListener('keydown',e=>{if(e.key==='1'&&!e.repeat){autoPlay=!autoPlay;say(autoPlay?'🤖 Auto mode ON (press 1 to stop)':'🤖 Auto mode OFF')}});
 function rushTick(dt){if(viewer.on&&rush.fall<=0||overlay.classList.contains('open'))return;                     // paused while viewing or reading achievements
  if(rush.fall>0){rush.fall=Math.max(0,rush.fall-dt);fallPose();if(rush.fall<=0){Object.assign(env.pose,{flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0});env.rig.root.position.y=0;stars.visible=false}return}                              // no keys while he's on the ground
  if(rush.uber>0){S.uberTime=(S.uberTime||0)+Math.min(dt,rush.uber);rush.uber-=dt;if(rush.uber<=0){rush.uber=0;rush.meter=0;document.body.classList.remove('uber');say('Phew… back to normal walking.')}syncLevel()}
- const c=rush.cur;if(c){c.t-=dt;c.el.querySelector('.time i').style.width=Math.max(0,c.t/c.life*100)+'%';c.el.classList.toggle('hurry',c.t<c.life*.35);if(c.t<=0)missKey()}
+ const c=rush.cur;if(c&&autoPlay&&c.life-c.t>.25){hitKey();return}   // dev auto mode: hits every key after a short beat
+ if(c){c.t-=dt;c.el.querySelector('.time i').style.width=Math.max(0,c.t/c.life*100)+'%';c.el.classList.toggle('hurry',c.t<c.life*.35);if(c.t<=0)missKey()}
  else if((rush.next-=dt)<=0)spawnKey()}
 syncLevel();
 let camL=0;   // game camera pulls back and up as the sponge gets taller
