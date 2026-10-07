@@ -12,7 +12,8 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 #hud{position:fixed;top:12px;left:12px;right:12px;display:flex;gap:10px;flex-wrap:wrap;pointer-events:none}
 .stat{background:var(--card);backdrop-filter:blur(6px);padding:6px 14px;border-radius:14px;border:2px solid #ffffff33}
 .stat b{display:block;font-size:1.3rem;color:var(--accent)}
-#msg{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--card);backdrop-filter:blur(6px);padding:8px 16px;border-radius:999px;max-width:min(90vw,520px);text-align:center;pointer-events:none}
+#msg{position:fixed;left:50%;top:14px;z-index:5;transform:translateX(-50%);background:rgba(10,40,70,.6);color:#fff;font-size:14px;backdrop-filter:blur(6px);padding:8px 16px;border-radius:999px;max-width:min(90vw,520px,calc(100vw - 490px));text-align:center;pointer-events:none}
+@media (max-width:760px){#msg{top:76px;max-width:min(90vw,520px)}}
 .hint{position:fixed;top:14px;right:14px;background:var(--card);backdrop-filter:blur(6px);border:2px solid #ffffff33;border-radius:12px;padding:6px 12px;font-size:.9rem;pointer-events:none}
 .hint kbd{background:#fff25a;color:#1c1c1c;border:2px solid #1c1c1c;border-radius:6px;padding:0 6px;font-family:inherit;font-weight:700;box-shadow:0 2px 0 #1c1c1c}
 #achOverlay{position:fixed;inset:0;display:grid;place-items:center;background:#05233a99;backdrop-filter:blur(3px);z-index:20;opacity:0;pointer-events:none;transition:opacity .18s}
@@ -158,21 +159,27 @@ function roadside(o,half,far=8){const s=Math.random()<.5?-1:1;o.position.set(s*(
 
 // ---------- drawn textures (the cartoon look lives here) ----------
 const holes=(x,list,col)=>{x.fillStyle=col;list.forEach(([a,b,rx,ry,r=0])=>{x.beginPath();x.ellipse(a,b,rx,ry,r,0,7);x.fill()})};
-function faceTex(){return canvasTex(512,608,(x,w,h)=>{
+function faceTex(mood='happy'){const sad=mood==='sad',scared=mood==='scared';return canvasTex(512,608,(x,w,h)=>{
  x.fillStyle=YEL;x.fillRect(0,0,w,h);
  holes(x,[[58,58,28,20],[452,80,22,30],[62,530,30,24,.4],[452,520,26,20],[34,300,14,24],[480,330,16,28],[300,575,24,14],[150,580,16,12],[260,30,18,11],[380,560,12,10]],HOLE);
  x.strokeStyle=INK;x.lineWidth=7;
  for(const ex of[180,332]){                                    // big round eyes, touching
   x.fillStyle='#fff';x.beginPath();x.ellipse(ex,212,78,86,0,0,7);x.fill();x.stroke();
-  x.fillStyle='#4aa6ea';x.beginPath();x.arc(ex+(ex<256?12:-8),222,31,0,7);x.fill();x.lineWidth=4;x.stroke();
-  x.fillStyle=INK;x.beginPath();x.arc(ex+(ex<256?12:-8),222,14,0,7);x.fill();
+  const px=ex+(scared?0:ex<256?12:-8),py=scared?212:sad?250:222,pr=scared?.55:1;   // scared: tiny centred pupils; sad: looking down
+  x.fillStyle='#4aa6ea';x.beginPath();x.arc(px,py,31*pr,0,7);x.fill();x.lineWidth=4;x.stroke();
+  x.fillStyle=INK;x.beginPath();x.arc(px,py,14*pr,0,7);x.fill();
   x.lineWidth=7;for(const a of[-2.0,-1.57,-1.14]){x.beginPath();x.moveTo(ex+78*Math.cos(a),212+86*Math.sin(a));x.lineTo(ex+110*Math.cos(a),212+118*Math.sin(a));x.stroke()}}
  x.fillStyle='rgba(255,110,110,.45)';for(const cx of[92,420]){x.beginPath();x.ellipse(cx,312,34,24,0,0,7);x.fill()}
  x.fillStyle='#d4553a';for(const cx of[92,420])for(const [dx,dy] of[[-12,-4],[6,-10],[10,8]]){x.beginPath();x.arc(cx+dx,312+dy,4,0,7);x.fill()}
- x.fillStyle='#fff';x.lineWidth=5;for(const tx of[220,258]){x.fillRect(tx,398,34,44);x.strokeRect(tx,398,34,44)}  // buck teeth
+ if(scared){x.fillStyle='#5a1a14';x.lineWidth=8;x.beginPath();x.ellipse(256,420,62,72,0,0,7);x.fill();x.stroke();   // scared: wide open "AAH" mouth
+  x.fillStyle='#fff';x.lineWidth=5;for(const tx of[222,258]){x.fillRect(tx,352,32,34);x.strokeRect(tx,352,32,34)}}
+ else if(sad){x.fillStyle='#fff';x.lineWidth=5;for(const tx of[226,258]){x.fillRect(tx,404,28,24);x.strokeRect(tx,404,28,24)}   // sad: small teeth under a frown, one tear
+  x.lineWidth=8;x.beginPath();x.moveTo(170,420);x.quadraticCurveTo(256,370,342,420);x.stroke();
+  x.fillStyle='#7cc8ff';x.lineWidth=4;x.beginPath();x.moveTo(126,300);x.quadraticCurveTo(104,340,126,348);x.quadraticCurveTo(148,340,126,300);x.fill();x.stroke()}
+ else{x.fillStyle='#fff';x.lineWidth=5;for(const tx of[220,258]){x.fillRect(tx,398,34,44);x.strokeRect(tx,398,34,44)}  // buck teeth
  x.lineWidth=8;x.beginPath();x.moveTo(108,322);x.quadraticCurveTo(256,488,404,322);x.stroke();                     // grin
  x.lineWidth=6;x.beginPath();x.moveTo(96,302);x.quadraticCurveTo(100,330,122,336);x.stroke();
- x.beginPath();x.moveTo(416,302);x.quadraticCurveTo(412,330,390,336);x.stroke();
+ x.beginPath();x.moveTo(416,302);x.quadraticCurveTo(412,330,390,336);x.stroke()}
  x.strokeStyle='#d9534f';x.lineWidth=4;x.beginPath();for(let i=0;i<=8;i++){const px=220+i*9,py=468+(i%2?5:-3);i?x.lineTo(px,py):x.moveTo(px,py)}x.stroke();  // chin squiggle
 })}
 const sideTex=()=>canvasTex(256,320,(x,w,h)=>{x.fillStyle=SIDE;x.fillRect(0,0,w,h);holes(x,Array.from({length:9},()=>[rnd(20,236),rnd(20,300),rnd(10,24),rnd(12,28)]),SIDEHOLE)});
@@ -206,8 +213,9 @@ function spongeGeo(w,h,d){const g=new THREE.BoxGeometry(w,h,d,10,12,2),p=g.attri
 function makeTorso(M,ol){
  const root=new THREE.Group(),body=new THREE.Group();root.add(body);
  const add=(m,x,y,z,p=body)=>{m.position.set(x,y,z);p.add(m);ol(m);return m};
- const side=M(sideTex());
- add(new THREE.Mesh(spongeGeo(1.6,1.9,.74),[side,side,side,side,M(faceTex()),side]),0,2.62,0);
+ const side=M(sideTex()),face=M(faceTex()),faces={happy:face.map,scared:faceTex('scared'),sad:faceTex('sad')};
+ add(new THREE.Mesh(spongeGeo(1.6,1.9,.74),[side,side,side,side,face,side]),0,2.62,0);
+ const setFace=mood=>{const m=faces[mood]||faces.happy;if(face.map!==m){face.map=m;face.needsUpdate=true}};
  add(new THREE.Mesh(new THREE.BoxGeometry(1.5,.2,.7),M(0xffffff)),0,1.57,0);
  add(new THREE.Mesh(new THREE.BoxGeometry(1.52,.36,.72),M(pantsTex())),0,1.29,0);
  [-1,1].forEach(s=>{const c=add(new THREE.Mesh(new THREE.ConeGeometry(.15,.26,3),M(0xffffff)),s*.17,1.62,.37);c.rotation.set(Math.PI/2,0,s*-.7)});
@@ -217,7 +225,7 @@ function makeTorso(M,ol){
  const nose=new THREE.CatmullRomCurve3([V(0,2.76,.34),V(0,2.73,.58),V(0,2.6,.74)]);
  body.add(inkTube(nose,.075,M(YEL),ol===NOOP?0:.022,12));
  const tip=add(new THREE.Mesh(new THREE.SphereGeometry(.078,12,10),M(YEL)),0,2.6,.74);
- return {root,body,tie,add}}
+ return {root,body,tie,add,setFace}}
 const NOOP=()=>{};
 
 function shoe(M,ol){const g=new THREE.Group();const s=new THREE.Mesh(new THREE.SphereGeometry(.2,22,16),new THREE.MeshBasicMaterial({color:0x111111}));s.scale.set(1,.62,1.65);s.position.z=.12;g.add(s);ol(s);
@@ -304,14 +312,18 @@ function buildC(){
  const BASE_A=.46,BASE_LIFT=.34,BASE_LEG=1.12,OMEGA=5.2;   // stride half-length, foot lift, rest leg length, step speed
  legs.forEach(L=>{L.A=BASE_A;L.Afrom=BASE_A;L.swinging=false});let stanceA=BASE_A;
  const tie={z:0,vz:0,x:0,vx:0},inv=new THREE.Matrix4(),loc=V(0,0,0);
- const tgt=V(0,0,0),mid=V(0,0,0),bx=V(0,0,0),by_=V(0,0,0),bz=V(0,0,0),basis=new THREE.Matrix4(),BM=t.body.matrix,SH=V(0,0,0);
+ const P={t:0,flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0},FT=V(0,0,0),XAX=V(1,0,0),tgt=V(0,0,0),mid=V(0,0,0),bx=V(0,0,0),by_=V(0,0,0),bz=V(0,0,0),basis=new THREE.Matrix4(),BM=t.body.matrix,SH=V(0,0,0);
  function walkHose(r,ph,dt){
   const ke=1-Math.exp(-dt*4);for(const k in GOOFY)gp[k]+=(GOOFY[k][goofyLevel]-gp[k])*ke;
   const A=BASE_A*gp.stride,LIFT=BASE_LIFT*gp.lift,LEG=BASE_LEG*gp.leg,rise=(gp.leg-1)*BASE_LEG;
   const c2=Math.cos(2*ph),pass=(1-c2)/2,by=pass*.16*gp.bounce+rise;          // down on contact, up on passing
   const sq=Math.min(.25,.05*gp.squash*Math.pow(Math.max(0,c2),8)),st=Math.min(.12,.025*(gp.squash-1)*pass);   // squash at contact, stretch at passing; capped so the shirt/shoulders don't bulge
   t.body.position.set(Math.sin(ph)*.05*gp.sway,by,0);t.body.scale.set(1+sq*.7-st*.4,1-sq+st,1+sq*.7-st*.4);
-  t.body.rotation.set(-.05,-Math.sin(ph)*.1*Math.min(gp.sway,3),Math.sin(ph)*.06*gp.sway);t.body.updateMatrix();
+  t.body.rotation.set(-.05,-Math.sin(ph)*.1*Math.min(gp.sway,3),Math.sin(ph)*.06*gp.sway);
+  if(P.bx||P.bz||P.by){t.body.rotation.x+=P.bx;t.body.rotation.y+=P.by;t.body.rotation.z+=P.bz}   // fall/stand-up: extra lean, twist and tilt
+  if(P.stretch){t.body.scale.y*=1+P.stretch;t.body.scale.x*=1-P.stretch*.4;t.body.scale.z*=1-P.stretch*.4}
+  if(P.splat){t.body.scale.z*=1-P.splat;t.body.scale.x*=1+P.splat*.35;t.body.scale.y*=1+P.splat*.2}   // face-plant: flattened against the road
+  t.body.updateMatrix();
   const legZ=[];let stepSide=0,stepFwd=0;
   [-1,1].forEach((side,i)=>{const u=((ph+i*Math.PI)/(2*Math.PI))%1,L=legs[i];let z,y,pitch;
    if(u<.5){if(L.swinging){L.swinging=false;L.A=A}z=L.A-4*L.A*u;y=0;pitch=0;stanceA=L.A}   // stance: stride latched at touchdown, foot moves back at exactly road speed
@@ -319,7 +331,9 @@ function buildC(){
    y=Math.sin(Math.PI*s)*LIFT;pitch=.55*Math.sin(2*Math.PI*s);stepSide+=side*Math.sin(Math.PI*s);stepFwd+=Math.sin(Math.PI*s)}   // swing: toe-off, then toe-up before contact
    legZ[i]=z;
    const H=L.curve.v0.set(side*.36,1.27,0).applyMatrix4(BM),F=L.curve.v2.set(side*.4,.205+y-z*z/(2*R),z);   // ankle height so the shoe sole sits on the road, following the hill's curve
-   const d=H.distanceTo(F),bulge=.6*Math.sqrt(Math.max(.01,LEG*LEG-d*d));       // knee bends more when the leg is shorter
+   if(P.kick){const w=P.t*11+i*Math.PI;F.z-=P.kick*(.35+.3*Math.sin(w));F.y+=P.kick*(.15+.12*Math.cos(w))}   // fall: legs kick up behind him
+   if(P.trip&&i===0)F.y+=P.trip*.35;                                             // trip: front foot catches and lifts
+   const d=H.distanceTo(F),bulge=.6*(1+P.knee)*Math.sqrt(Math.max(.01,LEG*LEG-d*d));       // knee bends more when the leg is shorter
    L.curve.v1.copy(mid.addVectors(H,F).multiplyScalar(.5)).add(tgt.set(side*(.05+Math.sin(ph*3+i*2)*gp.wiggle),0,bulge));
    L.parts.forEach(f=>f(L.curve));L.shoe.position.set(F.x,F.y-.08,F.z+.04);L.shoe.rotation.x=pitch});
   // Tie: swings opposite to the foot that is stepping (right foot steps -> tie flaps left), on a spring so it lags and overshoots.
@@ -332,7 +346,10 @@ function buildC(){
    tgt.set(side*lerp(1.0,1.05,up),lerp(.88,2.0,up)+Math.sin(ph*4)*.03*up,lerp(.12+a*.32,.55,up));   // hanging arm swings straight fore/aft along the side
    tgt.sub(SH).multiplyScalar(gp.arm).add(SH);                                           // goofy: longer reach from the shoulder
    tgt.applyMatrix4(BM);
-   if(!Ar.pos)Ar.pos=tgt.clone();else Ar.pos.lerp(tgt,1-Math.exp(-dt*12));               // springy follow-through
+   if(P.flail>0){const w=P.t*22+i*Math.PI;tgt.lerp(FT.set(side*(1.25+Math.cos(w)*.25),3.05+Math.sin(w)*.45,.35+Math.cos(w)*.4).applyMatrix4(BM),P.flail)}   // falling: arms windmill above the head
+   if(P.cheer>0)tgt.lerp(FT.set(side*1.35,3.35,.25).applyMatrix4(BM),P.cheer);   // stand-up: arms flung up, ta-da!
+   if(P.plant>0){const z=1.95;FT.set(side*1.2,.1-z*z/(2*R),z).sub(r.root.position).applyAxisAngle(XAX,-r.root.rotation.x);tgt.lerp(FT,P.plant)}   // hands flat on the road (world spot, held while the body pushes up)
+   if(!Ar.pos)Ar.pos=tgt.clone();else Ar.pos.lerp(tgt,1-Math.exp(-dt*lerp(12,40,P.plant)));               // springy follow-through
    // keep the hand outside sponge + pants, checked in body space after the spring (body sways/twists under it)
    inv.copy(BM).invert();loc.copy(Ar.pos).applyMatrix4(inv);
    {const hw=(loc.y>1.6?.8*(1+.12*(loc.y-2.62)/1.9):.78)+.2;if(loc.y>.85&&loc.y<3.65&&Math.abs(loc.z)<.6&&Math.abs(loc.x)<hw){loc.x=side*hw;Ar.pos.copy(loc).applyMatrix4(BM)}}
@@ -347,8 +364,8 @@ function buildC(){
    Ar.curled.forEach(([k1,k2])=>{k1.rotation.x=lerp(.6,1.35,up);k2.rotation.x=lerp(.75,1.5,up)});
    Ar.thumb[0].rotation.x=lerp(.2,.7,up);Ar.thumb[1].rotation.x=lerp(.3,.9,up)});
  }
- return {rig:{root,body:t.body},walk:walkHose,omega:OMEGA,get speed(){return 2*stanceA*OMEGA/Math.PI},
-  goofyNames:GOOFY_NAMES,setGoofy(l){goofyLevel=Math.max(0,Math.min(GOOFY_NAMES.length-1,l|0))},
+ return {rig:{root,body:t.body},pose:P,walk:walkHose,omega:OMEGA,get speed(){return 2*stanceA*OMEGA/Math.PI},
+  goofyNames:GOOFY_NAMES,setFace:t.setFace,setGoofy(l){goofyLevel=Math.max(0,Math.min(GOOFY_NAMES.length-1,l|0))},
   update(dt,t2,v){drumG.rotation.x-=v/R;fl(t2)}}}
 
 // ---------- Game loop ----------
@@ -379,13 +396,14 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
   <div class="goofy"><div class="gtop"><span>🤪 Goofy meter</span><b id="dvGoofyName">0 · Normal</b></div>
    <input type="range" id="dvGoofy" min="0" max="6" step="1" value="0" aria-label="Goofy meter level">
    <div class="gbar" id="dvGoofyBar">${'<i></i>'.repeat(7)}</div></div>
+  <label>Face<select id="dvFace"><option value="happy">😁 Smiling</option><option value="scared">😱 Scared</option><option value="sad">😢 Sad</option></select></label>
   <label>Animate<input type="checkbox" id="dvPlay" checked></label>
   <label>Speed<input type="range" id="dvSpeed" min="0.1" max="3" step="0.1" value="1"></label>
   <label>Pose<input type="range" id="dvPhase" min="0" max="6.283" step="0.01" value="0"></label>
   <label>World<input type="checkbox" id="dvWorld" checked></label>
   <label>Ink outlines<input type="checkbox" id="dvInk" checked></label>
   <label>Wireframe<input type="checkbox" id="dvWire"></label>
-  <button id="dvReset">Reset camera</button><button id="dvClose" style="background:#fff25a;color:#1c1c1c;font-weight:700">⬅ Back to game</button>
+  <button id="dvFall">Play fall + stand up</button><button id="dvReset">Reset camera</button><button id="dvClose" style="background:#fff25a;color:#1c1c1c;font-weight:700">⬅ Back to game</button>
   <div style="margin-top:8px;color:#aaa">Drag: rotate · Scroll: zoom · Right-drag: pan</div></div>`);
  const orbit=new OrbitControls(camera,renderer.domElement);orbit.enabled=false;orbit.enableDamping=true;orbit.target.set(0,1.7,0);
  const home={pos:camera.position.clone(),target:V(0,1.9,0)};
@@ -425,10 +443,10 @@ function popText(x,y,text,size=22){const d=document.createElement('div');d.textC
 
 // ---------- Key rush: press the keys that pop up to fill the goofy meter; full meter = Uber Goober mode ----------
 const KEYS='ASDFGHJKLZXCVBNUIOPERTYW';      // no Q (achievements) or M (model viewer)
-const UBER_TIME=12,HIT_FILL=4,KEY_SLOW=1.9,KEY_FAST=.8,FALL_TIME=2.6;
+const UBER_TIME=12,HIT_FILL=4,KEY_SLOW=1.9,KEY_FAST=.8,FALL_TIME=3;
 const rush={meter:0,level:0,uber:0,cur:null,next:1.5,fall:0};
 gameGoofy=()=>rush.level;
-function syncLevel(){const l=rush.uber>0?6:Math.min(5,Math.floor(rush.meter*6/100));
+function syncLevel(){const l=rush.uber>0?6:Math.min(5,Math.floor(rush.meter*6/100));if(l>=1)env.setFace('happy');   // sad after a fall until he's goofy again
  if(l!==rush.level){rush.level=l;if(!viewer.on)env.setGoofy(l)}
  $('mName').textContent=`${l} · ${env.goofyNames[l]}`;$('mFill').style.width=(rush.uber>0?rush.uber/UBER_TIME:rush.meter/100)*100+'%'}
 function spawnKey(){const k=KEYS[Math.random()*KEYS.length|0],el=document.createElement('button');el.className='key';el.setAttribute('aria-label',`Press ${k}`);
@@ -444,18 +462,29 @@ function hitKey(){const r=rush.cur.el.getBoundingClientRect();popText(r.left+10,
 // a miss resets everything: meter to 0, Uber mode ends, and the sponge falls over and has to get back up
 function missKey(){clearKey('miss');if(rush.meter<=0&&rush.uber<=0)return;   // empty meter: nothing to lose, no fall
  rush.meter=0;if(rush.uber>0){rush.uber=0;document.body.classList.remove('uber')}
- rush.fall=FALL_TIME;rush.next=.6;say('Whoops! 💫 Goofy meter reset…');syncLevel()}
-function fallPose(){const e=FALL_TIME-rush.fall,FLAT=1.45;let a;               // root pivots at the feet; positive = face-first onto the road
- if(e<.35)a=FLAT*(e/.35)**2;                                                   // tip over, speeding up
- else if(e<.6)a=FLAT-.14*Math.sin(Math.PI*(e-.35)/.25);                         // thud + small bounce
- else if(e<1.5)a=FLAT+Math.sin(e*14)*.02;                                       // lie there, dazed
- else if(e<2.25)a=FLAT*(1-ease((e-1.5)/.75));                                   // get back up
- else a=Math.sin((e-2.25)/.35*Math.PI)*.07;                                     // little wobble before walking on
- env.rig.root.rotation.x=a}
+ rush.fall=FALL_TIME;rush.next=.6;env.setFace('scared');say('Whoops! 💫 Goofy meter reset…');syncLevel()}
+// dizzy stars that circle the head while he's down
+const stars=new THREE.Group();{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.font='52px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('⭐',32,36);
+ const m=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true});for(let k=0;k<3;k++){const sp=new THREE.Sprite(m);sp.scale.setScalar(.45);stars.add(sp)}}
+stars.position.set(0,4.1,0);stars.visible=false;env.rig.body.add(stars);
+function fallPose(){const e=FALL_TIME-rush.fall,FLAT=1.45,P=env.pose;let a,fl=0,pl=0,sp=0,dz=0,bx=0,by=0,bz=0,st=0,kk=0,tr=0,kn=0,hop=0,ch=0;   // root pivots at the feet; positive = face-first onto the road
+ if(e<.35){const u=e/.35;a=FLAT*u*u;fl=Math.min(1,e/.12);bx=-.3*Math.sin(Math.PI*u);by=.15*Math.sin(Math.PI*u);st=.14*Math.sin(Math.PI*u);tr=Math.sin(Math.PI*Math.min(1,u*1.5));kk=u*.6}   // top lags behind and stretches as he tips                              // tip over, speeding up, arms windmilling
+ else if(e<.6){const u=(e-.35)/.25;a=FLAT-.14*Math.sin(Math.PI*u);fl=Math.max(0,1-u*4);pl=Math.min(1,u*4);sp=.32*Math.sin(Math.PI*Math.min(1,u*1.6));bx=.18*Math.sin(Math.PI*u);bz=Math.sin(u*18)*.1*(1-u);kk=.6+.4*Math.sin(Math.PI*u)}   // jiggles on impact   // SPLAT: hands slap down, body flattens, small bounce
+ else if(e<1.5){a=FLAT+Math.sin(e*14)*.02;pl=1;dz=1;bz=Math.sin(e*5)*.08;by=Math.sin(e*3.5)*.06;kk=Math.max(.25,.8-(e-.6)*.8)}   // woozy roll while dazed                            // lie there, dazed, stars circling
+ else if(e<2.65){const u=(e-1.5)/1.15;dz=Math.max(0,1-u*3);                     // stand up in four beats:
+  if(u<.35){const v=u/.35;a=lerp(FLAT,.95,ease(v));pl=1;bx=.3*Math.sin(Math.PI*v);kn=.6*v;kk=.25*(1-v);st=-.06*Math.sin(Math.PI*v)}   // 1. push-up: hands planted, chest comes off the road
+  else if(u<.55){const v=(u-.35)/.2;a=.95+Math.sin(v*Math.PI)*.05;pl=1-v;kn=.6+.4*v;st=-.16*ease(v);bz=Math.sin(v*20)*.03}   // 2. crouch: gathers himself, squashed like a spring
+  else if(u<.8){const v=(u-.55)/.25;a=lerp(.95,-.22,ease(v));hop=.55*Math.sin(Math.PI*v);kn=1-v;st=-.16+.34*Math.sin(Math.PI*Math.min(1,v*1.3));ch=Math.min(1,v*2)}   // 3. SPROING: hops up, stretches, arms thrown up
+  else{const v=(u-.8)/.2;a=-.22*(1-ease(v));st=-.12*Math.sin(Math.PI*v);kn=.5*Math.sin(Math.PI*v);ch=1-ease(v)}}   // 4. lands with a squash, arms come down
+ else{const u=(e-2.65)/.35;a=Math.sin(u*Math.PI)*.07;bz=Math.sin(u*Math.PI*3)*.12*(1-u);st=-.08*Math.sin(Math.PI*u);kn=.4*Math.sin(Math.PI*u)}   // shakes it off                                     // little wobble before walking on
+ if(e>=.35)env.setFace('sad');P.t=e;P.flail=fl;P.plant=pl;P.splat=sp;P.bx=bx;P.by=by;P.bz=bz;P.stretch=st;P.kick=kk;P.trip=tr;P.knee=kn;P.cheer=ch;env.rig.root.position.y=hop;env.rig.root.rotation.x=a;
+ stars.visible=dz>0;if(dz>0){stars.rotation.y=e*6;stars.children.forEach((s,k)=>{const w=k*2.094;s.position.set(Math.cos(w)*.9,Math.sin(e*8+k)*.08,Math.sin(w)*.9);s.material.opacity=dz})}}
+$('dvFace')?.addEventListener('change',e=>env.setFace(e.target.value));   // dev viewer: pick the face
+$('dvFall')?.addEventListener('click',()=>{rush.fall=FALL_TIME;env.setFace('scared')});   // dev viewer: preview the fall
 addEventListener('keydown',e=>{if(viewer.on||e.repeat||!rush.cur||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toUpperCase();
  if(k.length!==1||!KEYS.includes(k))return;if(k===rush.cur.k)hitKey();else missKey()});
-function rushTick(dt){if(viewer.on||overlay.classList.contains('open'))return;                     // paused while viewing or reading achievements
- if(rush.fall>0){rush.fall=Math.max(0,rush.fall-dt);fallPose();return}                              // no keys while he's on the ground
+function rushTick(dt){if(viewer.on&&rush.fall<=0||overlay.classList.contains('open'))return;                     // paused while viewing or reading achievements
+ if(rush.fall>0){rush.fall=Math.max(0,rush.fall-dt);fallPose();if(rush.fall<=0){Object.assign(env.pose,{flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0});env.rig.root.position.y=0;stars.visible=false}return}                              // no keys while he's on the ground
  if(rush.uber>0){S.uberTime=(S.uberTime||0)+Math.min(dt,rush.uber);rush.uber-=dt;if(rush.uber<=0){rush.uber=0;rush.meter=0;document.body.classList.remove('uber');say('Phew… back to normal walking.')}syncLevel()}
  const c=rush.cur;if(c){c.t-=dt;c.el.querySelector('.time i').style.width=Math.max(0,c.t/c.life*100)+'%';c.el.classList.toggle('hurry',c.t<c.life*.35);if(c.t<=0)missKey()}
  else if((rush.next-=dt)<=0)spawnKey()}
