@@ -172,16 +172,39 @@ function faceTex(mood='happy'){const sad=mood==='sad',scared=mood==='scared';ret
   x.lineWidth=7;for(const a of[-2.0,-1.57,-1.14]){x.beginPath();x.moveTo(ex+78*Math.cos(a),212+86*Math.sin(a));x.lineTo(ex+110*Math.cos(a),212+118*Math.sin(a));x.stroke()}}
  x.fillStyle='rgba(255,110,110,.45)';for(const cx of[92,420]){x.beginPath();x.ellipse(cx,312,34,24,0,0,7);x.fill()}
  x.fillStyle='#d4553a';for(const cx of[92,420])for(const [dx,dy] of[[-12,-4],[6,-10],[10,8]]){x.beginPath();x.arc(cx+dx,312+dy,4,0,7);x.fill()}
- if(scared){x.fillStyle='#5a1a14';x.lineWidth=8;x.beginPath();x.ellipse(256,420,62,72,0,0,7);x.fill();x.stroke();   // scared: wide open "AAH" mouth
-  x.fillStyle='#fff';x.lineWidth=5;for(const tx of[222,258]){x.fillRect(tx,352,32,34);x.strokeRect(tx,352,32,34)}}
- else if(sad){x.fillStyle='#fff';x.lineWidth=5;for(const tx of[226,258]){x.fillRect(tx,404,28,24);x.strokeRect(tx,404,28,24)}   // sad: small teeth under a frown, one tear
-  x.lineWidth=8;x.beginPath();x.moveTo(170,420);x.quadraticCurveTo(256,370,342,420);x.stroke();
-  x.fillStyle='#7cc8ff';x.lineWidth=4;x.beginPath();x.moveTo(126,300);x.quadraticCurveTo(104,340,126,348);x.quadraticCurveTo(148,340,126,300);x.fill();x.stroke()}
- else{x.fillStyle='#fff';x.lineWidth=5;for(const tx of[220,258]){x.fillRect(tx,398,34,44);x.strokeRect(tx,398,34,44)}  // buck teeth
- x.lineWidth=8;x.beginPath();x.moveTo(108,322);x.quadraticCurveTo(256,488,404,322);x.stroke();                     // grin
- x.lineWidth=6;x.beginPath();x.moveTo(96,302);x.quadraticCurveTo(100,330,122,336);x.stroke();
- x.beginPath();x.moveTo(416,302);x.quadraticCurveTo(412,330,390,336);x.stroke()}
- x.strokeStyle='#d9534f';x.lineWidth=4;x.beginPath();for(let i=0;i<=8;i++){const px=220+i*9,py=468+(i%2?5:-3);i?x.lineTo(px,py):x.moveTo(px,py)}x.stroke();  // chin squiggle
+ const drop=(tx,ty,k,col)=>{x.fillStyle=col;x.strokeStyle=INK;x.lineWidth=4;x.beginPath();x.moveTo(tx,ty);x.bezierCurveTo(tx-20*k,ty+34*k,tx-14*k,ty+50*k,tx,ty+50*k);x.bezierCurveTo(tx+14*k,ty+50*k,tx+20*k,ty+34*k,tx,ty);x.fill();x.stroke();
+  x.fillStyle='rgba(255,255,255,.8)';x.beginPath();x.ellipse(tx-5*k,ty+36*k,4*k,7*k,0,0,7);x.fill()};
+ const teeth=(xs,ty,tw,th)=>{x.fillStyle='#fff';x.strokeStyle=INK;x.lineWidth=5;for(const tx of xs){x.beginPath();x.roundRect(tx,ty,tw,th,[0,0,7,7]);x.fill();x.stroke()}};
+ const chin=cy=>{x.strokeStyle='#d9534f';x.lineWidth=5;for(const dx of[-16,16]){x.beginPath();x.arc(256+dx,cy,12,.15*Math.PI,.85*Math.PI);x.stroke()}};
+ if(scared){const lip=()=>{x.beginPath();x.ellipse(256,428,64,72,0,0,7)};           // scared: tall "AAH" mouth, sweat drop on the temple
+  lip();x.fillStyle='#6b1410';x.fill();x.save();x.clip();
+  x.fillStyle='#ff7f8f';x.beginPath();x.ellipse(256,502,56,34,0,0,7);x.fill();
+  teeth([218,258],346,36,44);x.restore();
+  x.strokeStyle=INK;x.lineWidth=8;lip();x.stroke();
+  drop(444,168,.95,'#bfe8ff');chin(524)}
+ else if(sad){                                                                  // sad: big shiny puppy-dog eyes, welling tears, worried brows, open frown
+  for(const ex of[180,332]){const eye=()=>{x.beginPath();x.ellipse(ex,212,78,86,0,0,7)};
+   x.fillStyle='#fff';eye();x.fill();x.save();eye();x.clip();
+   const py=206;x.fillStyle='#4aa6ea';x.strokeStyle=INK;x.lineWidth=4;x.beginPath();x.arc(ex,py,38,0,7);x.fill();x.stroke();   // centred and a bit up: pleading, clear of the 3D nose
+   x.fillStyle=INK;x.beginPath();x.arc(ex,py,17,0,7);x.fill();
+   x.fillStyle='#fff';x.beginPath();x.arc(ex-13,py-14,10,0,7);x.fill();x.beginPath();x.arc(ex+11,py+11,5,0,7);x.fill();
+   x.fillStyle='rgba(124,200,255,.6)';x.beginPath();x.moveTo(ex-90,266);for(let k=0;k<=12;k++)x.lineTo(ex-90+k*15,262+Math.sin(k*1.4)*4);x.lineTo(ex+90,320);x.lineTo(ex-90,320);x.fill();x.restore();   // tears welling up
+   x.strokeStyle=INK;x.lineWidth=7;eye();x.stroke()}
+  x.lineWidth=9;x.beginPath();x.moveTo(120,86);x.quadraticCurveTo(170,84,226,52);x.stroke();x.beginPath();x.moveTo(392,86);x.quadraticCurveTo(342,84,286,52);x.stroke();   // worried brows, inner ends up
+  const lip=()=>{x.beginPath();x.moveTo(184,456);x.bezierCurveTo(206,368,306,368,328,456);x.bezierCurveTo(300,444,212,444,184,456);x.closePath()};
+  lip();x.fillStyle='#6b1410';x.fill();x.save();x.clip();
+  x.fillStyle='#ff7f8f';x.beginPath();x.ellipse(256,452,44,12,0,0,7);x.fill();
+  teeth([222,258],380,32,34);x.restore();
+  x.strokeStyle=INK;x.lineWidth=8;lip();x.stroke();
+  chin(486)}
+ else{const L=146,Rt=366,y=352;                                        // open grin: dark mouth, tongue, buck teeth hanging from the upper lip, clear of the cheeks
+  const lip=()=>{x.beginPath();x.moveTo(L,y);x.bezierCurveTo(204,388,308,388,Rt,y);x.bezierCurveTo(350,458,300,476,256,476);x.bezierCurveTo(212,476,162,458,L,y);x.closePath()};
+  lip();x.fillStyle='#6b1410';x.fill();x.save();x.clip();
+  x.fillStyle='#ff7f8f';x.beginPath();x.ellipse(256,480,80,36,0,0,7);x.fill();
+  x.fillStyle='#fff';x.lineWidth=5;for(const tx of[216,258]){x.beginPath();x.roundRect(tx,366,38,50,[0,0,7,7]);x.fill();x.stroke()}x.restore();
+  x.lineWidth=8;lip();x.stroke();
+  x.lineWidth=6;x.beginPath();x.moveTo(134,340);x.quadraticCurveTo(134,356,150,358);x.stroke();x.beginPath();x.moveTo(378,340);x.quadraticCurveTo(378,356,362,358);x.stroke();   // dimples hug the corners
+  x.strokeStyle='#d9534f';x.lineWidth=5;for(const dx of[-16,16]){x.beginPath();x.arc(256+dx,506,12,.15*Math.PI,.85*Math.PI);x.stroke()}}   // chin
 })}
 const sideTex=()=>canvasTex(256,320,(x,w,h)=>{x.fillStyle=SIDE;x.fillRect(0,0,w,h);holes(x,Array.from({length:9},()=>[rnd(20,236),rnd(20,300),rnd(10,24),rnd(12,28)]),SIDEHOLE)});
 const pantsTex=()=>canvasTex(256,96,(x,w,h)=>{x.fillStyle='#9a5a28';x.fillRect(0,0,w,h);x.fillStyle=INK;for(let i=0;i<w;i+=42)x.fillRect(i+6,10,28,16);x.fillStyle='#7d4618';x.fillRect(0,h-6,w,6)});
