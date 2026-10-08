@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Goofy Sponge Walker</title>
+<style>
+:root{--bg:#0b3a5c;--fg:#fffbe6;--card:#ffffff1f;--accent:#ffe14d;--muted:#bfe3ff;--ok:#7dff9b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:"Comic Sans MS","Chalkboard SE",system-ui,sans-serif;overflow:hidden}
+#scene{position:fixed;inset:0}
+#hud{position:fixed;top:12px;left:12px;right:12px;display:flex;gap:10px;flex-wrap:wrap;pointer-events:none}
+.stat{background:var(--card);backdrop-filter:blur(6px);padding:6px 14px;border-radius:14px;border:2px solid #ffffff33}
+.stat b{display:block;font-size:1.3rem;color:var(--accent)}
+#msg{position:fixed;left:50%;top:14px;z-index:5;transform:translateX(-50%);background:rgba(10,40,70,.6);color:#fff;font-size:14px;backdrop-filter:blur(6px);padding:8px 16px;border-radius:999px;max-width:min(90vw,520px,calc(100vw - 490px));text-align:center;pointer-events:none}
+@media (max-width:760px){#msg{top:76px;max-width:min(90vw,520px)}}
+.hint{position:fixed;top:14px;right:14px;background:var(--card);backdrop-filter:blur(6px);border:2px solid #ffffff33;border-radius:12px;padding:6px 12px;font-size:.9rem;pointer-events:none}
+.hint kbd{background:#fff25a;color:#1c1c1c;border:2px solid #1c1c1c;border-radius:6px;padding:0 6px;font-family:inherit;font-weight:700;box-shadow:0 2px 0 #1c1c1c}
+#achOverlay{position:fixed;inset:0;display:grid;place-items:center;background:#05233a99;backdrop-filter:blur(3px);z-index:20;opacity:0;pointer-events:none;transition:opacity .18s}
+#achOverlay.open{opacity:1;pointer-events:auto}
+#achBox{width:min(860px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:auto;background:#fff8d6;color:#1c1c1c;border:5px solid #1c1c1c;border-radius:26px;box-shadow:8px 8px 0 #1c1c1c;padding:16px 20px 14px;transform:scale(.85) rotate(-1.5deg);transition:transform .22s cubic-bezier(.3,1.6,.5,1);
+ background-image:radial-gradient(#f3e27a 18%,transparent 19%),radial-gradient(#f3e27a 12%,transparent 13%);background-size:90px 90px,60px 60px;background-position:10px 20px,50px 60px}
+#achOverlay.open #achBox{transform:none}
+#achBox header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+#achBox h2{margin:0;font-size:1.7rem;letter-spacing:.5px;text-shadow:2px 2px 0 #fff25a}
+#achCount{background:#1c1c1c;color:#fff25a;border-radius:999px;padding:4px 12px;font-weight:700;white-space:nowrap}
+#achBar{height:14px;border:3px solid #1c1c1c;border-radius:999px;background:#fff;overflow:hidden;margin:4px 0 10px}
+#achBar i{display:block;height:100%;background:repeating-linear-gradient(45deg,#ffd23f 0 10px,#ffbf1f 10px 20px);transition:width .4s}
+#achList{display:flex;flex-direction:column;gap:10px}
+.achCat h3{display:flex;justify-content:space-between;align-items:center;margin:0 0 6px;font-size:1.05rem}
+.achCat h3 span{font-size:.85rem;background:#fff25a;border:2px solid #1c1c1c;border-radius:999px;padding:1px 10px}
+.achGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.card{display:flex;gap:8px;align-items:center;background:#fff;border:3px solid #1c1c1c;border-radius:12px;padding:5px 9px;box-shadow:3px 3px 0 #1c1c1c}
+.card .medal{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:1.05rem;border:3px solid #1c1c1c;background:#ffd23f}
+.card b{display:block;font-size:.92rem;line-height:1.2}
+.card small{font-size:.78rem}
+.card small{color:#6b6250}
+.card .prog{height:7px;border:2px solid #1c1c1c;border-radius:999px;background:#eee;overflow:hidden;margin-top:3px}
+.card .prog i{display:block;height:100%;background:#4fc98a}
+.card.locked{background:#f1ede0}
+.card.locked .medal{background:#cfc8b3;filter:grayscale(1)}
+.card.locked b{color:#7a725f}
+.card.got{background:#eaffef}
+#achBox footer{margin-top:14px;text-align:center;font-size:.85rem;color:#6b6250}
+#prompts{position:fixed;inset:0;pointer-events:none;z-index:5}
+.key{position:fixed;width:84px;height:84px;pointer-events:auto;cursor:pointer;background:#fff25a;color:#1c1c1c;border:5px solid #1c1c1c;border-radius:22px;box-shadow:0 7px 0 #1c1c1c;
+ font:900 2.6rem "Comic Sans MS","Chalkboard SE",system-ui,sans-serif;display:grid;place-items:center;padding:0;animation:keyIn .25s cubic-bezier(.3,1.7,.5,1)}
+.key .time{position:absolute;left:6px;right:6px;bottom:-19px;height:9px;background:#fff;border:3px solid #1c1c1c;border-radius:6px;overflow:hidden}
+.key .time i{display:block;height:100%;width:100%;background:#4fc98a}
+.key.hurry .time i{background:#ff6f61}
+.key.hit{animation:keyHit .3s forwards}.key.miss{animation:keyMiss .4s forwards;background:#ff8a7a}
+@keyframes keyIn{from{transform:scale(0) rotate(-20deg)}to{transform:none}}
+@keyframes keyHit{to{transform:scale(1.6) rotate(12deg);opacity:0}}
+@keyframes keyMiss{30%{transform:translateX(-10px) rotate(-6deg)}60%{transform:translateX(10px) rotate(6deg)}to{transform:translateY(40px);opacity:0}}
+#meter{position:fixed;left:50%;bottom:66px;transform:translateX(-50%);width:min(440px,calc(100vw - 32px));background:#fff8d6;color:#1c1c1c;border:4px solid #1c1c1c;border-radius:16px;box-shadow:5px 5px 0 #1c1c1c;padding:6px 12px 8px;pointer-events:none}
+#meter .mtop{display:flex;justify-content:space-between;font-weight:700}
+#meter .mbar{height:16px;margin-top:4px;border:3px solid #1c1c1c;border-radius:999px;background:#fff;overflow:hidden}
+#meter .mbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4fc98a,#fff25a,#ff8c42,#ff6f61);background-size:440px 100%;transition:width .2s}
+#uberBanner{position:fixed;left:50%;top:140px;transform:translateX(-50%);font:900 clamp(1.6rem,6vw,3.2rem) "Comic Sans MS","Chalkboard SE",sans-serif;color:#fff25a;-webkit-text-stroke:2px #1c1c1c;text-shadow:4px 4px 0 #1c1c1c;white-space:nowrap;pointer-events:none;display:none}
+body.uber #uberBanner{display:block;animation:wobble .5s ease-in-out infinite alternate}
+body.uber #meter .mbar i{background:linear-gradient(90deg,red,orange,yellow,lime,cyan,violet,red);background-size:200% 100%;animation:rainbow 1s linear infinite}
+body.uber::after{content:"";position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 70px 18px #ff4fd8;animation:hue 1.2s linear infinite}
+@keyframes wobble{from{transform:translateX(-50%) rotate(-4deg) scale(1)}to{transform:translateX(-50%) rotate(4deg) scale(1.08)}}
+@keyframes rainbow{to{background-position:200% 0}}
+@keyframes hue{to{filter:hue-rotate(360deg)}}
+body.viewing #meter,body.viewing #prompts,body.viewing #uberBanner{display:none}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div id="hud">
+  <div class="stat">Steps<b id="steps">0</b></div>
+  <div class="stat">Distance<b id="dist">0 m</b></div>
+</div>
+<div class="hint">Press <kbd>Q</kbd> for achievements</div>
+<div id="achOverlay" role="dialog" aria-modal="true" aria-labelledby="achTitle">
+  <div id="achBox">
+    <header><h2 id="achTitle">🏅 Achievements</h2><span id="achCount">0 / 0</span></header>
+    <div id="achBar"><i></i></div>
+    <div id="achList"></div>
+    <footer>Press <b>Q</b> or <b>Esc</b> to close</footer>
+  </div>
+</div>
+<div id="prompts"></div>
+<div id="meter"><div class="mtop"><span>🤪 Goofy meter</span><span id="mName">Normal</span></div><div class="mbar"><i id="mFill"></i></div></div>
+<div id="uberBanner">🤪 UBER GOOBER MODE! 🤪</div>
+<div id="msg">Press the keys that pop up to fill the goofy meter! 🧽</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+// ---------- Idle game state ----------
+const UPS=[];   // upgrades removed for now; sps()=0 and spc()=1 until they come back
+const STEP_M=.3;   // metres per step
+const fmtDist=m=>m<1000?Math.floor(m)+' m':(m/1000).toLocaleString('en',{maximumFractionDigits:m<1e4?2:m<1e5?1:0})+' km';
+const fmtTime=s=>s<60?Math.floor(s)+' s':s<3600?Math.floor(s/60)+' min '+String(Math.floor(s%60)).padStart(2,'0')+' s':(s/3600).toFixed(1)+' h';
+// Three separate achievement tracks; each reads its own total from the save
+const ACH_CATS=[
+ {id:'steps',title:'👣 Steps taken',val:()=>S.total,goal:n=>`Take ${fmt(n)} steps`,list:[[100,'First Squeak'],[1000,'Down the Lagoon'],[1e4,'Jellyfish Fields'],[1e5,'Across the Reef'],[1e6,'Sea Legs'],[1e7,'Goofiest Gait']]},
+ {id:'dist',title:'🗺️ Distance walked',val:()=>S.total*STEP_M,goal:m=>`Walk ${fmtDist(m)}`,list:[[100,'Warm-up Waddle'],[1000,'Kilometre Krawl'],[1e4,'Reef Ramble'],[42195,'Marathon Sponge'],[1e6,'Ocean Crosser'],[40075000,'🌍 U Walked the Earth']]},
+ {id:'uber',title:'🤪 Uber Goober time',val:()=>S.uberTime||0,goal:s=>`Be Uber Goober for ${fmtTime(s)}`,list:[[12,'First Goober'],[60,'Goober Minute'],[300,'Goober Habit'],[900,'Goober Lifestyle'],[3600,'Goober Legend']]},
+];
+const ACH=ACH_CATS.flatMap(c=>c.list.map(([n,t])=>({cat:c,n,t})));
+const QUIPS=["I'm ready! I'm ready! I'm ready!","Squeak. Squeak. Squeak.","Knees? Never heard of 'em.","A fish stares. You strut harder.","Your shoes are 60% squeak by now.","Is it cardio if you're underwater?","Left, right, wiggle, wiggle, right!","Somewhere, a grumpy neighbor sighs."];
+let S={steps:0,total:0,owned:{}};
+try{Object.assign(S,JSON.parse(localStorage.getItem('goofysponge')||'{}'))}catch(e){}
+const $=id=>document.getElementById(id);
+const fmt=n=>n<1e3?Math.floor(n)+'':n<1e6?(n/1e3).toFixed(1)+'K':n<1e9?(n/1e6).toFixed(2)+'M':(n/1e9).toFixed(2)+'B';
+const cnt=id=>S.owned[id]||0, cost=u=>Math.ceil(u.base*1.15**cnt(u.id));
+const sps=()=>UPS.reduce((a,u)=>a+(u.sps||0)*cnt(u.id),0);
+const spc=()=>1+UPS.reduce((a,u)=>a+(u.click||0)*cnt(u.id),0);
+const gain=n=>{S.steps+=n;S.total+=n};
+const say=t=>$('msg').textContent=t;
+UPS.forEach(u=>{const b=document.createElement('button');b.className='up';b.id='u_'+u.id;
+ b.onclick=e=>{e.stopPropagation();const c=cost(u);if(S.steps>=c){S.steps-=c;S.owned[u.id]=cnt(u.id)+1;say(`Got ${u.name}!`);render()}};$('ups').appendChild(b)});
+ACH_CATS.forEach(cat=>{const sec=document.createElement('section');sec.className='achCat';
+ sec.innerHTML=`<h3>${cat.title}<span id="achCat_${cat.id}"></span></h3><div class="achGrid"></div>`;$('achList').appendChild(sec)});
+ACH.forEach((a,i)=>{const c=document.createElement('div');c.className='card locked';c.id='a'+i;
+ c.innerHTML=`<div class="medal">🔒</div><div style="flex:1;min-width:0"><b>${a.t}</b><small>${a.cat.goal(a.n)}</small><div class="prog"><i></i></div></div>`;
+ $('achCat_'+a.cat.id).parentElement.nextElementSibling.appendChild(c)});
+const overlay=$('achOverlay');
+const toggleAch=open=>{overlay.classList.toggle('open',open??!overlay.classList.contains('open'));render()};
+addEventListener('keydown',e=>{if(e.repeat)return;if(e.key==='q'||e.key==='Q')toggleAch();else if(e.key==='Escape')toggleAch(false)});
+overlay.addEventListener('pointerdown',e=>{if(e.target===overlay)toggleAch(false)});
+let gotBefore=null;
+function render(){
+ $('steps').textContent=fmt(S.steps);
+ $('dist').textContent=fmtDist(S.total*STEP_M);
+ UPS.forEach(u=>{const b=$('u_'+u.id),c=cost(u);b.disabled=S.steps<c;
+  b.innerHTML=`<b>${u.name}</b> ×${cnt(u.id)}<small>${u.desc}</small><span class="cost">${fmt(c)} steps</span>`});
+ let got=0;ACH.forEach((a,i)=>{const c=$('a'+i),v=a.cat.val(),done=v>=a.n;got+=done;
+  if(done&&!c.classList.contains('got')){c.classList.replace('locked','got');c.querySelector('.medal').textContent='🏅';if(gotBefore!==null)say(`🏅 Achievement unlocked: ${a.t}! (press Q)`)}
+  c.querySelector('.prog i').style.width=Math.min(100,v/a.n*100)+'%'});
+ ACH_CATS.forEach(cat=>{const v=cat.val();$('achCat_'+cat.id).textContent=`${cat.list.filter(([n])=>v>=n).length} / ${cat.list.length}`});
+ gotBefore=got;$('achCount').textContent=`${got} / ${ACH.length}`;$('achBar').firstElementChild.style.width=got/ACH.length*100+'%';
+}
+
+// ---------- World + rubber-hose sponge (from prototype-sponge.html, variant C) ----------
+// ---------- shared setup ----------
+const YAW=0.35;                      // walk direction vs camera: toward you, at an angle
+const ZMIN=-50,SPAN=66;              // roadside props recycle between z=-50 and z=16 (road-local)
+const INK='#1c1c1c',YEL='#fff25a',HOLE='#c2c23a',SIDE='#d6cf3c',SIDEHOLE='#9fa22c';
+const rnd=(a,b)=>a+Math.random()*(b-a),V=(x,y,z)=>new THREE.Vector3(x,y,z);
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(2,devicePixelRatio));renderer.shadowMap.enabled=true;
+document.getElementById('scene').appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(38,1,.1,250);
+camera.position.set(0,2.9,10);camera.lookAt(0,1.9,0);
+const world=new THREE.Group();world.rotation.y=YAW;scene.add(world);   // road + sponge; local +z = walk direction
+
+function canvasTex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.lineCap=x.lineJoin='round';draw(x,w,h);
+ const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;return t}
+// (sky is a gradient dome, see skyDome)
+const bg=()=>canvasTex(2,256,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#27a9dc');g.addColorStop(.6,'#5cc9ea');g.addColorStop(1,'#a8e7f3');x.fillStyle=g;x.fillRect(0,0,w,h)});
+function scroll(o,v){o.position.z-=v;if(o.position.z<ZMIN)o.position.z+=SPAN}
+function roadside(o,half,far=8){const s=Math.random()<.5?-1:1;o.position.set(s*(half+rnd(.6,far)),0,rnd(ZMIN,ZMIN+SPAN));world.add(o);return o}
+
+// ---------- drawn textures (the cartoon look lives here) ----------
+const holes=(x,list,col)=>{x.fillStyle=col;list.forEach(([a,b,rx,ry,r=0])=>{x.beginPath();x.ellipse(a,b,rx,ry,r,0,7);x.fill()})};
+function faceTex(mood='happy'){const sad=mood==='sad',scared=mood==='scared';return canvasTex(512,608,(x,w,h)=>{
+ x.fillStyle=YEL;x.fillRect(0,0,w,h);
+ holes(x,[[58,58,28,20],[452,80,22,30],[62,530,30,24,.4],[452,520,26,20],[34,300,14,24],[480,330,16,28],[300,575,24,14],[150,580,16,12],[260,30,18,11],[380,560,12,10]],HOLE);
+ x.strokeStyle=INK;x.lineWidth=7;
+ for(const ex of[180,332]){                                    // big round eyes, touching
+  x.fillStyle='#fff';x.beginPath();x.ellipse(ex,212,78,86,0,0,7);x.fill();x.stroke();
+  const px=ex+(scared?0:ex<256?12:-8),py=scared?212:sad?250:222,pr=scared?.55:1;   // scared: tiny centred pupils; sad: looking down
+  x.fillStyle='#4aa6ea';x.beginPath();x.arc(px,py,31*pr,0,7);x.fill();x.lineWidth=4;x.stroke();
+  x.fillStyle=INK;x.beginPath();x.arc(px,py,14*pr,0,7);x.fill();
+  x.lineWidth=7;for(const a of[-2.0,-1.57,-1.14]){x.beginPath();x.moveTo(ex+78*Math.cos(a),212+86*Math.sin(a));x.lineTo(ex+110*Math.cos(a),212+118*Math.sin(a));x.stroke()}}
+ x.fillStyle='rgba(255,110,110,.45)';for(const cx of[92,420]){x.beginPath();x.ellipse(cx,312,34,24,0,0,7);x.fill()}
+ x.fillStyle='#d4553a';for(const cx of[92,420])for(const [dx,dy] of[[-12,-4],[6,-10],[10,8]]){x.beginPath();x.arc(cx+dx,312+dy,4,0,7);x.fill()}
+ const drop=(tx,ty,k,col)=>{x.fillStyle=col;x.strokeStyle=INK;x.lineWidth=4;x.beginPath();x.moveTo(tx,ty);x.bezierCurveTo(tx-20*k,ty+34*k,tx-14*k,ty+50*k,tx,ty+50*k);x.bezierCurveTo(tx+14*k,ty+50*k,tx+20*k,ty+34*k,tx,ty);x.fill();x.stroke();
+  x.fillStyle='rgba(255,255,255,.8)';x.beginPath();x.ellipse(tx-5*k,ty+36*k,4*k,7*k,0,0,7);x.fill()};
+ const teeth=(xs,ty,tw,th)=>{x.fillStyle='#fff';x.strokeStyle=INK;x.lineWidth=5;for(const tx of xs){x.beginPath();x.roundRect(tx,ty,tw,th,[0,0,7,7]);x.fill();x.stroke()}};
+ const chin=cy=>{};   // no chin dimples: they sit right above the dress neckline
+ const chinOld=(cy)=>{x.strokeStyle='#d9534f';x.lineWidth=5;for(const dx of[-16,16]){x.beginPath();x.arc(256+dx,cy,12,.15*Math.PI,.85*Math.PI);x.stroke()}};
+ if(scared){const lip=()=>{x.beginPath();x.ellipse(256,428,64,72,0,0,7)};           // scared: tall "AAH" mouth, sweat drop on the temple
+  lip();x.fillStyle='#6b1410';x.fill();x.save();x.clip();
+  x.fillStyle='#ff7f8f';x.beginPath();x.ellipse(256,502,56,34,0,0,7);x.fill();
+  teeth([218,258],346,36,44);x.restore();
+  x.strokeStyle=INK;x.lineWidth=8;lip();x.stroke();
+  drop(444,168,.95,'#bfe8ff');chin(524)}
+ else if(sad){                                                                  // sad: big shiny puppy-dog eyes, welling tears, worried brows, open frown
+  for(const ex of[180,332]){const eye=()=>{x.beginPath();x.ellipse(ex,212,78,86,0,0,7)};
+   x.fillStyle='#fff';eye();x.fill();x.save();eye();x.clip();
+   const py=206;x.fillStyle='#4aa6ea';x.strokeStyle=INK;x.lineWidth=4;x.beginPath();x.arc(ex,py,38,0,7);x.fill();x.stroke();   // centred and a bit up: pleading, clear of the 3D nose
+   x.fillStyle=INK;x.beginPath();x.arc(ex,py,17,0,7);x.fill();
+   x.fillStyle='#fff';x.beginPath();x.arc(ex-13,py-14,10,0,7);x.fill();x.beginPath();x.arc(ex+11,py+11,5,0,7);x.fill();
+   x.fillStyle='rgba(124,200,255,.6)';x.beginPath();x.moveTo(ex-90,266);for(let k=0;k<=12;k++)x.lineTo(ex-90+k*15,262+Math.sin(k*1.4)*4);x.lineTo(ex+90,320);x.lineTo(ex-90,320);x.fill();x.restore();   // tears welling up
+   x.strokeStyle=INK;x.lineWidth=7;eye();x.stroke()}
+  x.lineWidth=9;x.beginPath();x.moveTo(120,86);x.quadraticCurveTo(170,84,226,52);x.stroke();x.beginPath();x.moveTo(392,86);x.quadraticCurveTo(342,84,286,52);x.stroke();   // worried brows, inner ends up
+  const lip=()=>{x.beginPath();x.moveTo(184,456);x.bezierCurveTo(206,368,306,368,328,456);x.bezierCurveTo(300,444,212,444,184,456);x.closePath()};
+  lip();x.fillStyle='#6b1410';x.fill();x.save();x.clip();
+  x.fillStyle='#ff7f8f';x.beginPath();x.ellipse(256,452,44,12,0,0,7);x.fill();
+  teeth([222,258],380,32,34);x.restore();
+  x.strokeStyle=INK;x.lineWidth=8;lip();x.stroke();
+  chin(486)}
+ else{const L=146,Rt=366,y=352;                                        // open grin: dark mouth, tongue, buck teeth hanging from the upper lip, clear of the cheeks
+  const lip=()=>{x.beginPath();x.moveTo(L,y);x.bezierCurveTo(204,388,308,388,Rt,y);x.bezierCurveTo(350,458,300,476,256,476);x.bezierCurveTo(212,476,162,458,L,y);x.closePath()};
+  lip();x.fillStyle='#6b1410';x.fill();x.save();x.clip();
+  x.fillStyle='#ff7f8f';x.beginPath();x.ellipse(256,480,80,36,0,0,7);x.fill();
+  x.fillStyle='#fff';x.lineWidth=5;for(const tx of[216,258]){x.beginPath();x.roundRect(tx,366,38,50,[0,0,7,7]);x.fill();x.stroke()}x.restore();
+  x.lineWidth=8;lip();x.stroke();
+  x.lineWidth=6;x.beginPath();x.moveTo(134,340);x.quadraticCurveTo(134,356,150,358);x.stroke();x.beginPath();x.moveTo(378,340);x.quadraticCurveTo(378,356,362,358);x.stroke();   // dimples hug the corners
+  }
+})}
+const sideTex=()=>canvasTex(256,320,(x,w,h)=>{x.fillStyle=SIDE;x.fillRect(0,0,w,h);holes(x,Array.from({length:9},()=>[rnd(20,236),rnd(20,300),rnd(10,24),rnd(12,28)]),SIDEHOLE)});
+// PROTOTYPE (throwaway): princess dress variants, pick with ?dress=A..E
+const DRESS_ID=(new URLSearchParams(location.search).get('dress')||'A').toUpperCase();
+const DRESSES={
+ A:{name:'A · Pink bell (current)',col:0xff8fc8,dark:0xe0559f,skirt:[[.92,0],[1.0,-.14],[1.12,-.36],[1.22,-.56],[1.27,-.7]],waves:9,petticoat:0xffffff,bodice:'box',sleeve:.24},
+ B:{name:'B · Ball gown',col:0xffb0d8,dark:0xd94f9a,skirt:[[.9,0],[1.02,-.2],[1.25,-.58],[1.45,-.98],[1.55,-1.28]],waves:7,tiers:[-.5,-.92],bodice:'sweet',sleeve:.4,sleeveArm:.22,noBow:true},
+ C:{name:'C · Tutu ballerina',col:0xc9a0ff,dark:0x7b4fd0,skirt:[[.9,0],[1.45,-.07],[1.68,-.15],[1.72,-.19]],waves:12,layers:3,bodice:'corset',sleeve:0},
+ D:{name:'D · Blue gown + scalloped overskirt',col:0x9fd8ff,dark:0x2f6fd0,skirt:[[.92,0],[1.05,-.2],[1.25,-.55],[1.38,-.95]],waves:6,over:[[.96,0],[1.14,-.2],[1.28,-.38]],bodice:'sweet',sleeve:.34},
+ E:{name:'E · Royal purple + cape',col:0xb07ae0,dark:0x5b2a9a,skirt:[[.92,0],[1.04,-.2],[1.2,-.55],[1.3,-.85]],waves:8,goldTrim:true,cape:0xc0283c,bodice:'box',sleeve:.26},
+};
+const DV=DRESSES[DRESS_ID]||DRESSES.A;
+const DRESS=DV.col,DRESS_DARK=DV.dark,GOLD=0xffc21a;
+// Skirt: lathe profile (radius, height below the waist), squashed front-to-back, with a wavy hem.
+const SKIRT_TOP=1.63,SKIRT_Z=.6,SKIRT=DV.skirt,SKIRT_LEN=-SKIRT[SKIRT.length-1][1];
+const profR=(pr,dy)=>{for(let i=1;i<pr.length;i++){const[a,ya]=pr[i-1],[b,yb]=pr[i];if(dy>=yb)return a+(b-a)*(dy-ya)/(yb-ya)}return pr[pr.length-1][0]};
+const skirtR=dy=>profR(SKIRT,dy);
+function skirtGeo(extra,k,waves,phase,pr=SKIRT,amp=.06,grow=0){const len=-pr[pr.length-1][1],pts=pr.map(([r,y],i)=>new THREE.Vector2(r*k+grow,i===pr.length-1?y-extra-grow:y)).reverse(),g=new THREE.LatheGeometry(pts,64),p=g.attributes.position;
+ for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),f=Math.pow(-y/len,2),a=Math.atan2(x,z)*waves*2+phase,w=1+amp*f*Math.sin(a);
+  p.setXYZ(i,x*w,y+.03*f*Math.cos(a)*(amp/.06),z*w*(SKIRT_Z*(1+grow*.6)))}
+ g.computeVertexNormals();return g}
+function flowerTex(col){return canvasTex(256,256,(x,w,h)=>{x.translate(128,128);x.strokeStyle=col;x.lineWidth=11;const n=5+(Math.random()<.4);
+ x.beginPath();for(let i=0;i<=360;i++){const a=i/360*Math.PI*2,r=48+62*Math.pow(Math.abs(Math.sin(a*n/2)),.6);i?x.lineTo(r*Math.cos(a),r*Math.sin(a)):x.moveTo(r,0)}
+ x.globalAlpha=.12;x.fillStyle=col;x.fill();x.globalAlpha=1;x.stroke();x.lineWidth=8;x.beginPath();x.arc(0,0,22,0,7);x.stroke()})}
+function skyFlowers(n=11){const cols=['#8a4fd8','#ff6f61','#4fc98a','#f5d94a','#3a5fd8','#ff8fd0'],arr=[];
+ for(let i=0;i<n;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:flowerTex(cols[i%cols.length]),fog:false,transparent:true,depthWrite:false}));
+  sp.position.set(rnd(-45,45),rnd(9,26),rnd(-75,-40));sp.scale.setScalar(rnd(4,8));sp.userData.p=rnd(0,6);scene.add(sp);arr.push(sp)}
+ return t=>arr.forEach(s=>{s.material.rotation=Math.sin(t*.3+s.userData.p)*.25;s.position.x+=Math.sin(t*.2+s.userData.p)*.004})}
+const specks=(base,cols,n,w=256,h=256,extra)=>canvasTex(w,h,(x)=>{x.fillStyle=base;x.fillRect(0,0,w,h);if(extra)extra(x,w,h);for(let i=0;i<n;i++){x.fillStyle=cols[i%cols.length];x.beginPath();x.arc(rnd(0,w),rnd(0,h),rnd(1,2.6),0,7);x.fill()}});
+
+// ---------- materials / outline ----------
+function gradient(steps){const d=new Uint8Array(steps.flatMap(s=>[s,s,s,255]));const t=new THREE.DataTexture(d,steps.length,1);t.minFilter=t.magFilter=THREE.NearestFilter;t.needsUpdate=true;return t}
+const matFactory=(kind,grad)=>v=>{const o=v&&v.isTexture?{map:v}:{color:v};return kind==='flat'?new THREE.MeshBasicMaterial(o):new THREE.MeshToonMaterial({...o,gradientMap:grad})};
+const inkMat=new THREE.MeshBasicMaterial({color:INK,side:THREE.BackSide});
+const outliner=w=>m=>{if(!m.geometry)return;m.geometry.computeBoundingBox();const s=new THREE.Vector3();m.geometry.boundingBox.getSize(s);const c=new THREE.Vector3();m.geometry.boundingBox.getCenter(c);
+ const o=new THREE.Mesh(m.geometry,inkMat);o.userData.line=true;const k=[s.x,s.y,s.z].map(d=>d>1e-3?1+2*w/d:1);o.scale.set(...k);o.position.copy(c).multiply(V(1-k[0],1-k[1],1-k[2]));m.add(o)};
+function inkTube(curve,r,mat,w,seg=20){const g=new THREE.Group();g.add(new THREE.Mesh(new THREE.TubeGeometry(curve,seg,r,10),mat));
+ if(w){const o=new THREE.Mesh(new THREE.TubeGeometry(curve,seg,r+w,10),inkMat);o.userData.line=true;g.add(o)}return g}
+
+// ---------- the sponge ----------
+function spongeGeo(w,h,d){const g=new THREE.BoxGeometry(w,h,d,10,12,2),p=g.attributes.position;
+ for(let i=0;i<p.count;i++){let x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+  const ex=Math.abs(Math.abs(x)-w/2)<1e-4,ey=Math.abs(Math.abs(y)-h/2)<1e-4;
+  const wx=ex?Math.sign(x)*Math.sin(y*11+z*4)*.035:0,wy=ey?Math.sign(y)*Math.sin(x*10+z*4)*.03:0;
+  p.setXYZ(i,(x+wx)*(1+.12*y/h),y+wy,z)}                        // wavy edges, wider at the top
+ g.computeVertexNormals();return g}
+
+function makeTorso(M,ol){
+ const root=new THREE.Group(),body=new THREE.Group();root.add(body);
+ const add=(m,x,y,z,p=body)=>{m.position.set(x,y,z);p.add(m);ol(m);return m};
+ const side=M(sideTex()),face=M(faceTex()),faces={happy:face.map,scared:faceTex('scared'),sad:faceTex('sad')};
+ add(new THREE.Mesh(spongeGeo(1.6,1.9,.74),[side,side,side,side,face,side]),0,2.62,0);
+ const setFace=mood=>{const m=faces[mood]||faces.happy;if(face.map!==m){face.map=m;face.needsUpdate=true}};
+ // princess dress (variant DV)
+ const pink=M(DRESS),rose=M(DRESS_DARK),gold=M(GOLD);pink.side=rose.side=THREE.DoubleSide;
+ const skirt=(args,mat,y)=>{const m=new THREE.Mesh(skirtGeo(...args),mat);m.position.set(0,y,0);body.add(m);   // skirt with an outline that follows its curve
+  if(ol!==NOOP){const a=[...args];while(a.length<6)a.push([undefined,undefined,undefined,undefined,SKIRT,.06][a.length]);a[6]=.028;const o=new THREE.Mesh(skirtGeo(...a),inkMat);o.userData.line=true;m.add(o);
+   const p=m.geometry.attributes.position,n=m.geometry.parameters.points.length,hem=[];for(let i=0;i<64;i++){const k=i*n;hem.push(V(p.getX(k),p.getY(k),p.getZ(k)))}   // ink line along the wavy hem
+   const hl=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(hem,true),128,.022,6,true),new THREE.MeshBasicMaterial({color:INK}));hl.userData.line=true;m.add(hl)}return m};
+ const ring=(r,y,mat,th=.05)=>{const tr=new THREE.Mesh(new THREE.TorusGeometry(r,th,8,48),mat);tr.position.set(0,y,0);tr.rotation.x=Math.PI/2;tr.scale.y=SKIRT_Z;body.add(tr);   // own even-width outline (a bbox-scaled one pokes through the skirt)
+  if(ol!==NOOP){const o=new THREE.Mesh(new THREE.TorusGeometry(r+.012,th+.012,8,48),inkMat);o.userData.line=true;tr.add(o)}return tr};
+ add(new THREE.Mesh(new THREE.BoxGeometry(1.5,.2,.7),pink),0,1.57,0);
+ if(DV.petticoat)skirt([.07,.97,DV.waves,0],M(DV.petticoat),SKIRT_TOP).material.side=THREE.DoubleSide;
+ if(DV.layers)for(let l=DV.layers-1;l>0;l--)skirt([0,1-l*.07,DV.waves,l*.9,SKIRT,.09],l%2?rose:pink,SKIRT_TOP-l*.06);   // tulle layers underneath
+ skirt([0,1,DV.waves,Math.PI/9,SKIRT,DV.layers?.09:.06],pink,SKIRT_TOP);
+ if(DV.over)skirt([0,1.03,5,0,DV.over,.14],rose,SKIRT_TOP+.01);   // scalloped overskirt
+ if(DV.tiers)DV.tiers.forEach(dy=>ring(skirtR(dy-.035)+.03,SKIRT_TOP+dy,rose,.05));          // ruffle bands on the gown
+ if(DV.goldTrim){ring(skirtR(-SKIRT_LEN+.08)*1.04,SKIRT_TOP-SKIRT_LEN+.08,gold,.05)}
+ ring(.93,SKIRT_TOP-.02,DV.goldTrim?gold:rose);   // waist sash
+ if(DV.bodice==='sweet'){add(new THREE.Mesh(new THREE.BoxGeometry(1.56,.24,.8),pink),0,1.73,0);
+  const q=[[.78,.3],[.78,-.4],[-.78,-.4],[-.78,.3]].map(([x,z])=>V(x,1.85,z)),inkLine=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(q,false,'catmullrom',.05),64,.02,6,false),new THREE.MeshBasicMaterial({color:INK}));inkLine.userData.line=true;if(ol!==NOOP)body.add(inkLine)}   // bodice top edge: even ink line on the sides and back, stops where the cups start
+ else add(new THREE.Mesh(new THREE.BoxGeometry(1.62,.36,.8),pink),0,1.79,0);   // bodice over the bottom of the sponge
+ if(DV.bodice==='box')add(new THREE.Mesh(new THREE.BoxGeometry(1.66,.06,.84),DV.goldTrim?gold:rose),0,1.97,0);   // straight neckline trim
+ if(DV.bodice==='sweet'){[-1,1].forEach(s=>{const h=add(new THREE.Mesh(new THREE.SphereGeometry(.42,24,10,0,Math.PI*2,0,Math.PI/2),pink),s*.4,1.84,.38);h.scale.set(1,.36,.16)});   // sweetheart neckline: two wide rounded tops, below the mouth
+ }   // trim round the sides and back   // sweetheart neckline: two rounded tops
+ if(DV.bodice==='corset'){add(new THREE.Mesh(new THREE.BoxGeometry(1.66,.06,.84),rose),0,1.97,0);
+  for(let k=0;k<3;k++)[-1,1].forEach(s=>{const b=add(new THREE.Mesh(new THREE.BoxGeometry(.03,.17,.02),rose),0,1.68+k*.1,.41);b.rotation.z=s*.9;b.scale.x=1})}   // lacing
+ if(DV.cape){const cm=M(DV.cape);cm.side=THREE.DoubleSide;const cp=add(new THREE.Mesh(new THREE.CylinderGeometry(.92,1.55,1.95,32,1,true,Math.PI/2,Math.PI),cm),0,1.08,-.02);cp.scale.z=.55;
+  const fur=M(specks('#ffffff',['#1c1c1c'],40));add(new THREE.Mesh(new THREE.BoxGeometry(1.75,.2,.3),fur),0,2.0,-.3)}   // ermine collar
+ const tie=new THREE.Group();tie.position.set(0,DV.bodice==='sweet'?1.84:1.95,.45);body.add(tie);   // the tie is now a bow; it still flaps on the tie spring
+ if(!DV.noBow){add(new THREE.Mesh(new THREE.SphereGeometry(.07,12,10),rose),0,0,0,tie);
+ [-1,1].forEach(s=>{const lp=add(new THREE.Mesh(new THREE.ConeGeometry(.12,.26,12),rose),s*.14,0,0,tie);lp.rotation.z=s*Math.PI/2;lp.scale.z=.45;
+  const tl=add(new THREE.Mesh(new THREE.BoxGeometry(.07,.3,.03),rose),s*.06,-.17,0,tie);tl.rotation.z=s*.3})}
+ // crown, a bit crooked on top of the head
+ const crown=new THREE.Group();crown.position.set(.12,3.52,0);crown.rotation.set(-.08,0,-.14);crown.scale.setScalar(1.2);body.add(crown);
+ const band=add(new THREE.Mesh(new THREE.CylinderGeometry(.42,.38,.22,28,1,true),gold),0,.11,0,crown);band.material.side=THREE.DoubleSide;band.scale.z=.75;
+ for(let i=0;i<5;i++){const a=i/5*Math.PI*2,x=Math.sin(a)*.4,z=Math.cos(a)*.3;
+  add(new THREE.Mesh(new THREE.ConeGeometry(.1,.26,4),gold),x,.34,z,crown);
+  add(new THREE.Mesh(new THREE.SphereGeometry(.045,10,8),M(0xffffff)),x,.49,z,crown)}
+ add(new THREE.Mesh(new THREE.SphereGeometry(.065,12,10),M(0xe33a2c)),0,.11,.31,crown).scale.z=.5;
+ [-1,1].forEach(s=>add(new THREE.Mesh(new THREE.SphereGeometry(.045,10,8),M(0x3a6fd8)),s*.26,.11,.22,crown).scale.z=.5);
+ const nose=new THREE.CatmullRomCurve3([V(0,2.76,.34),V(0,2.73,.58),V(0,2.6,.74)]);
+ body.add(inkTube(nose,.075,M(YEL),ol===NOOP?0:.022,12));
+ const tip=add(new THREE.Mesh(new THREE.SphereGeometry(.078,12,10),M(YEL)),0,2.6,.74);
+ return {root,body,tie,add,setFace}}
+const NOOP=()=>{};
+
+function shoe(M,ol){const g=new THREE.Group();const s=new THREE.Mesh(new THREE.SphereGeometry(.2,22,16),new THREE.MeshBasicMaterial({color:0x111111}));s.scale.set(1,.62,1.65);s.position.z=.12;g.add(s);ol(s);
+ const hl=new THREE.Mesh(new THREE.SphereGeometry(.2,12,8),new THREE.MeshBasicMaterial({color:0xffffff}));hl.scale.set(.32,.12,.45);hl.position.set(.04,.11,.26);g.add(hl);return g}
+
+const lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t*t*(3-2*t);
+
+// ---------- Variant C: Rubber Hose on a rolling hill ----------
+// Sky dome: colour depends on view height, and the horizon colour equals the fog colour, so ground fades into sky with no seam.
+function skyDome(top,horizon){const m=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,
+ uniforms:{top:{value:new THREE.Color(top)},hor:{value:new THREE.Color(horizon)}},
+ vertexShader:'varying vec3 vW;void main(){vW=(modelMatrix*vec4(position,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(vW,1.);}',
+ fragmentShader:'uniform vec3 top;uniform vec3 hor;varying vec3 vW;void main(){float h=normalize(vW-cameraPosition).y;gl_FragColor=vec4(mix(hor,top,smoothstep(0.,.6,h)),1.);\n#include <colorspace_fragment>\n}'});
+ const s=new THREE.Mesh(new THREE.SphereGeometry(200,32,16),m);s.renderOrder=-1;scene.add(s)}
+
+// Tube whose vertices are rewritten in place every frame (no geometry allocation per frame).
+const _P=V(0,0,0),_T=V(0,0,0),_N=V(0,0,0),_B=V(0,0,0),_X=V(1,0,0),_Y=V(0,1,0);
+function fillTube(geo,curve,a,b,r,seg,rad){const pos=geo.attributes.position.array,nor=geo.attributes.normal.array;let k=0;
+ for(let i=0;i<=seg;i++){const u=a+(b-a)*i/seg;curve.getPoint(u,_P);curve.getTangent(u,_T).normalize();
+  if(i===0)_N.crossVectors(_T,Math.abs(_T.x)<.9?_X:_Y).normalize();else _N.addScaledVector(_T,-_N.dot(_T)).normalize();   // parallel transport, no twisting
+  _B.crossVectors(_T,_N);
+  for(let j=0;j<=rad;j++){const v=j/rad*Math.PI*2,s=Math.sin(v),c=-Math.cos(v),nx=c*_N.x+s*_B.x,ny=c*_N.y+s*_B.y,nz=c*_N.z+s*_B.z;
+   nor[k]=nx;nor[k+1]=ny;nor[k+2]=nz;pos[k]=_P.x+r*nx;pos[k+1]=_P.y+r*ny;pos[k+2]=_P.z+r*nz;k+=3}}
+ geo.attributes.position.needsUpdate=geo.attributes.normal.needsUpdate=true}
+function hose(parent,mat,r,ink,a=0,b=1,seg=14,rad=8){
+ const mk=(rr,m)=>{const me=new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(V(0,0,0),V(0,-1,0)),seg,rr,rad),m);me.frustumCulled=false;parent.add(me);return me};
+ const main=mk(r,mat);main.castShadow=true;const line=ink?mk(r+ink,inkMat):null;if(line)line.userData.line=true;
+ return curve=>{fillTube(main.geometry,curve,a,b,r,seg,rad);if(line)fillTube(line.geometry,curve,a,b,r+ink,seg,rad)}}
+
+function buildC(){
+ const M=matFactory('toon',gradient([110,190,255])),ol=outliner(.026);
+ const HORIZON=0xaee6f2;skyDome(0x1a95d0,HORIZON);scene.fog=new THREE.Fog(HORIZON,12,46);
+ scene.add(new THREE.HemisphereLight(0xffffff,0xd6c79a,1.4));
+ const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(-4,10,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.radius=3;Object.assign(sun.shadow.camera,{left:-3,right:3,top:4,bottom:-2});sun.shadow.bias=-.0006;scene.add(sun);
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(400,400),M(0xe8d79e));floor.rotation.x=-Math.PI/2;floor.position.y=-4;scene.add(floor);
+ // the road is the top of a giant drum that rolls away from the camera
+ const R=14,L=40,drumTex=canvasTex(1024,1024,(x,w,h)=>{x.fillStyle='#ead9a0';x.fillRect(0,0,w,h);
+  const half=1.8/L*h;x.fillStyle='#8c979d';x.fillRect(0,h/2-half,w,half*2);
+  for(let i=0;i<2500;i++){const y=rnd(0,h),onRoad=Math.abs(y-h/2)<half;x.fillStyle=onRoad?(Math.random()<.5?'#7a858b':'#a2abb0'):['#d9c88d','#f3e6b8','#e05050','#3a6fd8'][Math.random()*4|0];x.beginPath();x.arc(rnd(0,w),y,rnd(1,3),0,7);x.fill()}
+  x.fillStyle=INK;x.fillRect(0,h/2-half-4,w,5);x.fillRect(0,h/2+half-1,w,5)});
+ drumTex.wrapS=THREE.RepeatWrapping;drumTex.repeat.set(3,1);
+ const drumG=new THREE.Group();drumG.position.y=-R;world.add(drumG);
+ const drum=new THREE.Mesh(new THREE.CylinderGeometry(R,R,L,120,1),M(drumTex));drum.rotation.z=Math.PI/2;drum.receiveShadow=true;drumG.add(drum);
+ const cols=[0x9b59d0,0xff8c42,0xff6fa8,0x4fc98a];
+ for(let i=0;i<60;i++){const th=rnd(0,Math.PI*2),o=new THREE.Group();const m=M(cols[i%4]);
+  if(i%2){for(let j=0;j<3;j++){const b=new THREE.Mesh(new THREE.CylinderGeometry(.1,.14,rnd(.6,1.5),8),m);b.position.set(rnd(-.3,.3),.4,rnd(-.3,.3));b.rotation.z=rnd(-.5,.5);ol(b);o.add(b)}}
+  else{const r=new THREE.Mesh(new THREE.DodecahedronGeometry(rnd(.3,.7)),M(0xb8a98d));r.scale.y=.55;ol(r);o.add(r)}
+  const side=Math.random()<.5?-1:1;o.position.set(side*rnd(2.6,9),R*Math.cos(th),R*Math.sin(th));o.rotation.x=th;drumG.add(o)}
+ const fl=skyFlowers();
+
+ // rubber-hose sponge: bezier-arc limbs, geometry reused every frame
+ const t=makeTorso(M,ol),root=t.root;const skin=M(YEL),white=M(0xffffff),red=M(0xe33a2c),blue=M(0x2f6fe0),brown=M(DRESS),sleeve=M(DRESS);brown.side=THREE.DoubleSide;   // pink bloomers are open tubes: render the inside too
+ const bez=()=>new THREE.QuadraticBezierCurve3(V(0,0,0),V(0,0,0),V(0,0,0));
+ function cartoonHand(){   // show-style hand: small flat palm, three chunky two-joint fingers with round tips, separate thumb
+  const g=new THREE.Group(),sk=M(YEL);
+  const part=(geo,x,y,z,parent)=>{const m=new THREE.Mesh(geo,sk);m.position.set(x,y,z);parent.add(m);ol(m);m.castShadow=true;return m};
+  const palm=part(new THREE.SphereGeometry(.088,16,12),0,-.07,0,g);palm.scale.set(1.1,.95,.5);
+  const digit=(parent,x,y,z,r,l1,l2)=>{const k1=new THREE.Group();k1.position.set(x,y,z);parent.add(k1);
+   part(new THREE.CapsuleGeometry(r,l1,4,8),0,-l1/2-r*.3,0,k1);
+   const k2=new THREE.Group();k2.position.y=-l1-r*.3;k1.add(k2);part(new THREE.CapsuleGeometry(r,l2,4,8),0,-l2/2-r*.3,0,k2);
+   return [k1,k2]};
+  const index=digit(g,.058,-.13,0,.034,.06,.055),middle=digit(g,0,-.14,0,.034,.06,.055),ring=digit(g,-.056,-.13,0,.032,.05,.05);
+  const thumbBase=new THREE.Group();thumbBase.position.set(.08,-.05,.03);thumbBase.rotation.set(-.3,0,.9);g.add(thumbBase);
+  const thumb=digit(thumbBase,0,0,0,.032,.045,.04);
+  return {g,index,curled:[middle,ring],thumb}}
+ const legs=[0,1].map(()=>{const s=shoe(M,ol);root.add(s);return {curve:bez(),shoe:s,parts:[hose(root,skin,.05,.022),hose(root,brown,.15,.02,0,.27),hose(root,white,.075,.02,.62,1),hose(root,red,.08,0,.66,.71),hose(root,blue,.08,0,.74,.79)]}});
+ const arms=[0,1].map((_,i)=>{const h=cartoonHand();h.g.scale.x=i?-1:1;root.add(h.g);return {curve:bez(),hand:h.g,index:h.index,curled:h.curled,thumb:h.thumb,pos:null,parts:[hose(root,skin,.045,.022),hose(root,DV.sleeve?sleeve:skin,DV.sleeve?(DV.sleeveArm||.14):.045,.02,0,DV.sleeveArm?.18:.13)]}});
+ [-1,1].forEach(s=>{const sh=new THREE.Mesh(new THREE.SphereGeometry(DV.sleeve||.17,18,14),DV.sleeve?sleeve:M(DRESS_DARK));sh.scale.set(1,.9,1.05);sh.position.set(s*(DV.sleeve>.3?.9:.82),DV.sleeve>.3?1.7:1.6,0);t.body.add(sh);ol(sh)});   // puff sleeves, part of the body
+ root.traverse(o=>{if(o.isMesh&&!o.userData.line)o.castShadow=true});
+ // Goofy meter: level 0 (normal) .. 6 (max). Each row is one multiplier per level; live values ease toward the chosen level.
+ const GOOFY_NAMES=['Normal','A bit silly','Goofy','Very goofy','Wacky','Bonkers','Goofy Goober MAX'];
+ const GOOFY={         //  0    1     2     3     4     5     6
+  arm:   [1,   1.3,  1.55, 1.8,  2.05, 2.25, 2.45], // arm length
+  leg:   [1,   1.16, 1.29, 1.41, 1.53, 1.64, 1.75], // leg length (body rises with it)
+  stride:[1,   1.15, 1.27, 1.38, 1.49, 1.6,  1.7],  // step length (road speed follows, feet stay planted)
+  lift:  [1,   1.5,  1.9,  2.25, 2.55, 2.8,  3.0],  // foot lift
+  bounce:[1,   2.0,  2.8,  3.45, 4.0,  4.5,  5.0],  // body bob
+  squash:[1,   2.4,  3.5,  4.4,  5.2,  5.9,  6.5],  // squash on contact, stretch on passing
+  sway:  [1,   1.9,  2.7,  3.4,  4.1,  4.8,  5.5],  // side-to-side tilt
+  wiggle:[0,   .07,  .12,  .17,  .22,  .27,  .33],  // noodle wave (legs; arms get 30%)
+  tie:   [1,   1.4,  1.75, 2.05, 2.35, 2.7,  3.0],  // tie flap
+ };
+ const gp={};for(const k in GOOFY)gp[k]=GOOFY[k][0];let goofyLevel=0;
+ const BASE_A=.46,BASE_LIFT=.34,BASE_LEG=1.12,OMEGA=5.2;   // stride half-length, foot lift, rest leg length, step speed
+ legs.forEach(L=>{L.A=BASE_A;L.Afrom=BASE_A;L.swinging=false});let stanceA=BASE_A;
+ const tie={z:0,vz:0,x:0,vx:0},inv=new THREE.Matrix4(),loc=V(0,0,0);
+ const P={t:0,flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0},FT=V(0,0,0),XAX=V(1,0,0),tgt=V(0,0,0),mid=V(0,0,0),bx=V(0,0,0),by_=V(0,0,0),bz=V(0,0,0),basis=new THREE.Matrix4(),BM=t.body.matrix,SH=V(0,0,0);
+ function walkHose(r,ph,dt){
+  const ke=1-Math.exp(-dt*4);for(const k in GOOFY)gp[k]+=(GOOFY[k][goofyLevel]-gp[k])*ke;
+  const A=BASE_A*gp.stride,LIFT=BASE_LIFT*gp.lift,LEG=BASE_LEG*gp.leg,rise=(gp.leg-1)*BASE_LEG;
+  const c2=Math.cos(2*ph),pass=(1-c2)/2,by=pass*.16*gp.bounce+rise;          // down on contact, up on passing
+  const sq=Math.min(.25,.05*gp.squash*Math.pow(Math.max(0,c2),8)),st=Math.min(.12,.025*(gp.squash-1)*pass);   // squash at contact, stretch at passing; capped so the shirt/shoulders don't bulge
+  t.body.position.set(Math.sin(ph)*.05*gp.sway,by,0);t.body.scale.set(1+sq*.7-st*.4,1-sq+st,1+sq*.7-st*.4);
+  t.body.rotation.set(-.05,-Math.sin(ph)*.1*Math.min(gp.sway,3),Math.sin(ph)*.06*gp.sway);
+  if(P.bx||P.bz||P.by){t.body.rotation.x+=P.bx;t.body.rotation.y+=P.by;t.body.rotation.z+=P.bz}   // fall/stand-up: extra lean, twist and tilt
+  if(P.stretch){t.body.scale.y*=1+P.stretch;t.body.scale.x*=1-P.stretch*.4;t.body.scale.z*=1-P.stretch*.4}
+  if(P.splat){t.body.scale.z*=1-P.splat;t.body.scale.x*=1+P.splat*.35;t.body.scale.y*=1+P.splat*.2}   // face-plant: flattened against the road
+  t.body.updateMatrix();
+  const legZ=[];let stepSide=0,stepFwd=0;
+  [-1,1].forEach((side,i)=>{const u=((ph+i*Math.PI)/(2*Math.PI))%1,L=legs[i];let z,y,pitch;
+   if(u<.5){if(L.swinging){L.swinging=false;L.A=A}z=L.A-4*L.A*u;y=0;pitch=0;stanceA=L.A}   // stance: stride latched at touchdown, foot moves back at exactly road speed
+   else{const s=(u-.5)*2;if(!L.swinging){L.swinging=true;L.Afrom=L.A}z=-L.Afrom+(L.Afrom+A)*ease(s);   // swing: blends to the new stride before landing
+   y=Math.sin(Math.PI*s)*LIFT;pitch=.55*Math.sin(2*Math.PI*s);stepSide+=side*Math.sin(Math.PI*s);stepFwd+=Math.sin(Math.PI*s)}   // swing: toe-off, then toe-up before contact
+   legZ[i]=z;
+   const H=L.curve.v0.set(side*.36,1.27,0).applyMatrix4(BM),F=L.curve.v2.set(side*.4,.205+y-z*z/(2*R),z);   // ankle height so the shoe sole sits on the road, following the hill's curve
+   if(P.kick){const w=P.t*11+i*Math.PI;F.z-=P.kick*(.35+.3*Math.sin(w));F.y+=P.kick*(.15+.12*Math.cos(w))}   // fall: legs kick up behind him
+   if(P.trip&&i===0)F.y+=P.trip*.35;                                             // trip: front foot catches and lifts
+   const d=H.distanceTo(F),bulge=.6*(1+P.knee)*Math.sqrt(Math.max(.01,LEG*LEG-d*d));       // knee bends more when the leg is shorter
+   L.curve.v1.copy(mid.addVectors(H,F).multiplyScalar(.5)).add(tgt.set(side*(.05+Math.sin(ph*3+i*2)*gp.wiggle),0,bulge));
+   L.parts.forEach(f=>f(L.curve));L.shoe.position.set(F.x,F.y-.08,F.z+.04);L.shoe.rotation.x=pitch});
+  // Tie: swings opposite to the foot that is stepping (right foot steps -> tie flaps left), on a spring so it lags and overshoots.
+  const k=140,damp=9,h=Math.min(dt,1/30);
+  tie.vz+=(k*(-.55*gp.tie*stepSide-tie.z)-damp*tie.vz)*h;tie.z+=tie.vz*h;
+  tie.vx+=(k*(-.1-.35*gp.tie*stepFwd*pass-tie.x)-damp*tie.vx)*h;tie.x+=tie.vx*h;   // flips up a little as the body rises
+  t.tie.rotation.set(tie.x,0,tie.z);
+  [-1,1].forEach((side,i)=>{const a=Math.max(-1,Math.min(1,-legZ[i]/A)),up=ease(Math.max(0,a)),Ar=arms[i];       // arm swings opposite its leg, forward arm rises into a point
+   SH.set(side*.84,1.56,0);
+   tgt.set(side*lerp(1.0,1.05,up),lerp(.88,2.0,up)+Math.sin(ph*4)*.03*up,lerp(.12+a*.32,.55,up));   // hanging arm swings straight fore/aft along the side
+   tgt.sub(SH).multiplyScalar(gp.arm).add(SH);                                           // goofy: longer reach from the shoulder
+   tgt.applyMatrix4(BM);
+   if(P.flail>0){const w=P.t*22+i*Math.PI;tgt.lerp(FT.set(side*(1.25+Math.cos(w)*.25),3.05+Math.sin(w)*.45,.35+Math.cos(w)*.4).applyMatrix4(BM),P.flail)}   // falling: arms windmill above the head
+   if(P.cheer>0)tgt.lerp(FT.set(side*1.35,3.35,.25).applyMatrix4(BM),P.cheer);   // stand-up: arms flung up, ta-da!
+   if(P.plant>0){const z=1.95;FT.set(side*1.2,.1-z*z/(2*R),z).sub(r.root.position).applyAxisAngle(XAX,-r.root.rotation.x);tgt.lerp(FT,P.plant)}   // hands flat on the road (world spot, held while the body pushes up)
+   if(!Ar.pos)Ar.pos=tgt.clone();else Ar.pos.lerp(tgt,1-Math.exp(-dt*lerp(12,40,P.plant)));               // springy follow-through
+   // keep the hand outside sponge + pants, checked in body space after the spring (body sways/twists under it)
+   inv.copy(BM).invert();loc.copy(Ar.pos).applyMatrix4(inv);
+   if(loc.y>SKIRT_TOP-SKIRT_LEN-.05&&loc.y<SKIRT_TOP){const rx=skirtR(loc.y-SKIRT_TOP)+.26,rz=rx*SKIRT_Z,d=Math.hypot(loc.x/rx,loc.z/rz);if(d<1){loc.x/=d;loc.z/=d;Ar.pos.copy(loc).applyMatrix4(BM)}}   // hands ride on the skirt, not through it
+   {const hw=(loc.y>1.6?.8*(1+.12*(loc.y-2.62)/1.9):.78)+.2;if(loc.y>.85&&loc.y<3.65&&Math.abs(loc.z)<.6&&Math.abs(loc.x)<hw){loc.x=side*hw;Ar.pos.copy(loc).applyMatrix4(BM)}}
+   const S=Ar.curve.v0.copy(SH).applyMatrix4(BM);Ar.curve.v2.copy(Ar.pos);
+   const w=gp.wiggle*.3;   // arms stay calmer than legs
+   Ar.curve.v1.copy(mid.addVectors(S,Ar.pos).multiplyScalar(.5)).add(tgt.set(side*(lerp(.05,.45,up)+Math.cos(ph*3+i)*w),lerp(.04,-.1,up)+Math.sin(ph*3+i*2)*w,lerp(-.06,0,up)));
+   Ar.parts.forEach(f=>f(Ar.curve));Ar.hand.position.copy(Ar.pos);
+   // orient hand along the arm, thumb toward the front; index straightens as the arm comes up
+   Ar.curve.getTangent(1,_T);by_.copy(_T).normalize().negate();bz.set(0,0,1).addScaledVector(by_,-by_.z).normalize();bx.crossVectors(by_,bz);
+   Ar.hand.quaternion.setFromRotationMatrix(basis.makeBasis(bx,by_,bz));// hanging: all fingers loosely curled (limp wrist); pointing: index straight, others in a fist, thumb tucked
+   Ar.index[0].rotation.x=lerp(.55,-.05,up);Ar.index[1].rotation.x=lerp(.7,0,up);
+   Ar.curled.forEach(([k1,k2])=>{k1.rotation.x=lerp(.6,1.35,up);k2.rotation.x=lerp(.75,1.5,up)});
+   Ar.thumb[0].rotation.x=lerp(.2,.7,up);Ar.thumb[1].rotation.x=lerp(.3,.9,up)});
+ }
+ return {rig:{root,body:t.body},pose:P,walk:walkHose,omega:OMEGA,get speed(){return 2*stanceA*OMEGA/Math.PI},
+  goofyNames:GOOFY_NAMES,setFace(m){t.setFace(m);const sel=document.getElementById('dvFace');if(sel)sel.value=m},   // keep the model viewer's Face setting in sync
+  setGoofy(l){goofyLevel=Math.max(0,Math.min(GOOFY_NAMES.length-1,l|0))},
+  update(dt,t2,v){drumG.rotation.x-=v/R;fl(t2)}}}
+
+// ---------- Game loop ----------
+const env=buildC();world.add(env.rig.root);
+
+let gameGoofy=()=>0;   // set by the key rush below
+// ---------- Model viewer (only with ?developer-mode=true) ----------
+const viewer={on:false,paused:false,speed:1};
+if(new URLSearchParams(location.search).get('developer-mode')==='true'){
+ const css=document.createElement('style');css.textContent=`
+ #devBtn{position:fixed;top:56px;right:14px;z-index:15;font:inherit;background:#1c1c1c;color:#fff25a;border:2px solid #fff25a;border-radius:10px;padding:5px 10px;cursor:pointer}
+ #devPanel{position:fixed;top:14px;right:14px;z-index:15;width:250px;background:#1c1c1ce6;color:#fff;border:2px solid #fff25a;border-radius:14px;padding:12px 14px;font-size:.85rem;display:none}
+ #devPanel.open{display:block}
+ #devPanel h3{margin:0 0 8px;color:#fff25a;font-size:1rem}
+ #devPanel .goofy{background:#2c2c2c;border:1px solid #555;border-radius:10px;padding:8px;margin-bottom:6px}
+ #devPanel .gtop{display:flex;flex-direction:column;gap:2px}
+ #devPanel .gtop b{white-space:nowrap;color:#fff25a}
+ #devPanel #dvGoofy{width:100%;margin:6px 0 4px}
+ #devPanel .gbar{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+ #devPanel .gbar i{height:8px;border-radius:3px;background:#444}
+ #devPanel .gbar i.on{background:linear-gradient(90deg,#4fc98a,#fff25a,#ff6f61);background-size:700% 100%}
+ #devPanel label{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:7px 0}
+ #devPanel input[type=range]{width:120px}
+ #devPanel button{font:inherit;width:100%;margin-top:8px;background:#333;color:#fff;border:1px solid #666;border-radius:8px;padding:5px;cursor:pointer}
+ body.viewing #hud,body.viewing .hint,body.viewing #msg,body.viewing #devBtn{display:none}`;document.head.appendChild(css);
+ document.body.insertAdjacentHTML('beforeend',`<button id="devBtn" title="Open model viewer (M)">🛠 Model viewer</button>
+ <div id="devPanel"><h3>🛠 Model viewer</h3>
+  <div class="goofy"><div class="gtop"><span>🤪 Goofy meter</span><b id="dvGoofyName">0 · Normal</b></div>
+   <input type="range" id="dvGoofy" min="0" max="6" step="1" value="0" aria-label="Goofy meter level">
+   <div class="gbar" id="dvGoofyBar">${'<i></i>'.repeat(7)}</div></div>
+  <label>Face<select id="dvFace"><option value="happy">😁 Smiling</option><option value="scared">😱 Scared</option><option value="sad">😢 Sad</option></select></label>
+  <label>Animate<input type="checkbox" id="dvPlay" checked></label>
+  <label>Speed<input type="range" id="dvSpeed" min="0.1" max="3" step="0.1" value="1"></label>
+  <label>Pose<input type="range" id="dvPhase" min="0" max="6.283" step="0.01" value="0"></label>
+  <label>World<input type="checkbox" id="dvWorld" checked></label>
+  <label>Ink outlines<input type="checkbox" id="dvInk" checked></label>
+  <label>Wireframe<input type="checkbox" id="dvWire"></label>
+  <button id="dvFall">Play fall + stand up</button><button id="dvReset">Reset camera</button><button id="dvClose" style="background:#fff25a;color:#1c1c1c;font-weight:700">⬅ Back to game</button>
+  <div style="margin-top:8px;color:#aaa">Drag: rotate · Scroll: zoom · Right-drag: pan</div></div>`);
+ const orbit=new OrbitControls(camera,renderer.domElement);orbit.enabled=false;orbit.enableDamping=true;orbit.target.set(0,1.7,0);
+ const home={pos:camera.position.clone(),target:V(0,1.9,0)};
+ const rigMeshes=[];env.rig.root.traverse(o=>{if(o.isMesh)rigMeshes.push(o)});
+ const worldParts=[...scene.children,...world.children].filter(o=>o!==world&&o!==env.rig.root&&!o.isLight);
+ const panel=$('devPanel'),dv=id=>$(id);
+ const setOn=on=>{viewer.on=on;panel.classList.toggle('open',on);document.body.classList.toggle('viewing',on);orbit.enabled=on;
+  if(on){orbit.target.set(0,1.7,0);camera.position.set(3.6,2.4,7.5);frame(+dv('dvGoofy').value)}else{viewer.paused=false;viewer.speed=1;dv('dvPlay').checked=true;dv('dvSpeed').value=1;
+   camera.position.copy(home.pos);camera.lookAt(home.target);setWorld(true);dv('dvWorld').checked=true;
+   {const l=gameGoofy();dv('dvGoofy').value=l;setGoofy(l)}   // back to the game's own goofy level
+   dv('dvInk').checked=true;dv('dvWire').checked=false;rigMeshes.forEach(m=>{if(m.userData.line)m.visible=true;else [].concat(m.material).forEach(mm=>mm.wireframe=false)})}};
+ const setWorld=v=>{worldParts.forEach(o=>o.visible=v);scene.background=v?null:new THREE.Color(0x3a4a5a);scene.fog.far=v?46:1e4};
+ $('devBtn').onclick=()=>setOn(true);   // only opens; leaving is done with the Back button
+ dv('dvClose').onclick=()=>setOn(false);
+ dv('dvReset').onclick=()=>{orbit.target.set(0,1.7,0);camera.position.set(3.6,2.4,7.5);frame(+dv('dvGoofy').value)};
+ const gbars=[...$('dvGoofyBar').children];
+ const frame=l=>{const off=camera.position.clone().sub(orbit.target).normalize().multiplyScalar(8.4*(1+l*.035));
+  orbit.target.set(0,1.8+l*.2,0);camera.position.copy(orbit.target).add(off)};
+ const setGoofy=l=>{env.setGoofy(l);if(viewer.on)frame(l);dv('dvGoofyName').textContent=`${l} · ${env.goofyNames[l]}`;gbars.forEach((b,i)=>{b.classList.toggle('on',i<=l);b.style.backgroundPosition=`${i/6*100}% 0`})};
+ dv('dvGoofy').oninput=e=>setGoofy(+e.target.value);setGoofy(0);
+ dv('dvPlay').onchange=e=>viewer.paused=!e.target.checked;
+ dv('dvSpeed').oninput=e=>viewer.speed=+e.target.value;
+ dv('dvPhase').oninput=e=>{viewer.paused=true;dv('dvPlay').checked=false;phase=+e.target.value};
+ dv('dvWorld').onchange=e=>setWorld(e.target.checked);
+ dv('dvInk').onchange=e=>rigMeshes.forEach(m=>{if(m.userData.line)m.visible=e.target.checked});
+ dv('dvWire').onchange=e=>rigMeshes.forEach(m=>{if(!m.userData.line)[].concat(m.material).forEach(mm=>mm.wireframe=e.target.checked)});
+ addEventListener('keydown',e=>{if((e.key==='m'||e.key==='M')&&!e.repeat&&!viewer.on)setOn(true)});
+ // PROTOTYPE: variant bar + automatic screenshots (?shoot=1)
+ {const bar=document.createElement('div');bar.style.cssText='position:fixed;left:50%;bottom:110px;transform:translateX(-50%);z-index:50;display:flex;gap:6px;background:#1c1c1ccc;padding:6px 10px;border-radius:12px;font:13px sans-serif;color:#fff;align-items:center';
+  bar.innerHTML='<b style="margin-right:6px">'+DV.name+'</b>'+Object.keys(DRESSES).map(k=>`<a href="?developer-mode=true&dress=${k}" style="color:${k===DRESS_ID?'#fff25a':'#fff'};padding:2px 6px">${k}</a>`).join('');document.body.appendChild(bar)}
+ if(new URLSearchParams(location.search).get('shoot')){(async()=>{const w=ms=>new Promise(r=>setTimeout(r,ms)),f=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  const shot=async n=>{await f();await fetch('/save',{method:'POST',body:JSON.stringify({name:DRESS_ID+'_'+n+'.png',data:renderer.domElement.toDataURL()})})};
+  await w(2500);await shot('1game');
+  setOn(true);dv('dvPhase').value=1.1;dv('dvPhase').dispatchEvent(new Event('input'));
+  orbit.target.set(0,1.9,0);camera.position.set(2.2,2.7,5.2);await w(400);await shot('2front');
+  camera.position.set(5.6,2.3,-.6);await w(400);await shot('3side');
+  camera.position.set(-1.5,2.4,-5.4);await w(400);await shot('4back');
+  dv('dvGoofy').value=5;dv('dvGoofy').dispatchEvent(new Event('input'));dv('dvPlay').click();await w(2500);dv('dvPlay').click();
+  camera.position.set(3.6,2.4,7.5);orbit.target.set(0,1.7,0);await w(400);await shot('5goofy5');
+  document.title='DONE '+DRESS_ID})()}
+ viewer.tick=()=>{if(viewer.on){orbit.update();if(!viewer.paused)dv('dvPhase').value=phase%(Math.PI*2)}};
+}
+function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=camera.aspect<1?58:38;camera.updateProjectionMatrix()}
+addEventListener('resize',resize);resize();
+
+let boost=0,phase=0,lastStep=0;
+function popText(x,y,text,size=22){const d=document.createElement('div');d.textContent=text;Object.assign(d.style,{position:'fixed',left:x+'px',top:y+'px',color:'#ffe14d',fontWeight:'bold',fontSize:size+'px',pointerEvents:'none',transition:'all .9s ease-out',textShadow:'0 2px 0 #0006',zIndex:6});
+ document.body.appendChild(d);requestAnimationFrame(()=>{d.style.transform='translateY(-60px)';d.style.opacity='0'});setTimeout(()=>d.remove(),900)}
+// clicking the scene does nothing for now
+
+// ---------- Key rush: press the keys that pop up to fill the goofy meter; full meter = Uber Goober mode ----------
+const KEYS='ASDFGHJKLZXCVBNUIOPERTYW';      // no Q (achievements) or M (model viewer)
+const UBER_TIME=12,HIT_FILL=4,KEY_SLOW=1.9,KEY_FAST=.8,FALL_TIME=3;
+const rush={meter:0,level:0,uber:0,cur:null,next:1.5,fall:0};
+gameGoofy=()=>rush.level;
+function syncLevel(){const l=rush.uber>0?6:Math.min(5,Math.floor(rush.meter*6/100));
+ if(l!==rush.level){rush.level=l;if(!viewer.on)env.setGoofy(l)}
+ $('mName').textContent=`${l} · ${env.goofyNames[l]}`;$('mFill').style.width=(rush.uber>0?rush.uber/UBER_TIME:rush.meter/100)*100+'%'}
+function spawnKey(){const k=KEYS[Math.random()*KEYS.length|0],el=document.createElement('button');el.className='key';el.setAttribute('aria-label',`Press ${k}`);
+ el.innerHTML=`${k}<span class="time"><i></i></span>`;
+ el.style.left=rnd(24,innerWidth-110)+'px';el.style.top=rnd(110,Math.max(120,innerHeight-260))+'px';
+ const life=rush.uber>0?KEY_FAST:KEY_SLOW-(KEY_SLOW-KEY_FAST)*rush.meter/100;   // keys get quicker as the meter fills, never faster than in Uber mode
+ el.addEventListener('pointerdown',e=>{e.stopPropagation();if(rush.cur&&rush.cur.el===el)hitKey()});
+ $('prompts').appendChild(el);rush.cur={k,el,t:life,life}}
+function clearKey(cls){const c=rush.cur;if(!c)return;c.el.classList.add(cls);c.el.style.pointerEvents='none';setTimeout(()=>c.el.remove(),400);rush.cur=null;rush.next=rnd(.3,1)}
+function hitKey(){const r=rush.cur.el.getBoundingClientRect();popText(r.left+10,r.top-10,['Nice!','Goofy!','Yes!','Wheee!'][Math.random()*4|0],26);boost=1;   // keys only fill the meter, no steps
+ env.setFace('happy');   // any hit cheers him up
+ if(rush.uber<=0){rush.meter=Math.min(100,rush.meter+HIT_FILL);if(rush.meter>=100){rush.uber=UBER_TIME;rush.next=1;document.body.classList.add('uber');say('🤪 UBER GOOBER MODE!')}}
+ clearKey('hit');syncLevel();render()}
+// a miss resets everything: meter to 0, Uber mode ends, and the sponge falls over and has to get back up
+function missKey(){clearKey('miss');if(rush.meter<=0&&rush.uber<=0)return;   // empty meter: nothing to lose
+ if(rush.level<1&&rush.uber<=0){rush.meter=0;say('Missed! Goofy meter reset.');syncLevel();return}   // below level 1: meter resets, but he keeps his feet
+ rush.meter=0;if(rush.uber>0){rush.uber=0;document.body.classList.remove('uber')}
+ rush.fall=FALL_TIME;rush.next=.6;env.setFace('scared');say('Whoops! 💫 Goofy meter reset…');syncLevel()}
+// dizzy stars that circle the head while he's down
+const stars=new THREE.Group();{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.font='52px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('⭐',32,36);
+ const m=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true});for(let k=0;k<3;k++){const sp=new THREE.Sprite(m);sp.scale.setScalar(.45);stars.add(sp)}}
+stars.position.set(0,4.1,0);stars.visible=false;env.rig.body.add(stars);
+function fallPose(){const e=FALL_TIME-rush.fall,FLAT=1.45,P=env.pose;let a,fl=0,pl=0,sp=0,dz=0,bx=0,by=0,bz=0,st=0,kk=0,tr=0,kn=0,hop=0,ch=0;   // root pivots at the feet; positive = face-first onto the road
+ if(e<.35){const u=e/.35;a=FLAT*u*u;fl=Math.min(1,e/.12);bx=-.3*Math.sin(Math.PI*u);by=.15*Math.sin(Math.PI*u);st=.14*Math.sin(Math.PI*u);tr=Math.sin(Math.PI*Math.min(1,u*1.5));kk=u*.6}   // top lags behind and stretches as he tips                              // tip over, speeding up, arms windmilling
+ else if(e<.6){const u=(e-.35)/.25;a=FLAT-.14*Math.sin(Math.PI*u);fl=Math.max(0,1-u*4);pl=Math.min(1,u*4);sp=.32*Math.sin(Math.PI*Math.min(1,u*1.6));bx=.18*Math.sin(Math.PI*u);bz=Math.sin(u*18)*.1*(1-u);kk=.6+.4*Math.sin(Math.PI*u)}   // jiggles on impact   // SPLAT: hands slap down, body flattens, small bounce
+ else if(e<1.5){a=FLAT+Math.sin(e*14)*.02;pl=1;dz=1;bz=Math.sin(e*5)*.08;by=Math.sin(e*3.5)*.06;kk=Math.max(.25,.8-(e-.6)*.8)}   // woozy roll while dazed                            // lie there, dazed, stars circling
+ else if(e<2.65){const u=(e-1.5)/1.15;dz=Math.max(0,1-u*3);                     // stand up in four beats:
+  if(u<.35){const v=u/.35;a=lerp(FLAT,.95,ease(v));pl=1;bx=.3*Math.sin(Math.PI*v);kn=.6*v;kk=.25*(1-v);st=-.06*Math.sin(Math.PI*v)}   // 1. push-up: hands planted, chest comes off the road
+  else if(u<.55){const v=(u-.35)/.2;a=.95+Math.sin(v*Math.PI)*.05;pl=1-v;kn=.6+.4*v;st=-.16*ease(v);bz=Math.sin(v*20)*.03}   // 2. crouch: gathers himself, squashed like a spring
+  else if(u<.8){const v=(u-.55)/.25;a=lerp(.95,-.22,ease(v));hop=.55*Math.sin(Math.PI*v);kn=1-v;st=-.16+.34*Math.sin(Math.PI*Math.min(1,v*1.3));ch=Math.min(1,v*2)}   // 3. SPROING: hops up, stretches, arms thrown up
+  else{const v=(u-.8)/.2;a=-.22*(1-ease(v));st=-.12*Math.sin(Math.PI*v);kn=.5*Math.sin(Math.PI*v);ch=1-ease(v)}}   // 4. lands with a squash, arms come down
+ else{const u=(e-2.65)/.35;a=Math.sin(u*Math.PI)*.07;bz=Math.sin(u*Math.PI*3)*.12*(1-u);st=-.08*Math.sin(Math.PI*u);kn=.4*Math.sin(Math.PI*u)}   // shakes it off                                     // little wobble before walking on
+ if(e>=.35)env.setFace('sad');P.t=e;P.flail=fl;P.plant=pl;P.splat=sp;P.bx=bx;P.by=by;P.bz=bz;P.stretch=st;P.kick=kk;P.trip=tr;P.knee=kn;P.cheer=ch;env.rig.root.position.y=hop;env.rig.root.rotation.x=a;
+ stars.visible=dz>0;if(dz>0){stars.rotation.y=e*6;stars.children.forEach((s,k)=>{const w=k*2.094;s.position.set(Math.cos(w)*.9,Math.sin(e*8+k)*.08,Math.sin(w)*.9);s.material.opacity=dz})}}
+$('dvFace')?.addEventListener('change',e=>env.setFace(e.target.value));   // dev viewer: pick the face
+$('dvFall')?.addEventListener('click',()=>{rush.fall=FALL_TIME;env.setFace('scared')});   // dev viewer: preview the fall
+addEventListener('keydown',e=>{if(viewer.on||e.repeat||!rush.cur||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toUpperCase();
+ if(k.length!==1||!KEYS.includes(k))return;if(k===rush.cur.k)hitKey();else missKey()});
+// dev only: press 1 to toggle auto mode, which hits every key for you
+const DEV=new URLSearchParams(location.search).get('developer-mode')==='true';let autoPlay=false;
+if(DEV)addEventListener('keydown',e=>{if(e.key==='1'&&!e.repeat){autoPlay=!autoPlay;say(autoPlay?'🤖 Auto mode ON (press 1 to stop)':'🤖 Auto mode OFF')}});
+function rushTick(dt){if(viewer.on&&rush.fall<=0||overlay.classList.contains('open'))return;                     // paused while viewing or reading achievements
+ if(rush.fall>0){rush.fall=Math.max(0,rush.fall-dt);fallPose();if(rush.fall<=0){Object.assign(env.pose,{flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0});env.rig.root.position.y=0;stars.visible=false}return}                              // no keys while he's on the ground
+ if(rush.uber>0){S.uberTime=(S.uberTime||0)+Math.min(dt,rush.uber);rush.uber-=dt;if(rush.uber<=0){rush.uber=0;rush.meter=0;document.body.classList.remove('uber');say('Phew… back to normal walking.')}syncLevel()}
+ if(rush.uber>0){if(rush.cur)clearKey('hit');return}   // Uber Goober: no keys to press, so no misses and no falls
+ const c=rush.cur;if(c&&autoPlay&&c.life-c.t>.25){hitKey();return}   // dev auto mode: hits every key after a short beat
+ if(c){c.t-=dt;c.el.querySelector('.time i').style.width=Math.max(0,c.t/c.life*100)+'%';c.el.classList.toggle('hurry',c.t<c.life*.35);if(c.t<=0)missKey()}
+ else if((rush.next-=dt)<=0)spawnKey()}
+syncLevel();
+let camL=0;   // game camera pulls back and up as the sponge gets taller
+
+const clock=new THREE.Clock();let acc=0;
+renderer.setAnimationLoop(()=>{const dt=Math.min(.1,clock.getDelta()),t=clock.elapsedTime;
+ gain(sps()*dt);acc+=dt;if(acc>.25){acc=0;render()}
+ // walks faster with more steps/s and briefly after a click; road speed scales with it so the feet stay planted
+ const mult=(1+Math.min(1.2,Math.log10(1+sps())*.25)+boost*.8)*(1+camL*.1);   // goofier = walks a bit faster (up to +60% at level 6)
+ boost=Math.max(0,boost-dt*1.5);
+ let vs=viewer.on?(viewer.paused?0:viewer.speed):1;      // model viewer can pause / slow down the walk
+ rushTick(dt);
+ if(!viewer.on){camL+=(rush.level-camL)*(1-Math.exp(-dt*3));camera.position.set(0,2.9+camL*.25,10*(1+camL*.07));camera.lookAt(0,1.9+camL*.22,0)}
+ if(rush.fall>0)vs=0;                                       // lying down: no walking, road stops
+ phase+=dt*env.omega*mult*vs;
+ {const n=Math.floor(phase/Math.PI);if(n>lastStep&&!viewer.on)gain(n-lastStep);lastStep=n}   // one step per footfall (two per walk cycle)
+ env.walk(env.rig,phase,dt*(vs||1));env.update(dt,t,dt*env.speed*mult*vs);viewer.tick?.();
+ renderer.render(scene,camera)});
+
+setInterval(()=>{try{localStorage.setItem('goofysponge',JSON.stringify({...S,saved:Date.now()}))}catch(e){}},5000);
+if(S.saved){const off=Math.min(8*3600,(Date.now()-S.saved)/1000),g=sps()*off;if(g>0){gain(g);say(`While you were away, you strutted ${fmt(g)} steps. Squeak!`)}}
+render();
+</script>
+</body>
+</html>
