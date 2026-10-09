@@ -634,8 +634,8 @@ function buildPlankton(C,R){   // R: road drum radius
 const env=buildC();world.add(env.rig.root);
 // Characters: everything that depends on the hero's size lives here (docs/characters.md explains each number)
 const CHARS={
- sponge:{name:'Sponge',outfit:'classic',height:3.6,scale:1,cam:{y:2.9,z:10,ly:1.9},view:{ty:1.7,dist:8.4},stride:.46,omega:5.2,ink:1,stepM:STEP_M,stars:4.1},
- plankton:{name:'Plankton',outfit:null,height:.58,scale:.15,cam:{y:.82,z:3.1,ly:.42},view:{ty:.26,dist:1.5},stride:.3,omega:5.2,ink:2.2,stars:3.4},
+ sponge:{name:'Sponge',outfit:'classic',height:3.6,scale:1,cam:{y:2.9,z:10,ly:1.9},zoom:{in:.8,out:1.6},view:{ty:1.7,dist:8.4},stride:.46,omega:5.2,ink:1,stepM:STEP_M,stars:4.1},
+ plankton:{name:'Plankton',outfit:null,height:.58,scale:.15,cam:{y:.82,z:3.1,ly:.42},zoom:{in:.75,out:3.4},view:{ty:.26,dist:1.5},stride:.3,omega:5.2,ink:2.2,stars:3.4},
 };
 CHARS.plankton.stepM=STEP_M*(CHARS.plankton.stride*CHARS.plankton.scale)/(CHARS.sponge.stride*CHARS.sponge.scale);   // distance per step follows his real stride: about 3 cm
 let hero=env,stepM=STEP_M;   // the character on the road now; stepM = metres per step for the distance counter
@@ -874,7 +874,7 @@ addEventListener('keydown',e=>{if(viewer.on||e.repeat||!rush.cur||e.metaKey||e.c
 const DEV=new URLSearchParams(location.search).get('developer-mode')==='true';let autoPlay=false;
 // Esc: key menu with every shortcut; when something is open, Esc closes it instead
 const help=$('helpOverlay'),keyRow=(k,t)=>`<kbd>${k}</kbd><span>${t}</span>`;
-$('helpList').innerHTML=`<h3>🎮 Game</h3><div class="keys">${[['A–Z','Press the key that pops up (or click it)'],['Q','Achievements'],['B','Shop'],['G','Save a GIF of the walk'],['Esc','This menu · close any window']].map(r=>keyRow(...r)).join('')}</div>`+
+$('helpList').innerHTML=`<h3>🎮 Game</h3><div class="keys">${[['A–Z','Press the key that pops up (or click it)'],['Q','Achievements'],['B','Shop'],['G','Save a GIF of the walk'],['Scroll · + −','Zoom in or out (pinch on a touch screen)'],['Esc','This menu · close any window']].map(r=>keyRow(...r)).join('')}</div>`+
  (DEV?`<h3>🛠 Developer mode</h3><div class="keys">${[['M','Model viewer'],['1','Auto mode on/off'],['2','+1000 steps'],['0','Restart the game'],['Drag','Model viewer: rotate'],['Scroll','Model viewer: zoom'],['Right-drag','Model viewer: pan']].map(r=>keyRow(...r)).join('')}</div>`:'');
 const toggleHelp=open=>help.classList.toggle('open',open??!help.classList.contains('open'));
 addEventListener('keydown',e=>{if(e.repeat)return;
@@ -895,6 +895,19 @@ function rushTick(dt){if((viewer.on||viewer.fixedDt)&&rush.fall<=0||overlay.clas
  else if((rush.next-=dt)<=0)spawnKey()}
 syncLevel();
 let camL=0;   // game camera pulls back and up as the sponge gets taller
+// Game zoom: wheel, pinch or + / -. 1 = the character's own framing; CHARS[..].zoom limits it (small characters can zoom out much further). Saved per character.
+if(!S.zoom||typeof S.zoom!=='object')S.zoom={};
+let zoomC=null;   // eased zoom actually shown
+const zoomOf=()=>{const z=hero.char.zoom,k=Object.keys(HEROES).find(c=>HEROES[c]===hero);return {k,v:Math.min(z.out,Math.max(z.in,S.zoom[k]||1)),z}};
+const zoomBy=f=>{if(viewer.on||[overlay,shop,help].some(o=>o.classList.contains('open')))return;const {k,v,z}=zoomOf();S.zoom[k]=Math.min(z.out,Math.max(z.in,v*f))};
+renderer.domElement.style.touchAction='none';
+renderer.domElement.addEventListener('wheel',e=>{if(viewer.on)return;e.preventDefault();zoomBy(Math.exp(e.deltaY*.0015))},{passive:false});
+addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey)return;if(e.key==='+'||e.key==='=')zoomBy(1/1.15);else if(e.key==='-'||e.key==='_')zoomBy(1.15)});
+{const pts=new Map();let pinch=0;   // two-finger pinch on touch screens
+ const gap=()=>{const[a,b]=[...pts.values()];return Math.hypot(a.x-b.x,a.y-b.y)};
+ renderer.domElement.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2)pinch=gap()});
+ renderer.domElement.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2&&pinch){const g=gap();zoomBy(pinch/g);pinch=g}});
+ const up=e=>{pts.delete(e.pointerId);pinch=0};renderer.domElement.addEventListener('pointerup',up);renderer.domElement.addEventListener('pointercancel',up)}
 
 const clock=new THREE.Clock();let acc=0,gameT=0;
 renderer.setAnimationLoop(()=>{const real=Math.min(.1,clock.getDelta()),dt=viewer.fixedDt||real,t=gameT+=dt;   // the GIF export sets a fixed step
@@ -905,7 +918,8 @@ renderer.setAnimationLoop(()=>{const real=Math.min(.1,clock.getDelta()),dt=viewe
  let vs=viewer.on?(viewer.paused?0:viewer.speed):1;      // model viewer can pause / slow down the walk
  rushTick(dt);
  if(!viewer.on){camL+=(rush.level-camL)*(1-Math.exp(-dt*3));const c=hero.char.cam,f=hero.char.height/CHARS.sponge.height;   // framing per character; goofy pull-back scales with his size
-  camera.position.set(0,c.y+camL*.25*f,c.z*(1+camL*.07));camera.lookAt(0,c.ly+camL*.22*f,0)}
+  const zt=zoomOf().v;zoomC=zoomC===null||zoomC.h!==hero?{h:hero,v:zt}:{h:hero,v:zoomC.v+(zt-zoomC.v)*(1-Math.exp(-real*10))};   // eases to the chosen zoom; jumps when the character changes
+  const ly=c.ly+camL*.22*f;camera.position.set(0,ly+(c.y+camL*.25*f-ly)*zoomC.v,c.z*(1+camL*.07)*zoomC.v);camera.lookAt(0,ly,0)}   // zoom moves the camera along its line to the look point
  if(rush.fall>0)vs=0;                                       // lying down: no walking, road stops
  phase+=dt*hero.omega*mult*vs;
  {const n=Math.floor(phase/Math.PI);if(n>lastStep&&!viewer.on)gain(n-lastStep);lastStep=n}   // one step per footfall (two per walk cycle)
