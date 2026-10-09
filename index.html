@@ -49,6 +49,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 .keys kbd{justify-self:start;min-width:1.6em;text-align:center;background:#fff25a;color:#1c1c1c;border:2px solid #1c1c1c;border-radius:6px;padding:0 6px;font-family:inherit;font-weight:700;box-shadow:0 2px 0 #1c1c1c;white-space:nowrap}
 .shopSub{margin:0 0 4px;color:#6b6250}
 .gifts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;padding-top:70px}
+.noOutfits{opacity:.7;text-align:center;margin:16px 0}
 .gift{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
 .gift svg{display:block;width:100%;height:100%}
 .gift b{font-size:1.05rem}
@@ -148,7 +149,7 @@ body.evil.uber::after{box-shadow:inset 0 0 80px 22px #d8262e;animation:none}
 <div id="uberBanner">🤪 UBER GOOBER MODE! 🤪</div>
 <div id="msg">Press the keys that pop up to fill the meter! 🧽</div>
 
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
@@ -753,7 +754,7 @@ function renderShop(){   // rebuilds the cards only when something on them chang
    <b>${own?k.name:ch?'Mystery character':'Mystery outfit'}</b>
    <button data-id="${k.id}"${on||(!own&&S.steps<k.price)?' disabled':''}>${on?(ch?'✅ Playing':'✅ Wearing'):own?(ch?'Play':'Wear'):`Buy · ${fmt(k.price)} steps`}</button></div>`};
  const group=(title,list)=>list.length?`<h3>${title}</h3><div class="gifts">${list.map(card).join('')}</div>`:'';
- $('skinList').innerHTML=group('🧍 Characters',SKINS.filter(k=>k.type==='character'))+Object.keys(CHARS).map(c=>group(`👗 Outfits for ${CHARS[c].name}`,SKINS.filter(k=>k.type==='outfit'&&k.char===c))).join('')}
+ $('skinList').innerHTML=group('🧍 Characters',SKINS.filter(k=>k.type==='character'))+(group(`👗 Outfits for ${CHARS[S.char].name}`,SKINS.filter(k=>k.type==='outfit'&&k.char===S.char))||`<h3>👗 Outfits for ${CHARS[S.char].name}</h3><p class="noOutfits">No outfits yet. Coming soon!</p>`)}   // only the outfits of the character you're playing
 $('skinList').addEventListener('click',e=>{const id=e.target.dataset&&e.target.dataset.id;if(!id)return;const k=SKINS.find(s=>s.id===id);
  if(!S.skins.includes(id)){if(S.steps<k.price)return;S.steps-=k.price;S.skins.push(id);say(`🎁 Unwrapped ${k.name}! Looking fabulous.`);unwrap=id;setTimeout(()=>{unwrap=null;render()},1800)}
  S.char=k.char;if(k.type==='outfit')S.outfits[k.char]=id;showSaved();render()});   // wearing an outfit also switches to its character
@@ -770,17 +771,29 @@ async function exportGif(){const bs=[...document.querySelectorAll('[data-gif]')]
   const src=renderer.domElement,W=480,H=Math.round(W*src.height/src.width),c=document.createElement('canvas');c.width=W;c.height=H;
   const x=c.getContext('2d',{willReadFrequently:true}),STEP=1/50,frames=[];   // 50 fps: the fastest frame delay browsers play as written (20 ms)
   const tick=grab=>new Promise(done=>viewer.afterRender=()=>{if(grab){x.drawImage(src,0,0,W,H);frames.push(x.getImageData(0,0,W,H).data)}done()});
-  viewer.fixedDt=STEP;const p0=phase;await tick(false);const dp=phase-p0;   // one test frame: how far the walk moves per step
-  const n=dp>1e-4?Math.min(150,Math.round(Math.PI*2/dp)):1;   // paused: a still
-  if(n>1)viewer.fixedDt=STEP*Math.PI*2/n/dp;
-  for(let i=0;i<n;i++){await tick(true);show(`🔴 ${i+1}/${n}`)}
-  viewer.afterRender=null;const delay=Math.max(20,Math.round(viewer.fixedDt*100)*10);viewer.fixedDt=0;   // GIF delays are whole centiseconds
+  boost=0;viewer.fixedDt=STEP;const p0=phase;await tick(false);const dp=phase-p0;   // no click boost, so the speed stays the same; one test frame: how far the walk moves per step
+  const n=dp>1e-4?Math.min(150,Math.round(Math.PI*2/dp)):1;   // frames in exactly one walk cycle (two steps); paused: a still
+  if(n>1){viewer.fixedDt=STEP*Math.PI*2/n/dp;
+   for(let i=0;i<n;i++){await tick(false);show(`⏳ Warming up ${Math.round(i/n*100)}%`)}   // one cycle unrecorded: springs (hands, tie, antennae) and easing settle into the loop
+   const start=phase+Math.PI*2/n,cycles=scene.background?1:2;   // carry on smoothly from the warm-up; with the world on, record two cycles (see below)
+   for(let i=0;i<n*cycles;i++){viewer.gifPh=start+Math.PI*2*i/n;await tick(true);show(`🔴 ${i+1}/${n*cycles}`)}   // exact phases: frame n is frame 0 again for the character, so he loops without a jump
+   if(cycles===2){const out=[];for(let i=0;i<n;i++){const a=frames[i],b=frames[i+n],k=i/n,m=new Uint8ClampedArray(a.length);   // the road and props have moved on by one stride: cross-fade
+     for(let j=0;j<a.length;j++)m[j]=a[j]*k+b[j]*(1-k);out.push(m)}frames.length=0;frames.push(...out)}}   // frame i = blend of cycle 1 and 2, so the last frame flows into the first; he is in the same pose in both, so only the world blends
+  else await tick(true);
+  viewer.gifPh=null;viewer.afterRender=null;const delay=Math.max(20,Math.round(viewer.fixedDt*100)*10);viewer.fixedDt=0;   // GIF delays are whole centiseconds
   show('⏳ Making GIF…');await new Promise(res=>setTimeout(res,30));
-  const pal=quantize(frames[frames.length>>1],256),gif=GIFEncoder();
-  frames.forEach(f=>gif.writeFrame(applyPalette(f,pal),W,H,{palette:pal,delay}));gif.finish();
+  const K=Math.min(12,frames.length),smp=new Uint8ClampedArray(Math.ceil(frames[0].length/16)*K);let q=0;   // one palette from samples of many frames: steady colours, no flicker between frames
+  for(let f=0;f<K;f++){const fr=frames[Math.floor(f*frames.length/K)];for(let j=(f%4)*4;j<fr.length;j+=16){smp[q++]=fr[j];smp[q++]=fr[j+1];smp[q++]=fr[j+2];smp[q++]=fr[j+3]}}
+  const pal=quantize(smp.subarray(0,q-q%4),256),gif=GIFEncoder();
+  // steady colours: a pixel keeps last frame's palette colour while that is still nearly as close, so a shade between two palette colours can't flip the whole road for one frame.
+  // Two passes round the loop, so frame 0 also follows the last frame and the loop point stays smooth.
+  const idx=frames.map(f=>applyPalette(f,pal)),hold=(f,cur,prev)=>{for(let p=0,j=0;p<cur.length;p++,j+=4){const a=pal[cur[p]],b=pal[prev[p]];if(a===b)continue;
+   if((f[j]-b[0])**2+(f[j+1]-b[1])**2+(f[j+2]-b[2])**2-((f[j]-a[0])**2+(f[j+1]-a[1])**2+(f[j+2]-a[2])**2)<300)cur[p]=prev[p]}};
+  for(let pass=0;pass<2;pass++)for(let i=pass?0:1;i<idx.length;i++)hold(frames[i],idx[i],idx[(i+idx.length-1)%idx.length]);
+  idx.forEach(ix=>gif.writeFrame(ix,W,H,{palette:pal,delay}));gif.finish();
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([gif.bytes()],{type:'image/gif'}));a.download=`goofy-sponge-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.gif`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
   say('🎞 GIF saved to your downloads')}
- catch(e){viewer.afterRender=null;viewer.fixedDt=0;say('🎞 GIF export failed: '+e.message)}
+ catch(e){viewer.afterRender=null;viewer.fixedDt=0;viewer.gifPh=null;say('🎞 GIF export failed: '+e.message)}
  bs.forEach(b=>{b.disabled=false;b.textContent=b.dataset.gif})}
 $('gifBtn').onclick=exportGif;
 if(new URLSearchParams(location.search).get('developer-mode')==='true'){
@@ -885,7 +898,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=camera.aspect<1?58:38;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
 
-let boost=0,phase=0,lastStep=0;
+let phase=0,lastStep=0;
 function popText(x,y,text,size=22){const d=document.createElement('div');d.textContent=text;Object.assign(d.style,{position:'fixed',left:x+'px',top:y+'px',color:'#ffe14d',fontWeight:'bold',fontSize:size+'px',pointerEvents:'none',transition:'all .9s ease-out',textShadow:'0 2px 0 #0006',zIndex:6});
  document.body.appendChild(d);requestAnimationFrame(()=>{d.style.transform='translateY(-60px)';d.style.opacity='0'});setTimeout(()=>d.remove(),900)}
 // clicking the scene does nothing for now
@@ -905,7 +918,7 @@ function spawnKey(){const k=KEYS[Math.random()*KEYS.length|0],el=document.create
  el.addEventListener('pointerdown',e=>{e.stopPropagation();if(rush.cur&&rush.cur.el===el)hitKey()});
  $('prompts').appendChild(el);rush.cur={k,el,t:life,life}}
 function clearKey(cls){const c=rush.cur;if(!c)return;c.el.classList.add(cls);c.el.style.pointerEvents='none';setTimeout(()=>c.el.remove(),400);rush.cur=null;rush.next=rnd(.3,1)}
-function hitKey(){const r=rush.cur.el.getBoundingClientRect();popText(r.left+10,r.top-10,(hero===plank?['Mwahaha!','Evil!','Excellent!','Yes!']:['Nice!','Goofy!','Yes!','Wheee!'])[Math.random()*4|0],26);boost=1;   // keys only fill the meter, no steps
+function hitKey(){const r=rush.cur.el.getBoundingClientRect();popText(r.left+10,r.top-10,(hero===plank?['Mwahaha!','Evil!','Excellent!','Yes!']:['Nice!','Goofy!','Yes!','Wheee!'])[Math.random()*4|0],26);   // keys only fill the meter, no steps
  hero.setFace('happy');   // any hit cheers him up
  if(rush.uber<=0){rush.meter=Math.min(100,rush.meter+HIT_FILL);if(rush.meter>=100){rush.uber=UBER_TIME;rush.next=1;document.body.classList.add('uber');say(`${hero.meter.icon} ${hero.meter.max}!`)}}
  clearKey('hit');syncLevel();render()}
@@ -977,15 +990,14 @@ const clock=new THREE.Clock();let acc=0,gameT=0;
 renderer.setAnimationLoop(()=>{const real=Math.min(.1,clock.getDelta()),dt=viewer.fixedDt||real,t=gameT+=dt;   // the GIF export sets a fixed step
  gain(sps()*dt);acc+=dt;if(acc>.25){acc=0;render()}
  // walks faster with more steps/s and briefly after a click; road speed scales with it so the feet stay planted
- const mult=(1+Math.min(1.2,Math.log10(1+sps())*.25)+boost*.8)*(1+camL*.1);   // goofier = walks a bit faster (up to +60% at level 6)
- boost=Math.max(0,boost-dt*1.5);
+ const mult=(1+Math.min(1.2,Math.log10(1+sps())*.25))*(1+camL*.1);   // goofier = walks a bit faster (up to +60% at level 6)
  let vs=viewer.on?(viewer.paused?0:viewer.speed):1;      // model viewer can pause / slow down the walk
  rushTick(dt);
  if(!viewer.on){camL+=(rush.level-camL)*(1-Math.exp(-dt*3));const c=hero.char.cam,f=hero.char.height/CHARS.sponge.height;   // framing per character; goofy pull-back scales with his size
   const zt=zoomOf().v;zoomC=zoomC===null||zoomC.h!==hero?{h:hero,v:zt}:{h:hero,v:zoomC.v+(zt-zoomC.v)*(1-Math.exp(-real*10))};   // eases to the chosen zoom; jumps when the character changes
   const ly=c.ly+camL*.22*f;camera.position.set(0,ly+(c.y+camL*.25*f-ly)*zoomC.v,c.z*(1+camL*.07)*zoomC.v);camera.lookAt(0,ly,0)}   // zoom moves the camera along its line to the look point
  if(rush.fall>0)vs=0;                                       // lying down: no walking, road stops
- phase+=dt*hero.omega*mult*vs;
+ phase=viewer.gifPh??phase+dt*hero.omega*mult*vs;   // GIF export pins the exact phase of each frame
  {const n=Math.floor(phase/Math.PI);if(n>lastStep&&!viewer.on)gain(n-lastStep);lastStep=n}   // one step per footfall (two per walk cycle)
  hero.walk(hero.rig,phase,dt*(vs||1));env.update(dt,t,dt*hero.speed*mult*vs);viewer.tick?.();   // env.update rolls the road at the hero's own walking speed
  renderer.render(scene,camera);viewer.afterRender?.()});   // the GIF export grabs the frame right after it is drawn
