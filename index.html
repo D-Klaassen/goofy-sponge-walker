@@ -105,6 +105,11 @@ body.uber::after{content:"";position:fixed;inset:0;pointer-events:none;box-shado
 @keyframes rainbow{to{background-position:200% 0}}
 @keyframes hue{to{filter:hue-rotate(360deg)}}
 body.viewing #meter,body.viewing #prompts,body.viewing #uberBanner{display:none}
+/* Plankton's evil meter: green to purple to blood red, a red glow in EVIL GENIUS MODE */
+body.evil #meter .mbar i{background:linear-gradient(90deg,#58a83e,#7b3fa0,#c0182a,#5a0d0d);background-size:440px 100%}
+body.evil.uber #meter .mbar i{background:linear-gradient(90deg,#5a0d0d,#ff2a2a,#7b3fa0,#5a0d0d);background-size:200% 100%;animation:rainbow 1s linear infinite}
+body.evil #uberBanner{color:#ff3b3b}
+body.evil.uber::after{box-shadow:inset 0 0 80px 22px #d8262e;animation:none}
 </style>
 </head>
 <body>
@@ -140,9 +145,9 @@ body.viewing #meter,body.viewing #prompts,body.viewing #uberBanner{display:none}
 <button id="shopBtn" title="Open the shop (B)">🛍️ Shop</button>
 <button id="gifBtn" data-gif="🎞 GIF" title="Record one walk cycle and download it as an animated GIF (G)">🎞 GIF</button>
 <div id="prompts"></div>
-<div id="meter"><div class="mtop"><span>🤪 Goofy meter</span><span id="mName">Normal</span></div><div class="mbar"><i id="mFill"></i></div></div>
+<div id="meter"><div class="mtop"><span id="mLabel">🤪 Goofy meter</span><span id="mName">Normal</span></div><div class="mbar"><i id="mFill"></i></div></div>
 <div id="uberBanner">🤪 UBER GOOBER MODE! 🤪</div>
-<div id="msg">Press the keys that pop up to fill the goofy meter! 🧽</div>
+<div id="msg">Press the keys that pop up to fill the meter! 🧽</div>
 
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
 <script type="module">
@@ -527,7 +532,7 @@ function buildC(){
  }
  const outfitParts=new Set();[...Object.values(t.outfits),...Object.values(limbs),t.tie,...t.butt].forEach(g=>g.traverse(o=>outfitParts.add(o)));   // everything that is clothing, for the viewer's outfit-only mode
  return {roadR:R,rig:{root,body:t.body},isOutfit:o=>outfitParts.has(o),pose:P,walk:walkHose,omega:OMEGA,get speed(){return 2*stanceA*OMEGA/Math.PI},
-  goofyNames:GOOFY_NAMES,setFace(m){t.setFace(m);const sel=document.getElementById('dvFace');if(sel)sel.value=m},   // keep the model viewer's Face setting in sync
+  meter:{icon:'🤪',name:'Goofy meter',names:GOOFY_NAMES,max:'UBER GOOBER MODE'},setFace(m){t.setFace(m);const sel=document.getElementById('dvFace');if(sel)sel.value=m},   // keep the model viewer's Face setting in sync
   setSkin(id){t.setSkin(id);for(const k in limbs)limbs[k].visible=k===id;dressed=id==='princess'},
   setGoofy(l){goofyLevel=Math.max(0,Math.min(GOOFY_NAMES.length-1,l|0))},
   update(dt,t2,v){drumG.rotation.x-=v/R;fl(t2)}}}
@@ -543,32 +548,47 @@ function buildPlankton(C,R){   // R: road drum radius
  const KEYS_P=[[0,.62],[.38,.66],[.58,.82],[.66,1.15],[.64,1.6],[.56,2.1],[.43,2.5],[.3,2.76],[.12,2.875],[0,2.9]],BZ=.85;   // egg profile keys (radius, y), smoothed below
  const PROF=new THREE.CatmullRomCurve3(KEYS_P.map(([r,y])=>V(r,y,0))).getPoints(30).map(p=>[Math.max(0,p.x),p.y]);PROF[0][0]=0;PROF[PROF.length-1][0]=0;
  const bodyR=y=>{if(y<=PROF[0][1]||y>=PROF[PROF.length-1][1])return 0;for(let i=1;i<PROF.length;i++){const[a,ya]=PROF[i-1],[b,yb]=PROF[i];if(y<=yb)return a+(b-a)*(y-ya)/(yb-ya)}return 0};
- add(new THREE.Mesh(new THREE.LatheGeometry(PROF.map(([r,y])=>new THREE.Vector2(r,y)),56),skin),0,0,0).scale.z=BZ;
+ const egg=add(new THREE.Mesh(new THREE.LatheGeometry(PROF.map(([r,y])=>new THREE.Vector2(r,y)),56),skin),0,0,0);egg.scale.z=BZ;
  const onBody=(x,y,out)=>V(x,y,BZ*Math.sqrt(Math.max(0,bodyR(y)**2-x*x))+out);   // a point on the body's front surface, lifted by out
  // butt: two small cheeks low on his back, like the sponge's but sized to his little egg
  const BY=.95;[-1,1].forEach(sd=>{const x=sd*.18,c=add(new THREE.Mesh(new THREE.SphereGeometry(.17,20,14),skin),x,BY,-BZ*Math.sqrt(Math.max(0,bodyR(BY)**2-x*x))+.07);c.scale.set(1,.9,.85)});
  // the one big eye: pale yellow ball, red iris, black pupil, a glint
  const EY=2.0,EZ=.26,ER=.38,eye=new THREE.Group();eye.position.set(0,EY,EZ);eye.scale.z=.75;body.add(eye);   // one group flattened front to back, so ball, iris, pupil and glint stay together; front just 0.05 proud of the body
- {const e=new THREE.Mesh(new THREE.SphereGeometry(ER,28,20),M(0xfff2a0));e.castShadow=true;eye.add(e)}   // no outline shell: it only showed as a stray hairline
- const iris=new THREE.Mesh(new THREE.SphereGeometry(.2,24,16),M(0xd8262e));iris.scale.z=.4;iris.position.set(0,0,ER-.06);eye.add(iris);
+ const ballM=M(0xfff2a0);{const e=new THREE.Mesh(new THREE.SphereGeometry(ER,28,20),ballM);e.castShadow=true;eye.add(e)}   // no outline shell: it only showed as a stray hairline
+ const irisM=M(0xd8262e),iris=new THREE.Mesh(new THREE.SphereGeometry(.2,24,16),irisM);iris.scale.z=.4;iris.position.set(0,0,ER-.06);eye.add(iris);
  const pupil=new THREE.Mesh(new THREE.SphereGeometry(.095,18,12),blackM);pupil.scale.z=.4;pupil.position.set(0,0,ER);eye.add(pupil);
  const glint=new THREE.Mesh(new THREE.SphereGeometry(.035,10,8),new THREE.MeshBasicMaterial({color:0xffffff}));glint.position.set(.06,.07,ER-.005);eye.add(glint);
- // thick unibrow and mouth, one shape per mood
- // brow and mouth lines follow the body surface: y(x) gives the shape, so they never float or poke out
- const line=(n,x0,x1,y,r,out,closed)=>{const pts=[];for(let i=0;i<=n;i++){const x=x0+(x1-x0)*i/n;pts.push(onBody(x,y(x),out))}if(closed)pts.pop();
-  const m=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts,closed),48,r,8,closed),blackM);m.userData.mood=true;body.add(m);return m};
- const brows={happy:line(12,-.4,.4,x=>2.4+.42*Math.abs(x)-.15*x*x,.065,.035),   // scowl: sharp V pointing down at the eye, the scheming look
+ // face: unibrow, eyelids and mouth. Scared and sad are fixed shapes; the happy face is his evil face, shaped every frame by the evil meter (EVIL below)
+ // brow and mouth lines follow the body surface (and the eye where it bulges out), so they never float or sink in
+ const onFace=(x,y,out)=>{const p=onBody(x,y,out),d=(ER+.07)**2-x*x-(y-EY)**2;if(d>0)p.z=Math.max(p.z,EZ+.75*Math.sqrt(d)+out);return p};
+ const moodMesh=(mat,r)=>{const m=new THREE.Mesh(new THREE.BufferGeometry(),mat);m.userData.mood=true;m.userData.r=r;body.add(m);return m};
+ const retube=(m,pts,closed)=>{m.geometry.dispose();m.geometry=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts,closed),48,m.userData.r,8,closed)};
+ const curve=(n,x0,x1,y,out,surf=onBody)=>{const pts=[];for(let i=0;i<=n;i++){const x=x0+(x1-x0)*i/n;pts.push(surf(x,y(x),out))}return pts};
+ const line=(n,x0,x1,y,r,out)=>{const m=moodMesh(blackM,r);retube(m,curve(n,x0,x1,y,out));return m};
+ const ring=(cx,cy,rx,ry,r)=>{const pts=[];for(let i=0;i<16;i++){const a=i/16*Math.PI*2;pts.push(onBody(cx+Math.cos(a)*rx,cy+Math.sin(a)*ry,.02))}
+  const m=moodMesh(blackM,r);retube(m,pts,true);return m};
+ // patches on the body surface: quads q(u,v) -> [x,y] in face space, each an nu × nv grid (mouth inside and teeth)
+ const patch=(m,quads,nu,nv,out)=>{const pos=[],idx=[];for(const q of quads){const b=pos.length/3;
+   for(let j=0;j<=nv;j++)for(let i=0;i<=nu;i++){const [x,y]=q(i/nu,j/nv),p=onBody(x,y,out);pos.push(p.x,p.y,p.z)}
+   for(let j=0;j<nv;j++)for(let i=0;i<nu;i++){const a=b+j*(nu+1)+i;idx.push(a,a+1,a+nu+1,a+1,a+nu+2,a+nu+1)}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);m.geometry.dispose();m.geometry=g};
+ const evil={brow:moodMesh(blackM,.065),top:moodMesh(blackM,.035),low:moodMesh(blackM,.03),   // unibrow, top and bottom lip lines
+  inside:moodMesh(new THREE.MeshBasicMaterial({color:0x5a0d0d,side:THREE.DoubleSide})),teeth:moodMesh(new THREE.MeshBasicMaterial({color:0xfffbe8,side:THREE.DoubleSide}))};
+ // eyelids: green half shells just over the eye ball with an ink rim, swung down (top) or up (bottom) to cover part of the eye
+ const lid=top=>{const g=new THREE.Group(),R=ER+.05;   // clears the iris and pupil front
+ eye.add(g);g.visible=false;
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(R,28,10,0,Math.PI*2,top?0:Math.PI/2,Math.PI/2),skin));
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(R*.98,.036,6,48),blackM);rim.rotation.x=Math.PI/2;g.add(rim);return g};
+ const lids={top:lid(true),low:lid(false)};
+ const brows={happy:evil.brow,
   scared:line(10,-.38,.38,x=>2.72-.9*x*x,.055,.03),               // shot up high and round
   sad:line(10,-.38,.38,x=>2.58-1.6*x*x,.055,.03)};                // worried: middle up, ends dropped
- const ring=(cx,cy,rx,ry,r)=>{const pts=[];for(let i=0;i<16;i++){const a=i/16*Math.PI*2;pts.push(onBody(cx+Math.cos(a)*rx,cy+Math.sin(a)*ry,.02))}
-  const m=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts,true),48,r,8,true),blackM);m.userData.mood=true;body.add(m);return m};
- const mouths={happy:line(12,-.44,.44,x=>1.44+1.25*x*x*(1+.6*x*x),.035,.02),   // wide evil grin, corners curling up
+ const mouths={happy:evil.top,
   sad:line(10,-.32,.32,x=>1.54-1*x*x,.035,.02),
   scared:ring(0,1.48,.09,.11,.03)};                                            // round little "o"
  let mood='happy';
- const setFace=m=>{mood=m in brows?m:'happy';for(const k in brows){brows[k].visible=k===mood;mouths[k].visible=k===mood}pupil.scale.setScalar(mood==='scared'?.6:1);pupil.scale.z*=.4;
+ const setFace=m=>{mood=m in brows?m:'happy';for(const k in brows){brows[k].visible=k===mood;mouths[k].visible=k===mood}shapeFace(true);
   const sel=document.getElementById('dvFace');if(sel&&C.on())sel.value=mood};
- setFace('happy');
  // limbs and antennae: hoses rebuilt every frame, like the sponge's
  const bez=()=>new THREE.QuadraticBezierCurve3(V(0,0,0),V(0,0,0),V(0,0,0));
  const legs=[0,1].map(()=>{const f=new THREE.Mesh(new THREE.SphereGeometry(.13,16,12),skin);f.scale.set(1,.55,1.5);add(f,0,0,0,root);return {curve:bez(),foot:f,parts:[hose(root,skin,.06,INKW)]}});
@@ -576,19 +596,54 @@ function buildPlankton(C,R){   // R: road drum radius
   add(new THREE.Mesh(new THREE.SphereGeometry(.042,10,8),skin),.03,-.02,.08,h);return {curve:bez(),hand:h,pos:null,parts:[hose(root,skin,.05,INKW,0,.93)]}});   // thumb on the top-front of the fist
  const ants=[0,1].map(()=>({curve:bez(),parts:[hose(root,M(0x3f7f2c),.032,INKW*.8,0,1,12,6)]}));
  const tips=ants.map(()=>{const b=new THREE.Mesh(new THREE.SphereGeometry(.05,10,8),M(0x3f7f2c));add(b,0,0,0,root);return b});
- // goofy meter: same levels as the sponge, gentler on his short legs
- const GOOFY={arm:[1,1.2,1.35,1.5,1.65,1.8,1.95],leg:[1,1.15,1.28,1.4,1.52,1.63,1.75],stride:[1,1.12,1.22,1.32,1.42,1.5,1.6],lift:[1,1.4,1.7,2,2.25,2.45,2.6],
-  bounce:[1,1.8,2.5,3.1,3.6,4,4.4],squash:[1,2,2.8,3.5,4.1,4.6,5],sway:[1,1.7,2.4,3,3.6,4.2,4.8],wiggle:[0,.06,.1,.14,.18,.22,.26],ant:[1,1.3,1.6,1.85,2.05,2.25,2.4]};
- const gp={};for(const k in GOOFY)gp[k]=GOOFY[k][0];let goofyLevel=0;
+ // evil meter: level 0 (scheming) .. 6 (EVIL GENIUS MAX), ranked from evil Plankton clips. Each row is one value per level; live values ease toward the chosen level.
+ // walk feel (multipliers, gentle on his short legs); face: brow middle and end y, top and bottom lid cover, top lid tilt (sly, one-sided), pupil and iris scale, eye roll up, mouth half width, open depth, tooth height,
+ // bottom teeth (1 = clenched), fangs, iris glow; acting on the walk: hands at the chest (rubbing, or reaching out like claws), hands on hips, lean (rad, + = forward), arms flung out, fists shaken overhead, laugh bounce, antennae droop and quiver
+ const EVIL_NAMES=['Scheming','Sly','Plotting','Sinister','Diabolical','Maniacal','EVIL GENIUS MAX'];
+ const EVIL={      //  0    1    2    3    4    5    6
+  arm:    [1,   1,   1.05,1.05,1.1, 1.15,1.2], leg:   [1,   1,   1,   1,   1.05,1.1, 1.15],
+  stride: [1,   1.05,1.1, .9,  1.15,1.25,1.3], lift:  [1,   1.1, 1.2, .75, 1.4, 1.8, 2.1],
+  bounce: [1,   1.2, 1.4, .8,  2,   2.8, 3.4], squash:[1,   1.3, 1.6, 1.2, 2.4, 3.2, 3.8],
+  sway:   [1,   1.2, 1.4, 1.6, 2,   2.6, 3],   wiggle:[0,   0,   .03, .03, .06, .1,  .12], ant:[1,1.1,1.2,1,1.6,2,2.2],
+  browM:  [2.40,2.36,2.33,2.24,2.30,2.34,2.30],browE: [2.55,2.58,2.60,2.62,2.62,2.60,2.64],
+  lid:    [0,   .25, .35, .34, .36, .1,  0],   low:   [0,   0,   0,   .06, .14, .3,  .1],   tilt:[0,.2,0,0,0,0,0],
+  pupil:  [1,   .9,  .8,  .6,  .55, .37, .48], iris:  [1,   1,   1,   1,   1,   .8,  1.15], roll:[0,0,0,0,0,.05,0],
+  mouthW: [.44, .46, .5,  .54, .58, .56, .62], open:  [0,   .04, .08, .17, .3,  .32, .46], tooth:[.07,.07,.07,.07,.1,.11,.13],
+  bite:   [0,   0,   0,   1,   0,   .6,  0],   fang:  [0,   0,   0,   0,   0,   1,   .3],  glow:[0,0,0,0,0,0,1],
+  rub:    [0,   1,   1,   .9,  0,   0,   0],   rubbing:[0,  0,   1,   0,   0,   0,   0],  claw:[0,0,0,1,0,0,0], hips:[0,0,0,0,1,0,0],
+  lean:   [0,   0,   .05, .14, -.3, -.12,-.36],fling: [0,   0,   0,   0,   0,   1,   0],  raise:[0,0,0,0,0,0,1], laugh:[0,0,0,0,.05,.08,.1],
+  droop:  [0,   0,   0,   1,   0,   0,   0],   quiver:[0,   0,   0,   0,   .3,  1,   .6]};
+ const gp={};for(const k in EVIL)gp[k]=EVIL[k][0];let goofyLevel=0;
+ // reshape the evil face from the live values; the tubes and patches are only rebuilt when a shape value changed
+ let faceKey='';
+ function shapeFace(){const g=gp,happy=mood==='happy',on=happy&&egg.visible,w=g.mouthW,d=g.open;
+  const ps=mood==='scared'?.6:happy?g.pupil:1,is=happy?g.iris:1,ry=happy?g.roll:0;
+  pupil.scale.set(ps,ps,ps*.4);iris.scale.set(is,is,.4);iris.position.set(0,ry,Math.sqrt((ER-.06)**2-ry*ry));pupil.position.set(0,ry*1.1,iris.position.z+.08*is-.02);   // pupil stays just proud of the iris front, also when the iris grows   // eye rolls up a little when maniacal
+  lids.top.visible=on&&g.lid>.01;lids.top.rotation.set(Math.asin(2*g.lid-1),0,g.tilt);lids.low.visible=on&&g.low>.01;lids.low.rotation.x=Math.asin(1-2*g.low);   // front edge of the lid at cover × eye height
+  for(const k of ['low','inside','teeth'])evil[k].visible=on&&d>.006;
+  const key=[g.browM,g.browE,w,d,g.bite,g.fang,g.tooth].map(v=>v.toFixed(3)).join();if(key===faceKey)return;faceKey=key;
+  retube(evil.brow,curve(12,-.4,.4,x=>{const t=Math.abs(x)/.4;return g.browM+(g.browE-g.browM)*(1.1667*t-.1667*t*t)},.035,onFace));   // V scowl, rides over the eye and lids
+  const top=x=>{const u=x*.44/w;return 1.44+1.25*u*u*(1+.6*u*u)},bot=x=>top(x)-d*(1-(x/w)**2);   // grin with curled corners; open: a crescent below it
+  retube(evil.top,curve(12,-w,w,top,.02));if(d<=.006)return;
+  retube(evil.low,curve(12,-w,w,bot,.02));
+  patch(evil.inside,[(u,v)=>{const x=-w+2*w*u;return [x,lerp(bot(x),top(x),v)]}],24,2,.012);
+  const K=8,gap=.012,tt=Math.min(g.tooth,d*(1-g.bite/2)),bt=g.bite*Math.min(g.tooth,d/2),q=[];   // top teeth hang from the top lip; clenched bottom teeth meet them
+  for(let k=0;k<K;k++){const xa=-w+2*w*k/K+gap,xb=-w+2*w*(k+1)/K-gap,tri=u=>1-Math.abs(2*u-1),ft=g.fang*(k===1||k===K-2?2:.3),fb=g.fang*(k===2||k===K-3?.8:0);   // teeth turn pointy, two long fangs
+   q.push((u,v)=>{const x=lerp(xa,xb,u),h=Math.min(top(x)-bot(x),tt*(1+ft*tri(u)));return [x,lerp(top(x)-h,top(x),v)]});
+   if(bt>.002)q.push((u,v)=>{const x=lerp(xa,xb,u),h=Math.min(top(x)-bot(x),bt*(1+fb*tri(u)));return [x,lerp(bot(x),bot(x)+h,v)]})}
+  patch(evil.teeth,q,4,1,.02)}
+ setFace('happy');
  const BASE_A=C.stride,BASE_LIFT=.22,BASE_LEG=.8,OMEGA=C.omega,RD=R/s;   // RD: road curve radius in his design units
  legs.forEach(L=>{L.A=BASE_A;L.Afrom=BASE_A;L.swinging=false});let stanceA=BASE_A,lastRy=0,landT=0;
  const P={t:0,flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0},BM=body.matrix,XAX=V(1,0,0),inv=new THREE.Matrix4(),loc=V(0,0,0),tgt=V(0,0,0),mid=V(0,0,0),FT=V(0,0,0),SH=V(0,0,0);
  function walk(r,ph,dt){
-  const ke=1-Math.exp(-dt*4);for(const k in GOOFY)gp[k]+=(GOOFY[k][goofyLevel]-gp[k])*ke;
+  const ke=1-Math.exp(-dt*4);for(const k in EVIL)gp[k]+=(EVIL[k][goofyLevel]-gp[k])*ke;
+  shapeFace();{const k=mood==='happy'?gp.glow*(.7+.3*Math.sin(ph*2)):0;irisM.emissive.setRGB(.8*k,.1*k,0);ballM.emissive.setRGB(.45*k,.05*k,0)}   // EVIL GENIUS MAX: the eye glows hot, pulsing with his steps
   const A=BASE_A*gp.stride,LIFT=BASE_LIFT*gp.lift,LEG=BASE_LEG*gp.leg,rise=(gp.leg-1)*BASE_LEG*.8;
   const c2=Math.cos(2*ph),pass=(1-c2)/2,sq=Math.min(.2,.05*gp.squash*Math.pow(Math.max(0,c2),8)),st=Math.min(.1,.025*(gp.squash-1)*pass);
-  body.position.set(Math.sin(ph)*.04*gp.sway,pass*.07*gp.bounce+rise,0);body.scale.set(1+sq*.7-st*.4,1-sq+st,1+sq*.7-st*.4);
-  body.rotation.set(.1,-Math.sin(ph)*Math.min(.25,.12*gp.sway),Math.sin(ph)*Math.min(.2,.07*gp.sway));   // leans into the walk: a small guy on a mission; twist and roll capped so goofy 6 doesn't read as staggering
+  body.position.set(Math.sin(ph)*.04*gp.sway,pass*.07*gp.bounce+rise+gp.laugh*Math.abs(Math.sin(2*ph)),0);   // evil laugh: a chuckle bounce twice per step
+  body.scale.set(1+sq*.7-st*.4,1-sq+st,1+sq*.7-st*.4);
+  body.rotation.set(.1+gp.lean,-Math.sin(ph)*Math.min(.25,.12*gp.sway),Math.sin(ph)*Math.min(.2,.07*gp.sway));   // leans into the walk: a small guy on a mission; twist and roll capped so goofy 6 doesn't read as staggering
   const ry=r.root.position.y/s;   // stand-up hop height, design units
   body.rotation.x+=P.bx-.35*P.plant*Math.min(1,P.knee/.6);body.rotation.y+=P.by;body.rotation.z+=P.bz;   // push-up: arms lift the chest well off the road before the crouch
   if(lastRy>.02&&ry<=.01)landT=.22;lastRy=ry;landT=Math.max(0,landT-dt);   // touchdown after the hop: a quick squash that eases out
@@ -611,7 +666,12 @@ function buildPlankton(C,R){   // R: road drum radius
   // arms pump opposite the legs, the forward fist comes up to chest height
   [-1,1].forEach((side,i)=>{const a=Math.max(-1,Math.min(1,-legZ[i]/A)),up=ease(Math.max(0,a)),Ar=arms[i];
    SH.set(side*.6,1.45,0);
-   tgt.set(side*lerp(.8,.86,up),lerp(.9,1.6,up)+.06*Math.max(0,-a),lerp(.08+a*.3,.62,up)).sub(SH).multiplyScalar(gp.arm).add(SH).applyMatrix4(BM);   // fists pump fore and aft close to his sides, rising to chest height
+   tgt.set(side*lerp(.8,.86,up),lerp(.9,1.6,up)+.06*Math.max(0,-a),lerp(.08+a*.3,.62,up)).sub(SH).multiplyScalar(gp.arm).add(SH);   // fists pump fore and aft close to his sides, rising to chest height
+   if(gp.rub>.001)tgt.lerp(FT.set(side*(lerp(.13,.28,gp.claw)+.07*gp.rubbing*Math.sin(ph*6+i*Math.PI)),1.22+.2*gp.claw+.03*gp.rubbing*Math.cos(ph*6),lerp(.85,.9,gp.claw)),gp.rub);   // evil acting: hands together below the grin, rubbing when plotting, reaching like claws when sinister
+   if(gp.hips>.001)tgt.lerp(FT.set(side*.62,1.05,.05),gp.hips);                                                    // diabolical: hands on hips, leaning back
+   if(gp.fling>.001)tgt.lerp(FT.set(side*1.35,1.95+.12*Math.sin(ph*4+i),.4),gp.fling);                                              // maniacal: arms flung out wide
+   if(gp.raise>.001)tgt.lerp(FT.set(side*(1.25+.08*Math.sin(ph*8+i*Math.PI)),3.25+.1*Math.sin(ph*8+i*Math.PI),.1),gp.raise);           // evil genius: both fists shaken overhead in a V
+   tgt.applyMatrix4(BM);
    if(P.flail>0){const w=P.t*22+i*Math.PI*.5;tgt.lerp(FT.set(side*(1.1+Math.cos(w)*.2),3.0+Math.sin(w)*.3,.45+Math.sin(w)*.6).applyMatrix4(BM),P.flail)}   // windmill wide, mostly in front so it shows while he tips; arms a quarter turn apart
    if(P.cheer>0)tgt.lerp(FT.set(side*1.05,3.1,.2).applyMatrix4(BM),P.cheer);
    if(P.plant>0){const z=1.2;FT.set(side*.8,.06-z*z/(2*RD),z).sub(loc.copy(r.root.position).divideScalar(s)).applyAxisAngle(XAX,-r.root.rotation.x);tgt.lerp(FT,P.plant)}
@@ -619,16 +679,16 @@ function buildPlankton(C,R){   // R: road drum radius
    inv.copy(BM).invert();loc.copy(Ar.pos).applyMatrix4(inv);   // keep the hand outside the egg
    {const br=bodyR(loc.y);if(br>0){const rx=br+.14,rz=br*BZ+.14,d=Math.hypot(loc.x/rx,loc.z/rz);if(d<1){loc.x/=d;loc.z/=d;Ar.pos.copy(loc).applyMatrix4(BM)}}}
    const S0=Ar.curve.v0.copy(SH).applyMatrix4(BM);Ar.curve.v2.copy(Ar.pos);
-   Ar.curve.v1.copy(mid.addVectors(S0,Ar.pos).multiplyScalar(.5)).add(tgt.set(side*lerp(.1,.14,up),lerp(-.02,-.2,up),lerp(-.12,-.08,up)).multiplyScalar(Math.sqrt(gp.arm)));   // elbow out and back; long goofy arms keep a bend
-   Ar.parts.forEach(f=>f(Ar.curve));Ar.hand.position.copy(Ar.pos);Ar.hand.rotation.set(lerp(.2,-.6,up),0,side*.2)});
+   Ar.curve.v1.copy(mid.addVectors(S0,Ar.pos).multiplyScalar(.5)).add(tgt.set(side*lerp(.1,.14,up),lerp(-.02,-.2,up),lerp(-.12,-.08,up)).multiplyScalar(Math.sqrt(gp.arm)).add(FT.set(side*(.4*gp.hips+.3*gp.raise),.1*gp.hips,0).applyQuaternion(body.quaternion)));   // elbow out and back; long goofy arms keep a bend; elbows flare for hands on hips and fists overhead
+   Ar.parts.forEach(f=>f(Ar.curve));Ar.hand.position.copy(Ar.pos);Ar.hand.rotation.set(lerp(lerp(.2,-.6,up),-.8,gp.claw*gp.rub),0,side*.2)});   // claws open toward the camera
   // antennae: lag behind the bob and sway (cheap follow-through)
-  [-1,1].forEach((side,i)=>{const An=ants[i],w=gp.ant,lag=ph-.9,dx=Math.sin(lag)*.08*w,dy=-Math.cos(2*lag)*.15*w,dz=-Math.sin(2*lag)*.1*w,fall=Math.max(P.trip,P.flail);
+  [-1,1].forEach((side,i)=>{const An=ants[i],w=gp.ant,lag=ph-.9,dx=Math.sin(lag)*.08*w+gp.quiver*.05*Math.sin(ph*10+i*2),dy=-Math.cos(2*lag)*.15*w,dz=-Math.sin(2*lag)*.1*w,fall=Math.max(P.trip,P.flail);
    const B=An.curve.v0.set(side*.1,2.82,-.02).applyMatrix4(BM);
-   const T=An.curve.v2.set(side*.48+dx,3.85+dy+P.flail*Math.sin(P.t*30+i)*.15+fall*.15,-.12+dz-fall*.45).applyMatrix4(BM);   // tips lag the bob; trail up and back when he trips
+   const T=An.curve.v2.set(side*.48+dx,3.85+dy+P.flail*Math.sin(P.t*30+i)*.15+fall*.15,-.12+dz-fall*.45).add(FT.set(0,-.5*gp.droop,.5*gp.droop)).applyMatrix4(BM);   // tips lag the bob; trail up and back when he trips
    An.curve.v1.set(side*.29-dx*.4/Math.max(1,w*.6),3.34-dy*.4/Math.max(1,w*.6),-.07-dz*.4/Math.max(1,w*.6)-fall*.1).applyMatrix4(BM);   // middle swings against the tip, so the stalk bends
    An.parts.forEach(f=>f(An.curve));tips[i].position.copy(T)});
  }
- return {rig:{root,body},pose:P,walk,omega:OMEGA,get mood(){return mood},get speed(){return 2*stanceA*OMEGA/Math.PI*s},goofyNames:null,isOutfit:()=>false,setSkin(){},
+ return {rig:{root,body},pose:P,walk,omega:OMEGA,get mood(){return mood},get speed(){return 2*stanceA*OMEGA/Math.PI*s},meter:{icon:'😈',name:'Evil meter',names:EVIL_NAMES,max:'EVIL GENIUS MODE'},isOutfit:()=>false,setSkin(){},
   setFace,setGoofy(l){goofyLevel=Math.max(0,Math.min(6,l|0))}}}
 
 // ---------- Game loop ----------
@@ -641,7 +701,7 @@ const CHARS={
 CHARS.plankton.stepM=STEP_M*(CHARS.plankton.stride*CHARS.plankton.scale)/(CHARS.sponge.stride*CHARS.sponge.scale);   // distance per step follows his real stride: about 3 cm
 let hero=env,stepM=STEP_M;   // the character on the road now; stepM = metres per step for the distance counter
 CHARS.plankton.on=()=>hero===plank;
-const plank=buildPlankton(CHARS.plankton,env.roadR);plank.goofyNames=env.goofyNames;plank.rig.root.visible=false;world.add(plank.rig.root);
+const plank=buildPlankton(CHARS.plankton,env.roadR);plank.rig.root.visible=false;world.add(plank.rig.root);
 env.char=CHARS.sponge;plank.char=CHARS.plankton;
 const HEROES={sponge:env,plankton:plank};   // character id -> its rig
 
@@ -678,7 +738,9 @@ const outfitOf=c=>S.outfits[c]||CHARS[c].outfit;
 function show(c,outfit){const next=HEROES[c];
  if(next!==hero){hero.rig.root.visible=false;next.rig.root.visible=true;hero=next;stepM=hero.char.stepM;
   hero.setGoofy(gameGoofy());stars.removeFromParent();hero.rig.body.add(stars);stars.position.y=hero.char.stars;camera.near=hero===plank?.02:.1;camera.updateProjectionMatrix();viewer.reframe?.()}
- hero.setSkin(outfit)}
+ hero.setSkin(outfit);meterLabel()}
+// the meter belongs to the character: the goofy meter for the sponge, the evil meter for Plankton
+function meterLabel(){const m=hero.meter;$('mLabel').textContent=`${m.icon} ${m.name}`;$('uberBanner').textContent=`${m.icon} ${m.max}! ${m.icon}`;document.body.classList.toggle('evil',hero===plank)}
 const showSaved=()=>show(S.char,outfitOf(S.char));
 const shop=$('shopOverlay');let shopKey='',unwrap=null;   // unwrap: the skin whose gift is opening right now
 function renderShop(){   // rebuilds the cards only when something on them changed
@@ -763,12 +825,12 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
   <label>Height<span><input type="number" id="dvEl" min="-85" max="85" step="5" aria-label="Camera height angle">°</span></label>
   <button id="dvCopy" title="Copy the camera angle, to paste into feedback">📋 Copy angle</button></div>
  <div id="devPanel"><h3>🛠 Model viewer</h3>
-  <div class="goofy"><div class="gtop"><span>🤪 Goofy meter</span><b id="dvGoofyName">0 · Normal</b></div>
+  <div class="goofy"><div class="gtop"><span id="dvMeterLabel">🤪 Goofy meter</span><b id="dvGoofyName">0 · Normal</b></div>
    <input type="range" id="dvGoofy" min="0" max="6" step="1" value="0" aria-label="Goofy meter level">
    <div class="gbar" id="dvGoofyBar">${'<i></i>'.repeat(7)}</div></div>
   <label>Character<select id="dvChar">${SKINS.filter(k=>k.type==='character').map(k=>`<option value="${k.char}">${k.pic} ${k.name}</option>`).join('')}</select></label>
   <label>Outfit<select id="dvOutfit"></select></label>
-  <label>Face<select id="dvFace"><option value="happy">😁 Smiling</option><option value="scared">😱 Scared</option><option value="sad">😢 Sad</option></select></label>
+  <label>Face<select id="dvFace"><option value="happy">😁 Smiling (Plankton: evil)</option><option value="scared">😱 Scared</option><option value="sad">😢 Sad</option></select></label>
   <label>Animate<input type="checkbox" id="dvPlay" checked></label>
   <label>Speed<input type="range" id="dvSpeed" min="0.1" max="3" step="0.1" value="1"></label>
   <label>Pose<input type="range" id="dvPhase" min="0" max="6.283" step="0.01" value="0"></label>
@@ -805,7 +867,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  const baseDist=()=>hero.char.view.dist*(1+(+dv('dvGoofy').value)*.035);
  const frame=l=>{const v=hero.char.view,k=v.dist/8.4,{v:zv,z}=zoomOf(),b=baseDist(),off=camera.position.clone().sub(orbit.target).normalize().multiplyScalar(b*zv);
   orbit.minDistance=b*z.in;orbit.maxDistance=b*z.out;orbit.target.set(0,v.ty+(.1+l*.2)*k,0);camera.position.copy(orbit.target).add(off)};
- const setGoofy=l=>{env.setGoofy(l);plank.setGoofy(l);if(viewer.on)frame(l);dv('dvGoofyName').textContent=`${l} · ${env.goofyNames[l]}`;gbars.forEach((b,i)=>{b.classList.toggle('on',i<=l);b.style.backgroundPosition=`${i/6*100}% 0`})};
+ const setGoofy=l=>{env.setGoofy(l);plank.setGoofy(l);if(viewer.on)frame(l);dv('dvMeterLabel').textContent=`${hero.meter.icon} ${hero.meter.name}`;dv('dvGoofyName').textContent=`${l} · ${hero.meter.names[l]}`;gbars.forEach((b,i)=>{b.classList.toggle('on',i<=l);b.style.backgroundPosition=`${i/6*100}% 0`})};
  dv('dvGoofy').oninput=e=>setGoofy(+e.target.value);setGoofy(0);
  dv('dvPlay').onchange=e=>viewer.paused=!e.target.checked;
  dv('dvSpeed').oninput=e=>viewer.speed=+e.target.value;
@@ -814,7 +876,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  dv('dvInk').onchange=e=>rigMeshes.forEach(m=>{if(m.userData.line)m.visible=e.target.checked&&(spongeOn||env.isOutfit(m))});
  // try any character and any of its outfits, bought or not; the outfit list only holds clothes that fit the chosen character
  const viewChar=c=>{const l=SKINS.filter(k=>k.type==='outfit'&&k.char===c),o=outfitOf(c),sel=dv('dvOutfit');dv('dvChar').value=c;
-  sel.innerHTML=l.length?l.map(k=>`<option value="${k.id}">${k.pic} ${k.name}</option>`).join(''):'<option value="">— none yet —</option>';sel.disabled=!l.length;sel.value=o||'';show(c,o)};
+  sel.innerHTML=l.length?l.map(k=>`<option value="${k.id}">${k.pic} ${k.name}</option>`).join(''):'<option value="">— none yet —</option>';sel.disabled=!l.length;sel.value=o||'';show(c,o);setGoofy(+dv('dvGoofy').value)};   // relabel the meter: goofy or evil
  dv('dvChar').onchange=e=>viewChar(e.target.value);
  dv('dvOutfit').onchange=e=>show(dv('dvChar').value,e.target.value);
  dv('dvSponge').onchange=e=>setSponge(e.target.checked);   // outfit only: review a dress without SpongeBob in it
@@ -848,7 +910,7 @@ const rush={meter:0,level:0,uber:0,cur:null,next:1.5,fall:0};
 gameGoofy=()=>rush.level;
 function syncLevel(){const l=rush.uber>0?6:Math.min(5,Math.floor(rush.meter*6/100));
  if(l!==rush.level){rush.level=l;if(!viewer.on){env.setGoofy(l);plank.setGoofy(l)}}
- $('mName').textContent=`${l} · ${env.goofyNames[l]}`;$('mFill').style.width=(rush.uber>0?rush.uber/UBER_TIME:rush.meter/100)*100+'%'}
+ $('mName').textContent=`${l} · ${hero.meter.names[l]}`;$('mFill').style.width=(rush.uber>0?rush.uber/UBER_TIME:rush.meter/100)*100+'%'}
 function spawnKey(){const k=KEYS[Math.random()*KEYS.length|0],el=document.createElement('button');el.className='key';el.setAttribute('aria-label',`Press ${k}`);
  el.innerHTML=`${k}<span class="time"><i></i></span>`;
  el.style.left=rnd(24,innerWidth-110)+'px';el.style.top=rnd(110,Math.max(120,innerHeight-260))+'px';
@@ -856,15 +918,15 @@ function spawnKey(){const k=KEYS[Math.random()*KEYS.length|0],el=document.create
  el.addEventListener('pointerdown',e=>{e.stopPropagation();if(rush.cur&&rush.cur.el===el)hitKey()});
  $('prompts').appendChild(el);rush.cur={k,el,t:life,life}}
 function clearKey(cls){const c=rush.cur;if(!c)return;c.el.classList.add(cls);c.el.style.pointerEvents='none';setTimeout(()=>c.el.remove(),400);rush.cur=null;rush.next=rnd(.3,1)}
-function hitKey(){const r=rush.cur.el.getBoundingClientRect();popText(r.left+10,r.top-10,['Nice!','Goofy!','Yes!','Wheee!'][Math.random()*4|0],26);   // keys only fill the meter, no steps
+function hitKey(){const r=rush.cur.el.getBoundingClientRect();popText(r.left+10,r.top-10,(hero===plank?['Mwahaha!','Evil!','Excellent!','Yes!']:['Nice!','Goofy!','Yes!','Wheee!'])[Math.random()*4|0],26);   // keys only fill the meter, no steps
  hero.setFace('happy');   // any hit cheers him up
- if(rush.uber<=0){rush.meter=Math.min(100,rush.meter+HIT_FILL);if(rush.meter>=100){rush.uber=UBER_TIME;rush.next=1;document.body.classList.add('uber');say('🤪 UBER GOOBER MODE!')}}
+ if(rush.uber<=0){rush.meter=Math.min(100,rush.meter+HIT_FILL);if(rush.meter>=100){rush.uber=UBER_TIME;rush.next=1;document.body.classList.add('uber');say(`${hero.meter.icon} ${hero.meter.max}!`)}}
  clearKey('hit');syncLevel();render()}
 // a miss resets everything: meter to 0, Uber mode ends, and the sponge falls over and has to get back up
 function missKey(){clearKey('miss');if(rush.meter<=0&&rush.uber<=0)return;   // empty meter: nothing to lose
- if(rush.level<1&&rush.uber<=0){rush.meter=0;say('Missed! Goofy meter reset.');syncLevel();return}   // below level 1: meter resets, but he keeps his feet
+ if(rush.level<1&&rush.uber<=0){rush.meter=0;say(`Missed! ${hero.meter.name} reset.`);syncLevel();return}   // below level 1: meter resets, but he keeps his feet
  rush.meter=0;if(rush.uber>0){rush.uber=0;document.body.classList.remove('uber')}
- rush.fall=FALL_TIME;rush.next=.6;hero.setFace('scared');say('Whoops! 💫 Goofy meter reset…');syncLevel()}
+ rush.fall=FALL_TIME;rush.next=.6;hero.setFace('scared');say(`Whoops! 💫 ${hero.meter.name} reset…`);syncLevel()}
 // dizzy stars that circle the head while he's down
 const stars=new THREE.Group();{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.font='52px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('⭐',32,36);
  const m=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true});for(let k=0;k<3;k++){const sp=new THREE.Sprite(m);sp.scale.setScalar(.45);stars.add(sp)}}

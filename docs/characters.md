@@ -80,8 +80,8 @@ A character is built by a function like `buildPlankton(C, R)` (C = its `CHARS` r
 | `speed` | walking speed in **world** units per second (`2 × stance stride × omega ÷ π × scale`). The road rolls at this speed, so the feet stay planted. |
 | `pose` | the fall/stand-up fields `flail, plant, splat, bx, by, bz, stretch, kick, trip, knee, cheer, t`. `fallPose()` fills them; `walk()` must read them (arms windmill, hands planted on the road, legs kick, arms thrown up ...). |
 | `setFace(mood)` | `'happy'`, `'scared'` or `'sad'` |
-| `setGoofy(level)` | goofy meter level 0–6: longer limbs, bigger bounce and sway |
-| `goofyNames` | the level names (copy `env.goofyNames`) |
+| `setGoofy(level)` | meter level 0–6. For the sponge: longer limbs, bigger bounce and sway. For Plankton: the evil level (face and acting) |
+| `meter` | the character's own meter: `{icon, name, names, max}`, for example `{icon:'😈', name:'Evil meter', names:EVIL_NAMES, max:'EVIL GENIUS MODE'}`. The HUD, the model viewer slider and the messages read it |
 | `isOutfit(mesh)`, `setSkin(id)` | outfits; a character without outfits returns `false` and does nothing |
 | `char` | its `CHARS` row (set after building) |
 
@@ -108,4 +108,5 @@ A character is built by a function like `buildPlankton(C, R)` (C = its `CHARS` r
 | Legs | hoses r 0.06 from hips (±0.24, 0.74), rest length 0.8; feet r 0.13 scaled (1, 0.55, 1.5) |
 | Colours | body 0x58a83e, antennae 0x3f7f2c, eye 0xfff2a0, iris 0xd8262e |
 | Walk | stride 0.30, lift 0.22, rest leg 0.8; leans forward 0.1; twist capped at 0.25 rad and roll at 0.2; fists pump fore and aft close to his sides, up to (±0.86, 1.6, 0.62) |
+| Evil meter | `EVIL` table, one value per level 0–6, eased like the goofy meter. Face (happy mood only, rebuilt by `shapeFace()`): brow middle/end y 2.40/2.55 → 2.22/2.64; top lid cover 0 → 0.6 (Diabolical slit) and lower lid up to 0.3, both green half shells r 0.392 with an ink rim, swung to `asin(2·cover − 1)`; pupil scale 1 → 0.37; mouth half width 0.44 → 0.58 and open depth 0 → 0.38 (dark red inside, 8 white teeth, clenched bottom teeth at 3, fangs at 5); red iris glow at 6. Acting: hands together at the chest (1–2, rubbing at 2), sneak lean 0.14 (3), lean back with a chuckle bounce (4), arms flung out (5), fists shaken overhead with lean back 0.26 (6). All motion uses multiples of the walk phase, so a GIF still loops |
 | Fall | same `fallPose()` timing as the sponge; feet gather under him in the crouch, stretched up to 0.3 in the air, a 0.22 s squash on landing |
