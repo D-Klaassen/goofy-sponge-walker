@@ -608,7 +608,7 @@ function buildPlankton(C,R){   // R: road drum radius
   // arms pump opposite the legs, the forward fist comes up to chest height
   [-1,1].forEach((side,i)=>{const a=Math.max(-1,Math.min(1,-legZ[i]/A)),up=ease(Math.max(0,a)),Ar=arms[i];
    SH.set(side*.6,1.45,0);
-   tgt.set(side*lerp(.82,1.15,up),lerp(.9,1.95,up)+.1*Math.max(0,-a),lerp(.08+a*.3,.65,up)).sub(SH).multiplyScalar(gp.arm).add(SH).applyMatrix4(BM);   // rising fist swings out a bit, so the pump shows from the front camera too
+   tgt.set(side*lerp(.8,.86,up),lerp(.9,1.6,up)+.06*Math.max(0,-a),lerp(.08+a*.3,.62,up)).sub(SH).multiplyScalar(gp.arm).add(SH).applyMatrix4(BM);   // fists pump fore and aft close to his sides, rising to chest height
    if(P.flail>0){const w=P.t*22+i*Math.PI*.5;tgt.lerp(FT.set(side*(1.1+Math.cos(w)*.2),3.0+Math.sin(w)*.3,.45+Math.sin(w)*.6).applyMatrix4(BM),P.flail)}   // windmill wide, mostly in front so it shows while he tips; arms a quarter turn apart
    if(P.cheer>0)tgt.lerp(FT.set(side*1.05,3.1,.2).applyMatrix4(BM),P.cheer);
    if(P.plant>0){const z=1.2;FT.set(side*.8,.06-z*z/(2*RD),z).sub(loc.copy(r.root.position).divideScalar(s)).applyAxisAngle(XAX,-r.root.rotation.x);tgt.lerp(FT,P.plant)}
@@ -616,7 +616,7 @@ function buildPlankton(C,R){   // R: road drum radius
    inv.copy(BM).invert();loc.copy(Ar.pos).applyMatrix4(inv);   // keep the hand outside the egg
    {const br=bodyR(loc.y);if(br>0){const rx=br+.14,rz=br*BZ+.14,d=Math.hypot(loc.x/rx,loc.z/rz);if(d<1){loc.x/=d;loc.z/=d;Ar.pos.copy(loc).applyMatrix4(BM)}}}
    const S0=Ar.curve.v0.copy(SH).applyMatrix4(BM);Ar.curve.v2.copy(Ar.pos);
-   Ar.curve.v1.copy(mid.addVectors(S0,Ar.pos).multiplyScalar(.5)).add(tgt.set(side*lerp(.18,.3,up),lerp(-.02,-.24,up),lerp(-.12,-.08,up)).multiplyScalar(Math.sqrt(gp.arm)));   // elbow out and back; long goofy arms keep a bend
+   Ar.curve.v1.copy(mid.addVectors(S0,Ar.pos).multiplyScalar(.5)).add(tgt.set(side*lerp(.1,.14,up),lerp(-.02,-.2,up),lerp(-.12,-.08,up)).multiplyScalar(Math.sqrt(gp.arm)));   // elbow out and back; long goofy arms keep a bend
    Ar.parts.forEach(f=>f(Ar.curve));Ar.hand.position.copy(Ar.pos);Ar.hand.rotation.set(lerp(.2,-.6,up),0,side*.2)});
   // antennae: lag behind the bob and sway (cheap follow-through)
   [-1,1].forEach((side,i)=>{const An=ants[i],w=gp.ant,lag=ph-.9,dx=Math.sin(lag)*.08*w,dy=-Math.cos(2*lag)*.15*w,dz=-Math.sin(2*lag)*.1*w,fall=Math.max(P.trip,P.flail);
