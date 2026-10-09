@@ -18,7 +18,11 @@ Then open http://localhost:8765.
 
 - Letter keys: hit the key that pops up
 - `Q`: achievements
-- `M` / 🛠 button: model viewer (only with `?developer-mode=true`), with a goofy meter slider (levels 0–6), pose scrubber, wireframe and outline toggles
+- `M` / 🛠 button: model viewer (only with `?developer-mode=true`), with a goofy meter slider (levels 0–6), a camera angle readout (0° = front, 90° = his left, 180° = back, 270° = his right; type a number to jump there), pose scrubber, wireframe and outline toggles
+
+## Making outfits
+
+All body measurements for clothes (head top, face features, shoulders, waist, arm and leg attach points) are in [docs/outfit-sizes.md](docs/outfit-sizes.md).
 
 ## Note
 
