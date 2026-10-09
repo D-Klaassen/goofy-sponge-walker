@@ -1,0 +1,19 @@
+{
+  "name": "goofy-sponge-walker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "stripe": "^18.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0",
+    "globals": "^16.0.0",
+    "vitest": "^3.0.0"
+  }
+}
