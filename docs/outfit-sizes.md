@@ -139,7 +139,7 @@ The princess skin is the first fully fitted outfit . Its numbers show what a big
 
 1. Put torso and head pieces in the body group, and limb pieces on hoses.
 2. Check the numbers above: nothing over the eyes, nose or mouth, and the waist and shoulders line up.
-3. Open the model viewer (`?developer-mode=true`, press `M`) and check goofy levels 0 and 6, the pose slider and the fall. Note the camera angle shown in the panel for every problem.
+3. Open the model viewer (`?developer-mode=true`, press `4`) and check goofy levels 0 and 6, the pose slider and the fall. Note the camera angle shown in the panel for every problem.
 4. Turn off "Show sponge" to look at the outfit alone.
 5. Add a row here for the new outfit's key sizes.
 6. Add the shop item to `SKINS` with `type:'outfit'` and `char:'sponge'` (the character it fits). See [characters.md](characters.md#shop-items-characters-and-their-own-clothes).

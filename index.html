@@ -142,8 +142,8 @@ body.evil.uber::after{box-shadow:inset 0 0 80px 22px #d8262e;animation:none}
     <footer>Press <b>Esc</b> to close</footer>
   </div>
 </div>
-<button id="shopBtn" title="Open the shop (B)">🛍️ Shop</button>
-<button id="gifBtn" data-gif="🎞 GIF" title="Record one walk cycle and download it as an animated GIF (G)">🎞 GIF</button>
+<button id="shopBtn" title="Open the shop (2)">🛍️ Shop</button>
+<button id="gifBtn" data-gif="🎞 GIF" title="Record one walk cycle and download it as an animated GIF (3)">🎞 GIF</button>
 <div id="prompts"></div>
 <div id="meter"><div class="mtop"><span id="mLabel">🤪 Goofy meter</span><span id="mName">Normal</span></div><div class="mbar"><i id="mFill"></i></div></div>
 <div id="uberBanner">🤪 UBER GOOBER MODE! 🤪</div>
@@ -186,7 +186,8 @@ ACH.forEach((a,i)=>{const c=document.createElement('div');c.className='card lock
  $('achCat_'+a.cat.id).parentElement.nextElementSibling.appendChild(c)});
 const overlay=$('achOverlay');
 const toggleAch=open=>{overlay.classList.toggle('open',open??!overlay.classList.contains('open'));render()};
-addEventListener('keydown',e=>{if(e.repeat)return;if(e.key==='q'||e.key==='Q')toggleAch()});
+const numKey=e=>e.metaKey||e.ctrlKey||e.altKey||!/^(Digit|Numpad)\d$/.test(e.code)?null:e.code.slice(-1);   // menu keys are numbers, top row or numpad, so every letter is free for the game
+addEventListener('keydown',e=>{if(e.repeat)return;if(numKey(e)==='1')toggleAch()});
 overlay.addEventListener('pointerdown',e=>{if(e.target===overlay)toggleAch(false)});
 let gotBefore=null;
 function render(){
@@ -195,7 +196,7 @@ function render(){
  UPS.forEach(u=>{const b=$('u_'+u.id),c=cost(u);b.disabled=S.steps<c;
   b.innerHTML=`<b>${u.name}</b> ×${cnt(u.id)}<small>${u.desc}</small><span class="cost">${fmt(c)} steps</span>`});
  let got=0;ACH.forEach((a,i)=>{const c=$('a'+i),v=a.cat.val(),done=v>=a.n;got+=done;
-  if(done&&!c.classList.contains('got')){c.classList.replace('locked','got');c.querySelector('.medal').textContent='🏅';if(gotBefore!==null)say(`🏅 Achievement unlocked: ${a.t}! (press Q)`)}
+  if(done&&!c.classList.contains('got')){c.classList.replace('locked','got');c.querySelector('.medal').textContent='🏅';if(gotBefore!==null)say(`🏅 Achievement unlocked: ${a.t}! (press 1)`)}
   c.querySelector('.prog i').style.width=Math.min(100,v/a.n*100)+'%'});
  ACH_CATS.forEach(cat=>{const v=cat.val();$('achCat_'+cat.id).textContent=`${cat.list.filter(([n])=>v>=n).length} / ${cat.list.length}`});
  if($('shopOverlay').classList.contains('open'))renderShop();
@@ -760,7 +761,7 @@ $('skinList').addEventListener('click',e=>{const id=e.target.dataset&&e.target.d
  S.char=k.char;if(k.type==='outfit')S.outfits[k.char]=id;showSaved();render()});   // wearing an outfit also switches to its character
 const toggleShop=open=>{shop.classList.toggle('open',open??!shop.classList.contains('open'));render()};
 $('shopBtn').onclick=()=>toggleShop(true);
-addEventListener('keydown',e=>{if(e.repeat||viewer.on)return;if(e.key==='b'||e.key==='B')toggleShop()});
+addEventListener('keydown',e=>{if(e.repeat||viewer.on)return;if(numKey(e)==='2')toggleShop()});
 shop.addEventListener('pointerdown',e=>{if(e.target===shop)toggleShop(false)});
 let gameGoofy=()=>0;   // set by the key rush below
 // ---------- Model viewer (only with ?developer-mode=true) ----------
@@ -819,7 +820,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  #devPanel input[type=range]{width:120px}
  #devPanel button{font:inherit;width:100%;margin-top:8px;background:#333;color:#fff;border:1px solid #666;border-radius:8px;padding:5px;cursor:pointer}
  body.viewing #hud,body.viewing .hint,body.viewing #msg,body.viewing #devBtn{display:none}`;document.head.appendChild(css);
- document.body.insertAdjacentHTML('beforeend',`<button id="devBtn" title="Open model viewer (M)">🛠 Model viewer</button>
+ document.body.insertAdjacentHTML('beforeend',`<button id="devBtn" title="Open model viewer (4)">🛠 Model viewer</button>
  <div id="dvAngle"><div>📐 Camera: <b id="dvAngleName">front</b></div>
   <label>Around<span><input type="number" id="dvAz" min="-5" max="360" step="5" aria-label="Camera angle around the sponge, 0 is front, 90 is his left">°</span></label>
   <label>Height<span><input type="number" id="dvEl" min="-85" max="85" step="5" aria-label="Camera height angle">°</span></label>
@@ -838,7 +839,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
   <label>Show body<input type="checkbox" id="dvSponge" checked></label>
   <label>Ink outlines<input type="checkbox" id="dvInk" checked></label>
   <label>Wireframe<input type="checkbox" id="dvWire"></label>
-  <button id="dvFall">Play fall + stand up</button><button id="dvReset">Reset camera</button><button id="dvGif" data-gif="🎞 Export GIF" title="Record one walk cycle of the 3D view and download it as an animated GIF (G)">🎞 Export GIF</button><button id="dvSteps">👣 +10,000 steps</button><button id="dvRestart" style="background:#7a2020">🔄 Restart game</button><button id="dvClose" style="background:#fff25a;color:#1c1c1c;font-weight:700">⬅ Back to game</button>
+  <button id="dvFall">Play fall + stand up</button><button id="dvReset">Reset camera</button><button id="dvGif" data-gif="🎞 Export GIF" title="Record one walk cycle of the 3D view and download it as an animated GIF (3)">🎞 Export GIF</button><button id="dvSteps">👣 +10,000 steps</button><button id="dvRestart" style="background:#7a2020">🔄 Restart game</button><button id="dvClose" style="background:#fff25a;color:#1c1c1c;font-weight:700">⬅ Back to game</button>
   <div style="margin-top:8px;color:#aaa">Drag: rotate · Scroll: zoom · Right-drag: pan</div></div>`);
  const orbit=new OrbitControls(camera,renderer.domElement);orbit.enabled=false;orbit.enableDamping=true;orbit.target.set(0,1.7,0);
  const home={pos:camera.position.clone(),target:V(0,1.9,0)};
@@ -892,7 +893,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  dv('dvCopy').onclick=async()=>{const b=dv('dvCopy'),txt=`Camera ${dv('dvAz').value}° around, ${dv('dvEl').value}° height (${dv('dvAngleName').textContent})`;   // paste into feedback so the exact view can be found again
   try{await navigator.clipboard.writeText(txt);b.textContent='✅ Copied'}catch{b.textContent='❌ Copy failed'}setTimeout(()=>b.textContent='📋 Copy angle',1200)};
  dv('dvAz').oninput=dv('dvEl').oninput=setAngle;dv('dvAz').onkeydown=dv('dvEl').onkeydown=e=>e.stopPropagation();   // typing digits here must not trigger the dev keys
- addEventListener('keydown',e=>{if((e.key==='m'||e.key==='M')&&!e.repeat&&!viewer.on)setOn(true)});
+ addEventListener('keydown',e=>{if(numKey(e)==='4'&&!e.repeat&&!viewer.on)setOn(true)});
  viewer.tick=()=>{if(viewer.on){orbit.update();showAngle();{const {k,z}=zoomOf();S.zoom[k]=Math.min(z.out,Math.max(z.in,camera.position.distanceTo(orbit.target)/baseDist()))}if(!viewer.paused)dv('dvPhase').value=phase%(Math.PI*2)}};   // viewer zoom carries back to the game
 }
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=camera.aspect<1?58:38;camera.updateProjectionMatrix()}
@@ -904,7 +905,7 @@ function popText(x,y,text,size=22){const d=document.createElement('div');d.textC
 // clicking the scene does nothing for now
 
 // ---------- Key rush: press the keys that pop up to fill the goofy meter; full meter = Uber Goober mode ----------
-const KEYS='ASDFHJKLZXCVNUIOPERTYW';      // no Q (achievements), M (model viewer), B (shop) or G (GIF)
+const KEYS='ABCDEFGHIJKLMNOPQRSTUVWXYZ';   // every letter; menus use number keys
 const UBER_TIME=12,HIT_FILL=4,KEY_SLOW=1.9,KEY_FAST=.8,FALL_TIME=3;
 const rush={meter:0,level:0,uber:0,cur:null,next:1.5,fall:0};
 gameGoofy=()=>rush.level;
@@ -947,22 +948,22 @@ $('dvFace')?.addEventListener('change',e=>hero.setFace(e.target.value));   // de
 $('dvFall')?.addEventListener('click',()=>{rush.fall=FALL_TIME;hero.setFace('scared')});   // dev viewer: preview the fall
 addEventListener('keydown',e=>{if(viewer.on||e.repeat||!rush.cur||e.metaKey||e.ctrlKey||e.altKey||help.classList.contains('open'))return;const k=e.key.toUpperCase();
  if(k.length!==1||!KEYS.includes(k))return;if(k===rush.cur.k)hitKey();else missKey()});
-// dev only: press 1 to toggle auto mode, which hits every key for you; 2 = +1000 steps, 0 = restart the game
+// dev only: press 7 to toggle auto mode, which hits every key for you; 8 = +1000 steps, 0 = restart the game
 const DEV=new URLSearchParams(location.search).get('developer-mode')==='true';let autoPlay=false;
 // Esc: key menu with every shortcut; when something is open, Esc closes it instead
 const help=$('helpOverlay'),keyRow=(k,t)=>`<kbd>${k}</kbd><span>${t}</span>`;
-$('helpList').innerHTML=`<h3>🎮 Game</h3><div class="keys">${[['A–Z','Press the key that pops up (or click it)'],['Q','Achievements'],['B','Shop'],['G','Save a GIF of the walk'],['Scroll · + −','Zoom in or out (pinch on a touch screen)'],['Esc','This menu · close any window']].map(r=>keyRow(...r)).join('')}</div>`+
- (DEV?`<h3>🛠 Developer mode</h3><div class="keys">${[['M','Model viewer'],['1','Auto mode on/off'],['2','+1000 steps'],['0','Restart the game'],['Drag','Model viewer: rotate'],['Scroll','Model viewer: zoom'],['Right-drag','Model viewer: pan']].map(r=>keyRow(...r)).join('')}</div>`:'');
+$('helpList').innerHTML=`<h3>🎮 Game</h3><div class="keys">${[['A–Z','Press the key that pops up (or click it)'],['1','Achievements'],['2','Shop'],['3','Save a GIF of the walk'],['Scroll · + −','Zoom in or out (pinch on a touch screen)'],['Esc','This menu · close any window']].map(r=>keyRow(...r)).join('')}</div>`+
+ (DEV?`<h3>🛠 Developer mode</h3><div class="keys">${[['4','Model viewer'],['7','Auto mode on/off'],['8','+1000 steps'],['0','Restart the game'],['Drag','Model viewer: rotate'],['Scroll','Model viewer: zoom'],['Right-drag','Model viewer: pan']].map(r=>keyRow(...r)).join('')}</div>`:'');
 const toggleHelp=open=>help.classList.toggle('open',open??!help.classList.contains('open'));
 addEventListener('keydown',e=>{if(e.repeat)return;
  if(e.key==='Escape'){if([overlay,shop,help].some(o=>o.classList.contains('open'))){toggleAch(false);toggleShop(false);toggleHelp(false)}else toggleHelp(true)}
- else if(/^[qbgm]$/i.test(e.key))toggleHelp(false);   // another window's key takes over from the menu
- if((e.key==='g'||e.key==='G')&&!e.metaKey&&!e.ctrlKey&&!e.altKey)exportGif()});
+ else if('1234'.includes(numKey(e)||'x'))toggleHelp(false);   // another window's key takes over from the menu
+ if(numKey(e)==='3')exportGif()});
 help.addEventListener('pointerdown',e=>{if(e.target===help)toggleHelp(false)});
 function restartGame(){if(!confirm('Restart the game? All steps, upgrades, outfits and achievements are wiped.'))return;   // dev only: start over from a fresh save
  restarting=true;try{localStorage.removeItem('goofysponge')}catch(e){}location.reload()}
-if(DEV)addEventListener('keydown',e=>{if(e.repeat)return;if(e.key==='1'){autoPlay=!autoPlay;say(autoPlay?'🤖 Auto mode ON (press 1 to stop)':'🤖 Auto mode OFF')}
- else if(e.key==='2'){S.steps+=1000;say('🤖 +1000 steps (dev)');render()}else if(e.key==='0')restartGame()});
+if(DEV)addEventListener('keydown',e=>{if(e.repeat)return;const n=numKey(e);if(n==='7'){autoPlay=!autoPlay;say(autoPlay?'🤖 Auto mode ON (press 7 to stop)':'🤖 Auto mode OFF')}
+ else if(n==='8'){S.steps+=1000;say('🤖 +1000 steps (dev)');render()}else if(n==='0')restartGame()});
 function rushTick(dt){if((viewer.on||viewer.fixedDt)&&rush.fall<=0||overlay.classList.contains('open')||help.classList.contains('open'))return;   // paused while viewing, recording a GIF, or reading achievements or the key menu
  if(rush.fall>0){rush.fall=Math.max(0,rush.fall-dt);fallPose();if(rush.fall<=0){[env,plank].forEach(h=>{Object.assign(h.pose,{flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0});h.rig.root.position.y=0;h.rig.root.rotation.x=0});stars.visible=false}return}                              // no keys while he's on the ground
  if(rush.uber>0){S.uberTime=(S.uberTime||0)+Math.min(dt,rush.uber);rush.uber-=dt;if(rush.uber<=0){rush.uber=0;rush.meter=0;document.body.classList.remove('uber');say('Phew… back to normal walking.')}syncLevel()}
