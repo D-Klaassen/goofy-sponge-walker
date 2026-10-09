@@ -16,6 +16,14 @@ python3 -m http.server 8765
 
 Then open http://localhost:8765.
 
+Coins (buying with real money) need the server side: Vercel functions in `api/`, Supabase and Stripe. Locally the shop shows "Coins aren't available here yet". To set it all up, run the wizard and follow its steps:
+
+```bash
+scripts/setup-coins.sh
+```
+
+Tests and lint: `npm install`, then `npm test` and `npm run lint`.
+
 ## Controls
 
 - Letter keys: hit the key that pops up (any letter A–Z; menus use number keys, top row or numpad)
