@@ -1,6 +1,6 @@
 # Outfit sizes: where everything sits on the sponge
 
-Use these numbers when you design a new outfit (hat, shirt, dress, glasses, ...), so it fits the first time. All numbers come from `index.html`. If you change the body, update this file too.
+Use these numbers when you design a new outfit (hat, shirt, dress, glasses, ...), so it fits the first time. For a whole new character (bigger or smaller than the sponge), see [characters.md](characters.md). All numbers come from `index.html`. If you change the body, update this file too.
 
 ## Units and axes
 
@@ -55,12 +55,12 @@ Keep clothing and accessories off these, unless the piece is meant to cover them
 | Eyes (2 ovals) | centres ±0.24, outer edge ±0.49 | 2.64 – 3.18, centre 2.91 | each 0.49 wide, 0.54 tall |
 | Eyelashes | ±0.09 – ±0.38 | up to 3.28 | |
 | Sad eyebrows | ±0.10 – ±0.43 | 3.30 – 3.41 | only on the sad face |
-| Nose (3D) | 0 | 2.52 – 2.85 | sticks out to **z ≈ +0.82**; tip ball at `(0, 2.60, 0.74)` |
+| Nose (3D) | 0 | 2.59 – 2.75 | straight tube r 0.075 sticking out to **z ≈ +0.84**; tip ball at `(0, 2.67, 0.76)` |
 | Cheeks | ±0.51 | ≈ 2.60 | |
 | Mouth | ±0.38 (with dimples) | **2.01 – 2.47** | happy, sad and scared mouths all fit in this box |
 | Scared sweat drop | +0.59 | 2.89 – 3.05 | |
 
-Glasses: lenses centred at `(±0.24, 2.91)`, resting on the face at z ≈ +0.40. The bridge must clear the nose, which starts at y 2.76 and z +0.34.
+Glasses: lenses centred at `(±0.24, 2.91)`, resting on the face at z ≈ +0.40. The bridge must clear the nose, which starts at y 2.67 (top 2.75) and z +0.34.
 
 Neckline rule: any top must stay **below y ≈ 2.0** so it never covers the mouth.
 
@@ -71,7 +71,7 @@ To turn a face-texture pixel (canvas 512 × 608) into body space: `x = (px / 512
 | Piece | Shape | Centre | Covers y |
 |---|---|---|---|
 | Shirt | box 1.50 × 0.20 × 0.70 | (0, 1.57, 0) | 1.47 – 1.67 |
-| Pants | box 1.52 × 0.36 × 0.72 | (0, 1.29, 0) | 1.11 – 1.47 |
+| Pants | box 1.52 × 0.46 × 0.72 | (0, 1.24, 0) | 1.01 – 1.47; the black belt-loop dashes carry on over the butt at y 1.385 |
 | Collar points | cones r 0.15, h 0.26 | (±0.17, 1.62, 0.37) | |
 | Tie | knot 0.14 × 0.10 × 0.05, blade cone r 0.13 h 0.36, 0.23 below the knot | tie group at (0, 1.60, 0.40) | swings on a spring |
 | Shoulders | spheres r 0.17, scale (1, 0.9, 1.05) | (±0.80, 1.58, 0) | |
@@ -142,3 +142,4 @@ The princess skin is the first fully fitted outfit . Its numbers show what a big
 3. Open the model viewer (`?developer-mode=true`, press `M`) and check goofy levels 0 and 6, the pose slider and the fall. Note the camera angle shown in the panel for every problem.
 4. Turn off "Show sponge" to look at the outfit alone.
 5. Add a row here for the new outfit's key sizes.
+6. Add the shop item to `SKINS` with `type:'outfit'` and `char:'sponge'` (the character it fits). See [characters.md](characters.md#shop-items-characters-and-their-own-clothes).
