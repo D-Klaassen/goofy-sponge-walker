@@ -1,6 +1,6 @@
 # Outfit sizes: where everything sits on the sponge
 
-Use these numbers when you design a new outfit (hat, shirt, dress, glasses, ...), so it fits the first time. All numbers come from `index.html`. If you change the body, update this file too.
+Use these numbers when you design a new outfit (hat, shirt, dress, glasses, ...), so it fits the first time. For a whole new character (bigger or smaller than the sponge), see [characters.md](characters.md). All numbers come from `index.html`. If you change the body, update this file too.
 
 ## Units and axes
 
@@ -142,3 +142,4 @@ The princess skin is the first fully fitted outfit . Its numbers show what a big
 3. Open the model viewer (`?developer-mode=true`, press `M`) and check goofy levels 0 and 6, the pose slider and the fall. Note the camera angle shown in the panel for every problem.
 4. Turn off "Show sponge" to look at the outfit alone.
 5. Add a row here for the new outfit's key sizes.
+6. Add the shop item to `SKINS` with `type:'outfit'` and `char:'sponge'` (the character it fits). See [characters.md](characters.md#shop-items-characters-and-their-own-clothes).
