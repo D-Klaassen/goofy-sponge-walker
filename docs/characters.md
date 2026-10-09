@@ -16,6 +16,7 @@ All size settings live in one table, `CHARS` in `index.html` (next to `const env
 | `height` | real height on the road, world units (sole to top of head) | 3.6 | 0.58 (body top 0.43, antenna tips 0.58) |
 | `scale` | root scale: design units → world units | 1 | 0.15 |
 | `cam` | in-game camera: position `(0, y, z)`, looking at `(0, ly, 0)` | y 2.9, z 10, ly 1.9 | y 0.82, z 3.1, ly 0.42 |
+| `zoom` | how far you can zoom the game camera: `in` = closest, `out` = furthest, as a multiple of the `cam` distance (1 = normal) | in 0.8, out 1.6 | in 0.75, out 3.4 |
 | `view` | model viewer start: target height `ty` and camera distance `dist` | ty 1.7, dist 8.4 | ty 0.26, dist 1.5 |
 | `stride` | half step length, design units (`BASE_A`) | 0.46 | 0.30 |
 | `omega` | step speed (walk cycles per second × 2π) | 5.2 | 5.2 |
@@ -27,6 +28,7 @@ All size settings live in one table, `CHARS` in `index.html` (next to `const env
 
 - **`height` and `scale`:** decide how tall he really is next to the sponge (3.6). Then `scale = height ÷ design height`. Plankton is about 1/6 of the sponge: 0.58 tall, built 3.9 units tall in design units, so `scale = 0.15`.
 - **`cam`:** the camera should **not** zoom all the way to his size, or he would look as big as the sponge on screen. Plankton's camera is about 0.31 of the sponge's distance while he is 0.15 of the size. So on screen he is about half the sponge's size, and the world around him looks about three times bigger. Rule of thumb: `cam ≈ sponge cam × (scale × 2)` for small characters, and `ly` at about chest height. A big character can use the sponge camera × `scale`, and maybe a bit more so he fits.
+- **`zoom`:** a big character is already seen from far away, so keep `in` close to 1 (he should never fill the screen) and `out` modest. A small character starts close up, so allow a big `out` (about 3–4) so players can pull back and see how tiny he is in the world. The zoom is saved per character in `S.zoom`.
 - **`view`:** `dist ≈ 8.4 × height ÷ 3.6 × 1.5`, and `ty` at about mid-height. The goofy meter pull-back scales from this.
 - **`stride` and `omega`:** pick a stride that suits his legs in design units. Keep `omega` at 5.2 so he earns steps at the same rate as the sponge. A faster `omega` would also make him earn steps faster.
 - **`ink`:** outlines are built in design units and scale with the root. To make lines look as heavy on screen as the sponge's, use `ink ≈ (cam scale) ÷ scale`. For Plankton that is 0.31 ÷ 0.15 ≈ 2.2. A big character usually needs about 1.
