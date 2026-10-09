@@ -4,7 +4,7 @@ A goofy idle walker game in a single `index.html` (Three.js from a CDN, no build
 
 A cartoon sponge struts along a rolling hill road. Keys pop up on screen: press the key (or click it) before its timer runs out to fill the **goofy meter**. Every 20% the walk gets goofier and a bit faster; a full meter starts **UBER GOOBER MODE**. A miss resets the meter and the sponge falls flat on its face. Steps are counted per footfall; distance and achievements follow. Distance depends on the character's real stride, so tiny Plankton covers about 3 cm per step.
 
-Plankton has an **evil meter** instead: every level makes him more evil (Scheming, Sly, Plotting, Sinister, Diabolical, Maniacal, EVIL GENIUS MAX). His eyelid drops, his pupil shrinks, his grin opens into teeth and fangs, and his hands rub, fling out or shake overhead; a full meter is **EVIL GENIUS MODE** with a glowing red eye.
+Plankton has an **evil meter** instead: every level makes him more evil (Scheming, Sly, Plotting, Sinister, Diabolical, Maniacal, EVIL GENIUS MAX). His eyelid drops, his pupil shrinks, his grin opens into teeth and fangs, and his hands rub, fling out or shake overhead; a full meter is **EVIL GENIUS MODE**: a glowing red eye and a hysterical laugh (jaw flapping, eye squeezed shut, tongue out, spit flying, red "HA!" pop-ups).
 
 ## Run
 
