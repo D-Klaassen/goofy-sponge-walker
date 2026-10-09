@@ -16,14 +16,14 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 @media (max-width:760px){#msg{top:76px;max-width:min(90vw,520px)}}
 .hint{position:fixed;top:14px;right:14px;background:var(--card);backdrop-filter:blur(6px);border:2px solid #ffffff33;border-radius:12px;padding:6px 12px;font-size:.9rem;pointer-events:none}
 .hint kbd{background:#fff25a;color:#1c1c1c;border:2px solid #1c1c1c;border-radius:6px;padding:0 6px;font-family:inherit;font-weight:700;box-shadow:0 2px 0 #1c1c1c}
-#achOverlay,#shopOverlay{position:fixed;inset:0;display:grid;place-items:center;background:#05233a99;backdrop-filter:blur(3px);z-index:20;opacity:0;pointer-events:none;transition:opacity .18s}
-#achOverlay.open,#shopOverlay.open{opacity:1;pointer-events:auto}
-#achBox,#shopBox{width:min(860px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:auto;background:#fff8d6;color:#1c1c1c;border:5px solid #1c1c1c;border-radius:26px;box-shadow:8px 8px 0 #1c1c1c;padding:16px 20px 14px;transform:scale(.85) rotate(-1.5deg);transition:transform .22s cubic-bezier(.3,1.6,.5,1);
+#achOverlay,#shopOverlay,#helpOverlay{position:fixed;inset:0;display:grid;place-items:center;background:#05233a99;backdrop-filter:blur(3px);z-index:20;opacity:0;pointer-events:none;transition:opacity .18s}
+#achOverlay.open,#shopOverlay.open,#helpOverlay.open{opacity:1;pointer-events:auto}
+#achBox,#shopBox,#helpBox{width:min(860px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:auto;background:#fff8d6;color:#1c1c1c;border:5px solid #1c1c1c;border-radius:26px;box-shadow:8px 8px 0 #1c1c1c;padding:16px 20px 14px;transform:scale(.85) rotate(-1.5deg);transition:transform .22s cubic-bezier(.3,1.6,.5,1);
  background-image:radial-gradient(#f3e27a 18%,transparent 19%),radial-gradient(#f3e27a 12%,transparent 13%);background-size:90px 90px,60px 60px;background-position:10px 20px,50px 60px}
 #shopBox{background-color:#ffe9f3;background-image:radial-gradient(#ffc7df 18%,transparent 19%),radial-gradient(#ffd8ea 12%,transparent 13%)}
-#achOverlay.open #achBox,#shopOverlay.open #shopBox{transform:none}
-#achBox header,#shopBox header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
-#achBox h2,#shopBox h2{margin:0;font-size:1.7rem;letter-spacing:.5px;text-shadow:2px 2px 0 #fff25a}
+#achOverlay.open #achBox,#shopOverlay.open #shopBox,#helpOverlay.open #helpBox{transform:none}
+#achBox header,#shopBox header,#helpBox header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+#achBox h2,#shopBox h2,#helpBox h2{margin:0;font-size:1.7rem;letter-spacing:.5px;text-shadow:2px 2px 0 #fff25a}
 #achCount,#shopWallet{background:#1c1c1c;color:#fff25a;border-radius:999px;padding:4px 12px;font-weight:700;white-space:nowrap}
 #achBar{height:14px;border:3px solid #1c1c1c;border-radius:999px;background:#fff;overflow:hidden;margin:4px 0 10px}
 #achBar i{display:block;height:100%;background:repeating-linear-gradient(45deg,#ffd23f 0 10px,#ffbf1f 10px 20px);transition:width .4s}
@@ -42,8 +42,11 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 .card.locked .medal{background:#cfc8b3;filter:grayscale(1)}
 .card.locked b{color:#7a725f}
 .card.got{background:#eaffef}
-#achBox footer,#shopBox footer{margin-top:14px;text-align:center;font-size:.85rem;color:#6b6250}
-#shopBox h3{margin:4px 0 8px;font-size:1.05rem}
+#achBox footer,#shopBox footer,#helpBox footer{margin-top:14px;text-align:center;font-size:.85rem;color:#6b6250}
+#shopBox h3,#helpBox h3{margin:4px 0 8px;font-size:1.05rem}
+#helpBox{width:min(520px,calc(100vw - 32px))}
+.keys{display:grid;grid-template-columns:6.5em 1fr;gap:6px 12px;align-items:center;margin:0 0 12px}
+.keys kbd{justify-self:start;min-width:1.6em;text-align:center;background:#fff25a;color:#1c1c1c;border:2px solid #1c1c1c;border-radius:6px;padding:0 6px;font-family:inherit;font-weight:700;box-shadow:0 2px 0 #1c1c1c;white-space:nowrap}
 .shopSub{margin:0 0 4px;color:#6b6250}
 .gifts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;padding-top:70px}
 .gift{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
@@ -76,7 +79,9 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 .boxw .confetti i{position:absolute;width:9px;height:14px;border:2px solid #1c1c1c;border-radius:3px;opacity:0;animation:confetti .9s ease-out .45s}
 @keyframes confetti{from{opacity:1;transform:rotate(var(--a)) translateY(0)}to{opacity:0;transform:rotate(var(--a)) translateY(-95px) rotate(320deg)}}
 #shopBtn{position:fixed;top:56px;right:14px;z-index:15;font:inherit;font-weight:700;background:#fff25a;color:#1c1c1c;border:3px solid #1c1c1c;border-radius:12px;padding:4px 12px;cursor:pointer;box-shadow:0 3px 0 #1c1c1c}
-body.viewing #shopBtn{display:none}
+#gifBtn{position:fixed;top:100px;right:14px;z-index:15;font:inherit;font-weight:700;background:#fff;color:#1c1c1c;border:3px solid #1c1c1c;border-radius:12px;padding:4px 12px;cursor:pointer;box-shadow:0 3px 0 #1c1c1c}
+#gifBtn:disabled{cursor:default;background:#e4dfcf}
+body.viewing #shopBtn,body.viewing #gifBtn{display:none}
 #prompts{position:fixed;inset:0;pointer-events:none;z-index:5}
 .key{position:fixed;width:84px;height:84px;pointer-events:auto;cursor:pointer;background:#fff25a;color:#1c1c1c;border:5px solid #1c1c1c;border-radius:22px;box-shadow:0 7px 0 #1c1c1c;
  font:900 2.6rem "Comic Sans MS","Chalkboard SE",system-ui,sans-serif;display:grid;place-items:center;padding:0;animation:keyIn .25s cubic-bezier(.3,1.7,.5,1)}
@@ -107,7 +112,7 @@ body.viewing #meter,body.viewing #prompts,body.viewing #uberBanner{display:none}
   <div class="stat">Steps<b id="steps">0</b></div>
   <div class="stat">Distance<b id="dist">0 m</b></div>
 </div>
-<div class="hint">Press <kbd>Q</kbd> for achievements</div>
+<div class="hint">Press <kbd>Esc</kbd> for all keys</div>
 <div id="achOverlay" role="dialog" aria-modal="true" aria-labelledby="achTitle">
   <div id="achBox">
     <header><h2 id="achTitle">🏅 Achievements</h2><span id="achCount">0 / 0</span></header>
@@ -124,7 +129,15 @@ body.viewing #meter,body.viewing #prompts,body.viewing #uberBanner{display:none}
     <footer>Pay with your steps · Press <b>B</b> or <b>Esc</b> to close</footer>
   </div>
 </div>
+<div id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div id="helpBox">
+    <header><h2 id="helpTitle">⌨️ Keys</h2></header>
+    <div id="helpList"></div>
+    <footer>Press <b>Esc</b> to close</footer>
+  </div>
+</div>
 <button id="shopBtn" title="Open the shop (B)">🛍️ Shop</button>
+<button id="gifBtn" data-gif="🎞 GIF" title="Record one walk cycle and download it as an animated GIF (G)">🎞 GIF</button>
 <div id="prompts"></div>
 <div id="meter"><div class="mtop"><span>🤪 Goofy meter</span><span id="mName">Normal</span></div><div class="mbar"><i id="mFill"></i></div></div>
 <div id="uberBanner">🤪 UBER GOOBER MODE! 🤪</div>
@@ -167,7 +180,7 @@ ACH.forEach((a,i)=>{const c=document.createElement('div');c.className='card lock
  $('achCat_'+a.cat.id).parentElement.nextElementSibling.appendChild(c)});
 const overlay=$('achOverlay');
 const toggleAch=open=>{overlay.classList.toggle('open',open??!overlay.classList.contains('open'));render()};
-addEventListener('keydown',e=>{if(e.repeat)return;if(e.key==='q'||e.key==='Q')toggleAch();else if(e.key==='Escape')toggleAch(false)});
+addEventListener('keydown',e=>{if(e.repeat)return;if(e.key==='q'||e.key==='Q')toggleAch()});
 overlay.addEventListener('pointerdown',e=>{if(e.target===overlay)toggleAch(false)});
 let gotBefore=null;
 function render(){
@@ -683,14 +696,33 @@ $('skinList').addEventListener('click',e=>{const id=e.target.dataset&&e.target.d
  S.char=k.char;if(k.type==='outfit')S.outfits[k.char]=id;showSaved();render()});   // wearing an outfit also switches to its character
 const toggleShop=open=>{shop.classList.toggle('open',open??!shop.classList.contains('open'));render()};
 $('shopBtn').onclick=()=>toggleShop(true);
-addEventListener('keydown',e=>{if(e.repeat||viewer.on)return;if(e.key==='b'||e.key==='B')toggleShop();else if(e.key==='Escape')toggleShop(false)});
+addEventListener('keydown',e=>{if(e.repeat||viewer.on)return;if(e.key==='b'||e.key==='B')toggleShop()});
 shop.addEventListener('pointerdown',e=>{if(e.target===shop)toggleShop(false)});
 let gameGoofy=()=>0;   // set by the key rush below
 // ---------- Model viewer (only with ?developer-mode=true) ----------
-const viewer={on:false,paused:false,speed:1};
+const viewer={on:false,paused:false,speed:1,fixedDt:0};
+// Export GIF (button or G, in the game and in the model viewer): run the game on a fixed clock and grab every frame, so frames are evenly spaced however slow the grab is; the step is fitted so one walk cycle fills a whole number of frames (seamless loop). One shared palette (no colour flicker)
+async function exportGif(){const bs=[...document.querySelectorAll('[data-gif]')];if(viewer.fixedDt||bs.some(b=>b.disabled))return;bs.forEach(b=>b.disabled=true);const show=t=>bs.forEach(b=>b.textContent=t);
+ try{const{GIFEncoder,quantize,applyPalette}=await import('https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js');
+  const src=renderer.domElement,W=480,H=Math.round(W*src.height/src.width),c=document.createElement('canvas');c.width=W;c.height=H;
+  const x=c.getContext('2d',{willReadFrequently:true}),STEP=1/50,frames=[];   // 50 fps: the fastest frame delay browsers play as written (20 ms)
+  const tick=grab=>new Promise(done=>viewer.afterRender=()=>{if(grab){x.drawImage(src,0,0,W,H);frames.push(x.getImageData(0,0,W,H).data)}done()});
+  viewer.fixedDt=STEP;const p0=phase;await tick(false);const dp=phase-p0;   // one test frame: how far the walk moves per step
+  const n=dp>1e-4?Math.min(150,Math.round(Math.PI*2/dp)):1;   // paused: a still
+  if(n>1)viewer.fixedDt=STEP*Math.PI*2/n/dp;
+  for(let i=0;i<n;i++){await tick(true);show(`🔴 ${i+1}/${n}`)}
+  viewer.afterRender=null;const delay=Math.max(20,Math.round(viewer.fixedDt*100)*10);viewer.fixedDt=0;   // GIF delays are whole centiseconds
+  show('⏳ Making GIF…');await new Promise(res=>setTimeout(res,30));
+  const pal=quantize(frames[frames.length>>1],256),gif=GIFEncoder();
+  frames.forEach(f=>gif.writeFrame(applyPalette(f,pal),W,H,{palette:pal,delay}));gif.finish();
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([gif.bytes()],{type:'image/gif'}));a.download=`goofy-sponge-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.gif`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+  say('🎞 GIF saved to your downloads')}
+ catch(e){viewer.afterRender=null;viewer.fixedDt=0;say('🎞 GIF export failed: '+e.message)}
+ bs.forEach(b=>{b.disabled=false;b.textContent=b.dataset.gif})}
+$('gifBtn').onclick=exportGif;
 if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  const css=document.createElement('style');css.textContent=`
- #devBtn{position:fixed;top:100px;right:14px;z-index:15;font:inherit;background:#1c1c1c;color:#fff25a;border:2px solid #fff25a;border-radius:10px;padding:5px 10px;cursor:pointer}
+ #devBtn{position:fixed;top:144px;right:14px;z-index:15;font:inherit;background:#1c1c1c;color:#fff25a;border:2px solid #fff25a;border-radius:10px;padding:5px 10px;cursor:pointer}
  #devPanel{position:fixed;top:14px;right:14px;z-index:15;width:250px;background:#1c1c1ce6;color:#fff;border:2px solid #fff25a;border-radius:14px;padding:12px 14px;font-size:.85rem;display:none}
  #devPanel.open{display:block}
  #devPanel h3{margin:0 0 8px;color:#fff25a;font-size:1rem}
@@ -730,7 +762,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
   <label>Show body<input type="checkbox" id="dvSponge" checked></label>
   <label>Ink outlines<input type="checkbox" id="dvInk" checked></label>
   <label>Wireframe<input type="checkbox" id="dvWire"></label>
-  <button id="dvFall">Play fall + stand up</button><button id="dvReset">Reset camera</button><button id="dvGif" title="Record one walk cycle of the 3D view and download it as an animated GIF">🎞 Export GIF</button><button id="dvSteps">👣 +10,000 steps</button><button id="dvRestart" style="background:#7a2020">🔄 Restart game</button><button id="dvClose" style="background:#fff25a;color:#1c1c1c;font-weight:700">⬅ Back to game</button>
+  <button id="dvFall">Play fall + stand up</button><button id="dvReset">Reset camera</button><button id="dvGif" data-gif="🎞 Export GIF" title="Record one walk cycle of the 3D view and download it as an animated GIF (G)">🎞 Export GIF</button><button id="dvSteps">👣 +10,000 steps</button><button id="dvRestart" style="background:#7a2020">🔄 Restart game</button><button id="dvClose" style="background:#fff25a;color:#1c1c1c;font-weight:700">⬅ Back to game</button>
   <div style="margin-top:8px;color:#aaa">Drag: rotate · Scroll: zoom · Right-drag: pan</div></div>`);
  const orbit=new OrbitControls(camera,renderer.domElement);orbit.enabled=false;orbit.enableDamping=true;orbit.target.set(0,1.7,0);
  const home={pos:camera.position.clone(),target:V(0,1.9,0)};
@@ -748,24 +780,10 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  const setWorld=v=>{worldParts.forEach(o=>o.visible=v);scene.background=v?null:new THREE.Color(0x3a4a5a);scene.fog.far=v?46:1e4};
  $('devBtn').onclick=()=>setOn(true);   // only opens; leaving is done with the Back button
  dv('dvClose').onclick=()=>setOn(false);
- // Export GIF: grab the canvas for one walk cycle (or 2 s when paused), then encode with one shared palette (no colour flicker)
- dv('dvGif').onclick=async()=>{const b=dv('dvGif');if(b.disabled)return;b.disabled=true;
-  try{const{GIFEncoder,quantize,applyPalette}=await import('https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js');
-   const src=renderer.domElement,W=480,H=Math.round(W*src.height/src.width),c=document.createElement('canvas');c.width=W;c.height=H;
-   const x=c.getContext('2d',{willReadFrequently:true}),FPS=20,frames=[],start=phase;let last=0;
-   await new Promise(done=>{viewer.afterRender=()=>{const now=performance.now();if(now-last<1000/FPS-3)return;last=now;
-    x.drawImage(src,0,0,W,H);frames.push(x.getImageData(0,0,W,H).data);b.textContent=`🔴 Recording… ${frames.length}`;
-    if(phase-start>=Math.PI*2||(phase===start&&frames.length>=FPS*2)||frames.length>=FPS*8){viewer.afterRender=null;done()}}});
-   b.textContent='⏳ Making GIF…';await new Promise(res=>setTimeout(res,30));
-   const pal=quantize(frames[frames.length>>1],256),gif=GIFEncoder();
-   frames.forEach(f=>gif.writeFrame(applyPalette(f,pal),W,H,{palette:pal,delay:1000/FPS}));gif.finish();
-   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([gif.bytes()],{type:'image/gif'}));a.download=`goofy-sponge-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.gif`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
-   say('🎞 GIF saved to your downloads')}
-  catch(e){viewer.afterRender=null;say('🎞 GIF export failed: '+e.message)}
-  b.disabled=false;b.textContent='🎞 Export GIF'};
+ dv('dvGif').onclick=exportGif;
  dv('dvSteps').onclick=()=>{S.steps+=10000;say('🤖 +10,000 steps (dev)');render()};
  dv('dvRestart').onclick=()=>restartGame();
- const home3=()=>{const v=hero.char.view,k=v.dist/8.4;orbit.target.set(0,v.ty,0);camera.position.set(3.6*k,v.ty+.7*k,7.5*k);frame(+dv('dvGoofy').value)};   // start view, sized to the character
+ const home3=()=>{const v=hero.char.view,c=hero.char.cam;orbit.target.set(0,v.ty,0);camera.position.set(0,c.y,c.z);frame(+dv('dvGoofy').value)};   // start view: the game's own slanted angle (he walks toward you at YAW), sized to the character, so a GIF looks like the game
  viewer.reframe=()=>{if(viewer.on)home3()};
  dv('dvReset').onclick=home3;
  const gbars=[...$('dvGoofyBar').children];
@@ -804,7 +822,7 @@ function popText(x,y,text,size=22){const d=document.createElement('div');d.textC
 // clicking the scene does nothing for now
 
 // ---------- Key rush: press the keys that pop up to fill the goofy meter; full meter = Uber Goober mode ----------
-const KEYS='ASDFGHJKLZXCVNUIOPERTYW';      // no Q (achievements), M (model viewer) or B (shop)
+const KEYS='ASDFHJKLZXCVNUIOPERTYW';      // no Q (achievements), M (model viewer), B (shop) or G (GIF)
 const UBER_TIME=12,HIT_FILL=4,KEY_SLOW=1.9,KEY_FAST=.8,FALL_TIME=3;
 const rush={meter:0,level:0,uber:0,cur:null,next:1.5,fall:0};
 gameGoofy=()=>rush.level;
@@ -845,15 +863,25 @@ function fallPose(){const e=FALL_TIME-rush.fall,FLAT=1.45,P=hero.pose;let a,fl=0
  stars.visible=dz>0;if(dz>0){stars.rotation.y=e*6;stars.children.forEach((s,k)=>{const w=k*2.094;s.position.set(Math.cos(w)*.9,Math.sin(e*8+k)*.08,Math.sin(w)*.9);s.material.opacity=dz})}}
 $('dvFace')?.addEventListener('change',e=>hero.setFace(e.target.value));   // dev viewer: pick the face
 $('dvFall')?.addEventListener('click',()=>{rush.fall=FALL_TIME;hero.setFace('scared')});   // dev viewer: preview the fall
-addEventListener('keydown',e=>{if(viewer.on||e.repeat||!rush.cur||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toUpperCase();
+addEventListener('keydown',e=>{if(viewer.on||e.repeat||!rush.cur||e.metaKey||e.ctrlKey||e.altKey||help.classList.contains('open'))return;const k=e.key.toUpperCase();
  if(k.length!==1||!KEYS.includes(k))return;if(k===rush.cur.k)hitKey();else missKey()});
 // dev only: press 1 to toggle auto mode, which hits every key for you; 2 = +1000 steps, 0 = restart the game
 const DEV=new URLSearchParams(location.search).get('developer-mode')==='true';let autoPlay=false;
+// Esc: key menu with every shortcut; when something is open, Esc closes it instead
+const help=$('helpOverlay'),keyRow=(k,t)=>`<kbd>${k}</kbd><span>${t}</span>`;
+$('helpList').innerHTML=`<h3>🎮 Game</h3><div class="keys">${[['A–Z','Press the key that pops up (or click it)'],['Q','Achievements'],['B','Shop'],['G','Save a GIF of the walk'],['Esc','This menu · close any window']].map(r=>keyRow(...r)).join('')}</div>`+
+ (DEV?`<h3>🛠 Developer mode</h3><div class="keys">${[['M','Model viewer'],['1','Auto mode on/off'],['2','+1000 steps'],['0','Restart the game'],['Drag','Model viewer: rotate'],['Scroll','Model viewer: zoom'],['Right-drag','Model viewer: pan']].map(r=>keyRow(...r)).join('')}</div>`:'');
+const toggleHelp=open=>help.classList.toggle('open',open??!help.classList.contains('open'));
+addEventListener('keydown',e=>{if(e.repeat)return;
+ if(e.key==='Escape'){if([overlay,shop,help].some(o=>o.classList.contains('open'))){toggleAch(false);toggleShop(false);toggleHelp(false)}else toggleHelp(true)}
+ else if(/^[qbgm]$/i.test(e.key))toggleHelp(false);   // another window's key takes over from the menu
+ if((e.key==='g'||e.key==='G')&&!e.metaKey&&!e.ctrlKey&&!e.altKey)exportGif()});
+help.addEventListener('pointerdown',e=>{if(e.target===help)toggleHelp(false)});
 function restartGame(){if(!confirm('Restart the game? All steps, upgrades, outfits and achievements are wiped.'))return;   // dev only: start over from a fresh save
  restarting=true;try{localStorage.removeItem('goofysponge')}catch(e){}location.reload()}
 if(DEV)addEventListener('keydown',e=>{if(e.repeat)return;if(e.key==='1'){autoPlay=!autoPlay;say(autoPlay?'🤖 Auto mode ON (press 1 to stop)':'🤖 Auto mode OFF')}
  else if(e.key==='2'){S.steps+=1000;say('🤖 +1000 steps (dev)');render()}else if(e.key==='0')restartGame()});
-function rushTick(dt){if(viewer.on&&rush.fall<=0||overlay.classList.contains('open'))return;                     // paused while viewing or reading achievements
+function rushTick(dt){if((viewer.on||viewer.fixedDt)&&rush.fall<=0||overlay.classList.contains('open')||help.classList.contains('open'))return;   // paused while viewing, recording a GIF, or reading achievements or the key menu
  if(rush.fall>0){rush.fall=Math.max(0,rush.fall-dt);fallPose();if(rush.fall<=0){[env,plank].forEach(h=>{Object.assign(h.pose,{flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0});h.rig.root.position.y=0;h.rig.root.rotation.x=0});stars.visible=false}return}                              // no keys while he's on the ground
  if(rush.uber>0){S.uberTime=(S.uberTime||0)+Math.min(dt,rush.uber);rush.uber-=dt;if(rush.uber<=0){rush.uber=0;rush.meter=0;document.body.classList.remove('uber');say('Phew… back to normal walking.')}syncLevel()}
  if(rush.uber>0){if(rush.cur)clearKey('hit');return}   // Uber Goober: no keys to press, so no misses and no falls
@@ -863,8 +891,8 @@ function rushTick(dt){if(viewer.on&&rush.fall<=0||overlay.classList.contains('op
 syncLevel();
 let camL=0;   // game camera pulls back and up as the sponge gets taller
 
-const clock=new THREE.Clock();let acc=0;
-renderer.setAnimationLoop(()=>{const dt=Math.min(.1,clock.getDelta()),t=clock.elapsedTime;
+const clock=new THREE.Clock();let acc=0,gameT=0;
+renderer.setAnimationLoop(()=>{const real=Math.min(.1,clock.getDelta()),dt=viewer.fixedDt||real,t=gameT+=dt;   // the GIF export sets a fixed step
  gain(sps()*dt);acc+=dt;if(acc>.25){acc=0;render()}
  // walks faster with more steps/s and briefly after a click; road speed scales with it so the feet stay planted
  const mult=(1+Math.min(1.2,Math.log10(1+sps())*.25)+boost*.8)*(1+camL*.1);   // goofier = walks a bit faster (up to +60% at level 6)

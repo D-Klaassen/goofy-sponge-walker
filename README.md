@@ -16,10 +16,12 @@ Then open http://localhost:8765.
 
 ## Controls
 
-- Letter keys: hit the key that pops up
+- Letter keys: hit the key that pops up (never Q, B, G or M, those are menu keys)
+- `Esc`: menu with every key; closes any open window
 - `Q`: achievements
 - `B` / 🛍 button: shop, spend steps on skins (Classic, Princess: pink ball gown with a heart diamond tiara) and characters (Plankton). Each item is a wrapped gift showing only a silhouette; buying it unwraps the box
-- `M` / 🛠 button: model viewer (only with `?developer-mode=true`), with a goofy meter slider (levels 0–6), a camera angle box in the top left (0° = front, 90° = his left, 180° = back, 270° = his right; type a number to jump there, 📋 copies it), an outfit / character picker, pose scrubber, wireframe and outline toggles, and a **Show body** switch to view an outfit on its own, a 🎞 **Export GIF** button (records one walk cycle of the current view), a 👣 **+10,000 steps** button and a 🔄 **Restart game** button
+- `G` / 🎞 button: save a GIF of one seamless walk cycle (50 fps, the game's camera view); the key rush pauses while it records
+- `M` / 🛠 button: model viewer (only with `?developer-mode=true`; opens at the game's own slanted camera angle, **Reset camera** goes back there), with a goofy meter slider (levels 0–6), a camera angle box in the top left (0° = front, 90° = his left, 180° = back, 270° = his right; type a number to jump there, 📋 copies it), an outfit / character picker, pose scrubber, wireframe and outline toggles, and a **Show body** switch to view an outfit on its own, a 🎞 **Export GIF** button (same as `G`, but from the viewer's current camera), a 👣 **+10,000 steps** button and a 🔄 **Restart game** button
 - Dev keys (only with `?developer-mode=true`): `1` auto mode, `2` +1000 steps, `0` restart the game (wipes the save after a confirm)
 
 ## Skins
