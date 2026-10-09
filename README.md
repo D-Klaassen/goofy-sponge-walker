@@ -18,7 +18,7 @@ Then open http://localhost:8765.
 
 - Letter keys: hit the key that pops up (never Q, B, G or M, those are menu keys)
 - `Esc`: menu with every key; closes any open window
-- Mouse wheel, `+` / `−` or pinch: zoom the game camera. How far depends on the character: Plankton can zoom far out, the sponge only a little in or out
+- Mouse wheel, `+` / `−` or pinch: zoom the game camera. How far depends on the character: Plankton can zoom far out, the sponge only a little in or out. The model viewer uses the same zoom
 - `Q`: achievements
 - `B` / 🛍 button: shop, spend steps on skins (Classic, Princess: pink ball gown with a heart diamond tiara) and characters (Plankton). Each item is a wrapped gift showing only a silhouette; buying it unwraps the box
 - `G` / 🎞 button: save a GIF of one seamless walk cycle (50 fps, the game's camera view); the key rush pauses while it records
