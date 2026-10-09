@@ -98,9 +98,35 @@ describe('endpoints', () => {
     expect(r.json.balance).toBe(0);
     expect(fakeStripe.refunds.create).toHaveBeenCalledWith({ payment_intent: 'pi_cs_1' }, { idempotencyKey: 'withdraw-cs_1' });
     // Stripe then confirms the refund: no second deduction
-    await h.webhook(signed({ id: 'evt_r', type: 'charge.refunded', data: { object: { payment_intent: 'pi_cs_1' } } }));
+    await h.webhook(signed({ id: 'evt_r', type: 'charge.refunded', data: { object: { payment_intent: 'pi_cs_1', refunded: true } } }));
     expect((await h.account({ headers: user })).json.balance).toBe(0);
     expect((await h.withdraw({ headers: user, body: '{"session":"cs_1"}' })).status).toBe(409);
+  });
+
+  it('does not take Coins when the refund fails, so the Player can retry', async () => {
+    const { h, fakeStripe } = setup();
+    await h.webhook(signed(paid()));
+    fakeStripe.refunds.create.mockRejectedValueOnce(new Error('stripe down'));
+    await expect(h.withdraw({ headers: user, body: '{"session":"cs_1"}' })).rejects.toThrow();
+    expect((await h.account({ headers: user })).json.balance).toBe(550);
+    expect((await h.withdraw({ headers: user, body: '{"session":"cs_1"}' })).json.balance).toBe(0);
+  });
+
+  it('credits a delayed iDEAL payment when it succeeds', async () => {
+    const { h } = setup();
+    const pending = paid('cs_2');
+    pending.data.object.payment_status = 'unpaid';
+    await h.webhook(signed(pending));
+    expect((await h.account({ headers: user })).json.balance).toBe(0);
+    await h.webhook(signed({ ...pending, id: 'evt_async', type: 'checkout.session.async_payment_succeeded' }));
+    expect((await h.account({ headers: user })).json.balance).toBe(550);
+  });
+
+  it('a partial refund made by hand leaves the Coins alone', async () => {
+    const { h } = setup();
+    await h.webhook(signed(paid()));
+    await h.webhook(signed({ id: 'evt_p', type: 'charge.refunded', data: { object: { payment_intent: 'pi_cs_1', refunded: false } } }));
+    expect((await h.account({ headers: user })).json.balance).toBe(550);
   });
 
   it('a dispute takes the Coins back into a negative balance', async () => {

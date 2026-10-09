@@ -163,7 +163,7 @@ body.evil.uber::after{box-shadow:inset 0 0 80px 22px #d8262e;animation:none}
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {COIN_PACKS,PREMIUM_ITEMS,premiumById,returnValue} from './catalogue.js';
+import {COIN_PACKS,PREMIUM_ITEMS,premiumById,returnValue,RETURN_SHARE,WITHDRAW_DAYS} from './catalogue.js';
 
 // ---------- Idle game state ----------
 const UPS=[];   // upgrades removed for now; sps()=0 and spc()=1 until they come back
@@ -795,14 +795,15 @@ addEventListener('keydown',e=>{if(e.repeat||viewer.on)return;if(numKey(e)==='2')
 shop.addEventListener('pointerdown',e=>{if(e.target===shop)toggleShop(false)});
 // ---------- Coins: bought with real money, kept on the server against an Account (docs/specs/buy-coins.md) ----------
 // The browser only shows and asks; the server decides every balance, Return and Withdrawal.
-const coins={on:false,user:null,acct:null,packs:false,busy:false,note:''};let supa=null;
+const coins={on:false,player:null,acct:null,packs:false,busy:false,note:''};let supa=null;
+const esc=t=>String(t).replace(/[&<>"']/g,c=>`&#${c.charCodeAt(0)};`);   // text from outside (email, error messages) never becomes HTML
 const euro=c=>'€'+(c/100).toFixed(2).replace('.',',');
 const ownsPremium=id=>!!coins.acct?.owned.includes(id);
 async function api(path,body){const {data}=await supa.auth.getSession(),t=data.session?.access_token;
  const r=await fetch('/api/'+path,{method:body?'POST':'GET',headers:{'content-type':'application/json',...(t?{authorization:'Bearer '+t}:{})},body:body&&JSON.stringify(body)});
  const j=await r.json().catch(()=>({error:'server_error'}));if(!r.ok)throw new Error(j.error||'server_error');return j}
-const WHY={not_enough_coins:'Not enough Coins. Buy more below!',negative_balance:'Your Coin balance is negative after a reversed payment. Top up before buying Premium items.',already_owned:'You already own that.',not_withdrawable:'That pack can no longer be withdrawn.',sign_in_required:'Please sign in first.'};
-async function loadAccount(){if(!coins.user){coins.acct=null;dropUnowned();return renderCoins()}
+const WHY={not_enough_coins:'Not enough Coins. Buy more below!',negative_balance:'Your Coin balance is negative after a reversed payment. Buy a Coin pack before buying Premium items.',already_owned:'You already own that.',not_withdrawable:'That pack can no longer be withdrawn.',sign_in_required:'Please sign in first.'};
+async function loadAccount(){if(!coins.player){coins.acct=null;dropUnowned();return renderCoins()}
  try{coins.acct=await api('account')}catch(e){coins.note='Could not load your Coins: '+(WHY[e.message]||e.message)}dropUnowned();renderCoins()}
 function dropUnowned(){let changed=false;for(const c in S.outfits)if(premiumById(S.outfits[c])&&!ownsPremium(S.outfits[c])){delete S.outfits[c];changed=true}if(changed)showSaved()}   // never wear something the Account doesn't own
 async function act(fn,done){if(coins.busy)return;coins.busy=true;coins.note='';renderCoins();try{await fn();if(done)coins.note=done}catch(e){coins.note=WHY[e.message]||'Something went wrong: '+e.message}coins.busy=false;renderCoins()}
@@ -814,23 +815,23 @@ function renderCoins(){const box=$('coinBox');
  const prem=PREMIUM_ITEMS.filter(k=>k.char===ch).map(k=>{const own=ownsPremium(k.id),on=outfitOf(ch)===k.id;
   return `<div class="prem"><b>💎 ${k.name}</b><small>${k.desc}</small>`+(own?`<button data-wear="${k.id}"${on?' disabled':d}>${on?'✅ Wearing':'Wear'}</button><button data-return="${k.id}"${d}>Return for ${returnValue(k.price)} Coins</button>`:`<button data-premium="${k.id}"${d}>Buy · ${k.price} Coins</button>`)+'</div>'}).join('');
  const wd=(a?.withdrawable||[]).map(w=>`<div class="pack"><b>${w.coins} Coins</b><small>Untouched: money back until ${new Date(w.until).toLocaleDateString()}</small><button data-withdraw="${w.session}"${d}>Withdraw</button></div>`).join('');
- box.innerHTML=`<div class="ctop"><b class="bal${a&&a.balance<0?' neg':''}">🪙 ${a?a.balance:'–'} Coins</b><span>`+(coins.user?`<small>${coins.user.email}</small> <button data-signout${d}>Sign out</button>`:`<button data-signin${d}>Sign in</button>`)+` <button data-packs${d}>${coins.packs?'Hide packs':'Buy coins'}</button></span></div>`
-  +(coins.packs?`<div class="row">${COIN_PACKS.map(p=>`<div class="pack"><b>${p.coins} Coins</b><small>${p.name} · incl. VAT</small><button data-pack="${p.id}"${d}>${euro(p.cents)}</button></div>`).join('')}</div><p class="note"><small>Coins are delivered right away, so the legal right of withdrawal ends at delivery. Untouched packs can still be refunded within 14 days. Returned items give Coins, never money.</small></p>`:'')
+ box.innerHTML=`<div class="ctop"><b class="bal${a&&a.balance<0?' neg':''}">🪙 ${a?a.balance:'–'} Coins</b><span>`+(coins.player?`<small>${esc(coins.player.email)}</small> <button data-signout${d}>Sign out</button>`:`<button data-signin${d}>Sign in</button>`)+` <button data-packs${d}>${coins.packs?'Hide packs':'Buy coins'}</button></span></div>`
+  +(coins.packs?`<div class="row">${COIN_PACKS.map(p=>`<div class="pack"><b>${p.coins} Coins</b><small>${p.name} · incl. VAT</small><button data-pack="${p.id}"${d}>${euro(p.cents)}</button></div>`).join('')}</div><p class="note"><small>Coins are delivered right away, so the legal right of withdrawal ends at delivery. Untouched packs can still be withdrawn (money back) within ${WITHDRAW_DAYS} days. Returned items give Coins, never money.</small></p>`:'')
   +(prem?`<h4>💎 Premium outfits for ${CHARS[ch].name}</h4><div class="row">${prem}</div>`:'')
   +(wd?`<h4>↩️ Withdrawable packs</h4><div class="row">${wd}</div><p class="note"><small>Spending uses your oldest Coins first. Coins from a Return don't make a pack withdrawable again.</small></p>`:'')
-  +(coins.note?`<p class="note">${coins.note}</p>`:'')}
+  +(coins.note?`<p class="note">${esc(coins.note)}</p>`:'')}
 $('coinBox').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const ds=b.dataset;
  if('packs' in ds){coins.packs=!coins.packs;return renderCoins()}
  if('signin' in ds)return signIn();
  if('signout' in ds)return act(async()=>{await supa.auth.signOut()});
- const needUser=()=>{if(!coins.user){signIn();return false}return true};
- if(ds.pack){if(needUser())act(async()=>{const {url}=await api('checkout',{packId:ds.pack});location.href=url});return}
- if(ds.premium){if(!needUser())return;const k=premiumById(ds.premium);
+ const needPlayer=()=>{if(!coins.player){signIn();return false}return true};
+ if(ds.pack){if(needPlayer())act(async()=>{const {url}=await api('checkout',{packId:ds.pack});location.href=url});return}
+ if(ds.premium){if(!needPlayer())return;const k=premiumById(ds.premium);
   if(coins.acct&&coins.acct.balance<0){coins.note=WHY.negative_balance;return renderCoins()}
   if(coins.acct&&coins.acct.balance<k.price){coins.note=WHY.not_enough_coins;coins.packs=true;return renderCoins()}
   return act(async()=>{coins.acct={...coins.acct,...await api('buy',{itemId:k.id})};S.char=k.char;S.outfits[k.char]=k.id;showSaved();render()},`🎁 Unwrapped ${k.name}!`)}
  if(ds.wear){S.char=premiumById(ds.wear).char;S.outfits[S.char]=ds.wear;showSaved();render();return renderCoins()}
- if(ds.return){const k=premiumById(ds.return);if(!confirm(`Return ${k.name}? You get ${returnValue(k.price)} Coins back (80%). You can buy it again later at full price.`))return;
+ if(ds.return){const k=premiumById(ds.return);if(!confirm(`Return ${k.name}? You get ${returnValue(k.price)} Coins back (${RETURN_SHARE*100}%). You can buy it again later at full price.`))return;
   return act(async()=>{coins.acct={...coins.acct,...await api('return',{itemId:k.id})};dropUnowned();render()},`↩️ Returned ${k.name}.`)}
  if(ds.withdraw){if(!confirm('Withdraw this Coin pack? Its Coins are removed and the money goes back to how you paid.'))return;
   return act(async()=>{coins.acct={...coins.acct,...await api('withdraw',{session:ds.withdraw})}},'💶 Withdrawn: the refund is on its way.')}});
@@ -838,8 +839,10 @@ $('coinBox').addEventListener('click',e=>{const b=e.target.closest('button');if(
  try{const cfg=await fetch('/api/config').then(r=>r.ok?r.json():{});if(!cfg.supabaseUrl){dropUnowned();return renderCoins()}
   const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/+esm');
   supa=createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);coins.on=true;   // the session is kept in this browser, so Players stay signed in
-  supa.auth.onAuthStateChange((ev,session)=>{const u=session?.user;const was=coins.user?.id;coins.user=u?{id:u.id,email:u.email}:null;if(coins.user?.id!==was)loadAccount()});
-  if(q.get('coins')==='paid'){coins.note='✅ Payment received! Your Coins appear in a moment.';for(let i=0;i<5;i++){await new Promise(r=>setTimeout(r,2000));await loadAccount()}}
+  supa.auth.onAuthStateChange((ev,session)=>{const u=session?.user;const was=coins.player?.id;coins.player=u?{id:u.id,email:u.email}:null;if(coins.player?.id!==was)loadAccount()});
+  if(q.get('coins')==='paid'){coins.note='✅ Payment received! Your Coins appear in a moment.';const before=coins.acct?.balance;let got=false;
+   for(let i=0;i<8&&!got;i++){await new Promise(r=>setTimeout(r,2000));await loadAccount();got=!!coins.acct&&coins.acct.balance!==before}
+   coins.note=got?'✅ Your Coins have arrived!':'⏳ Your Coins are still on their way. Reopen the shop in a minute.';renderCoins()}
   if(q.get('coins')==='cancelled')coins.note='Payment cancelled: nothing was charged.'}
  catch(e){coins.on=false}
  renderCoins()})();
