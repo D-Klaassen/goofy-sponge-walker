@@ -63,6 +63,8 @@ The whole flow runs in Stripe test mode first; going live is swapping keys plus 
 - **Auth and storage**: Supabase. Auth by email magic link only. Postgres stores Accounts, ledger entries and owned Premium items. The game page talks to Supabase Auth for sign-in and sends the session token to the functions.
 - **Coin ledger module (the deep module)**: one pure module owns every Coins rule. It takes an Account's ledger entries plus a command and returns either the new entries to append or a refusal with a reason. Commands: credit a Coin pack, buy a Premium item, Return a Premium item, Withdraw a pack, apply a Chargeback. Queries: balance, owned Premium items, Withdrawable packs with their deadline. Rules it enforces:
   - Spending draws from the oldest pack first; a pack with any Coins spent is no longer Withdrawable; Coins from a Return never revive a pack.
+  - Coins from a Return are spent before any pack's Coins, so packs stay Withdrawable as long as possible.
+  - After a Chargeback, the next Coins that come in (a new pack or a Return) first pay off the negative balance; a pack used that way is no longer Withdrawable.
   - Return gives 80% of the item's Coin price, rounded up, and removes ownership.
   - Withdrawal only within 14 days of purchase and only for an untouched pack; it removes that pack's Coins.
   - Chargeback removes the pack's Coins even if the balance goes negative; owned items stay.
@@ -99,3 +101,5 @@ The whole flow runs in Stripe test mode first; going live is swapping keys plus 
 
 - Human-only setup (Stripe, Supabase and Vercel accounts, subdomain DNS, secrets) is a good fit for `/wizard`.
 - The legal summary behind the waiver is general information, not legal advice; check before going live.
+- The confirmation email is Stripe's receipt (with the waiver in the payment description). Stripe sends no receipts in test mode, and the waiver checkbox uses Stripe's terms-of-service consent, which needs a terms URL in the Stripe dashboard. Check both before going live; a dedicated email may be needed.
+- A full refund made by hand in the Stripe dashboard counts as a Chargeback; partial refunds leave Coins alone.
