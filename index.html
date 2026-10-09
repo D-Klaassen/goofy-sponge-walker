@@ -16,14 +16,14 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 @media (max-width:760px){#msg{top:76px;max-width:min(90vw,520px)}}
 .hint{position:fixed;top:14px;right:14px;background:var(--card);backdrop-filter:blur(6px);border:2px solid #ffffff33;border-radius:12px;padding:6px 12px;font-size:.9rem;pointer-events:none}
 .hint kbd{background:#fff25a;color:#1c1c1c;border:2px solid #1c1c1c;border-radius:6px;padding:0 6px;font-family:inherit;font-weight:700;box-shadow:0 2px 0 #1c1c1c}
-#achOverlay{position:fixed;inset:0;display:grid;place-items:center;background:#05233a99;backdrop-filter:blur(3px);z-index:20;opacity:0;pointer-events:none;transition:opacity .18s}
-#achOverlay.open{opacity:1;pointer-events:auto}
-#achBox{width:min(860px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:auto;background:#fff8d6;color:#1c1c1c;border:5px solid #1c1c1c;border-radius:26px;box-shadow:8px 8px 0 #1c1c1c;padding:16px 20px 14px;transform:scale(.85) rotate(-1.5deg);transition:transform .22s cubic-bezier(.3,1.6,.5,1);
+#achOverlay,#shopOverlay{position:fixed;inset:0;display:grid;place-items:center;background:#05233a99;backdrop-filter:blur(3px);z-index:20;opacity:0;pointer-events:none;transition:opacity .18s}
+#achOverlay.open,#shopOverlay.open{opacity:1;pointer-events:auto}
+#achBox,#shopBox{width:min(860px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:auto;background:#fff8d6;color:#1c1c1c;border:5px solid #1c1c1c;border-radius:26px;box-shadow:8px 8px 0 #1c1c1c;padding:16px 20px 14px;transform:scale(.85) rotate(-1.5deg);transition:transform .22s cubic-bezier(.3,1.6,.5,1);
  background-image:radial-gradient(#f3e27a 18%,transparent 19%),radial-gradient(#f3e27a 12%,transparent 13%);background-size:90px 90px,60px 60px;background-position:10px 20px,50px 60px}
-#achOverlay.open #achBox{transform:none}
-#achBox header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
-#achBox h2{margin:0;font-size:1.7rem;letter-spacing:.5px;text-shadow:2px 2px 0 #fff25a}
-#achCount{background:#1c1c1c;color:#fff25a;border-radius:999px;padding:4px 12px;font-weight:700;white-space:nowrap}
+#achOverlay.open #achBox,#shopOverlay.open #shopBox{transform:none}
+#achBox header,#shopBox header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+#achBox h2,#shopBox h2{margin:0;font-size:1.7rem;letter-spacing:.5px;text-shadow:2px 2px 0 #fff25a}
+#achCount,#shopWallet{background:#1c1c1c;color:#fff25a;border-radius:999px;padding:4px 12px;font-weight:700;white-space:nowrap}
 #achBar{height:14px;border:3px solid #1c1c1c;border-radius:999px;background:#fff;overflow:hidden;margin:4px 0 10px}
 #achBar i{display:block;height:100%;background:repeating-linear-gradient(45deg,#ffd23f 0 10px,#ffbf1f 10px 20px);transition:width .4s}
 #achList{display:flex;flex-direction:column;gap:10px}
@@ -41,7 +41,18 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 .card.locked .medal{background:#cfc8b3;filter:grayscale(1)}
 .card.locked b{color:#7a725f}
 .card.got{background:#eaffef}
-#achBox footer{margin-top:14px;text-align:center;font-size:.85rem;color:#6b6250}
+#achBox footer,#shopBox footer{margin-top:14px;text-align:center;font-size:.85rem;color:#6b6250}
+#shopBox h3{margin:4px 0 8px;font-size:1.05rem}
+.shopGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.skin{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;background:#fff;border:3px solid #1c1c1c;border-radius:14px;box-shadow:3px 3px 0 #1c1c1c;padding:10px 12px}
+.skin .pic{font-size:2.8rem;line-height:1.1}
+.skin b{font-size:1.05rem}
+.skin small{color:#6b6250;font-size:.8rem;flex:1}
+.skin button{width:100%;margin-top:4px;font:inherit;font-weight:700;color:#1c1c1c;background:#fff25a;border:3px solid #1c1c1c;border-radius:10px;padding:5px;cursor:pointer;box-shadow:0 3px 0 #1c1c1c}
+.skin button:disabled{background:#e4dfcf;color:#8a826d;cursor:default;box-shadow:none}
+.skin.wearing{background:#eaffef}
+#shopBtn{position:fixed;top:56px;right:14px;z-index:15;font:inherit;font-weight:700;background:#fff25a;color:#1c1c1c;border:3px solid #1c1c1c;border-radius:12px;padding:4px 12px;cursor:pointer;box-shadow:0 3px 0 #1c1c1c}
+body.viewing #shopBtn{display:none}
 #prompts{position:fixed;inset:0;pointer-events:none;z-index:5}
 .key{position:fixed;width:84px;height:84px;pointer-events:auto;cursor:pointer;background:#fff25a;color:#1c1c1c;border:5px solid #1c1c1c;border-radius:22px;box-shadow:0 7px 0 #1c1c1c;
  font:900 2.6rem "Comic Sans MS","Chalkboard SE",system-ui,sans-serif;display:grid;place-items:center;padding:0;animation:keyIn .25s cubic-bezier(.3,1.7,.5,1)}
@@ -81,6 +92,15 @@ body.viewing #meter,body.viewing #prompts,body.viewing #uberBanner{display:none}
     <footer>Press <b>Q</b> or <b>Esc</b> to close</footer>
   </div>
 </div>
+<div id="shopOverlay" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
+  <div id="shopBox">
+    <header><h2 id="shopTitle">🛍️ Shop</h2><span id="shopWallet">0 steps</span></header>
+    <h3>👗 Skins</h3>
+    <div class="shopGrid" id="skinList"></div>
+    <footer>Pay with your steps · Press <b>B</b> or <b>Esc</b> to close</footer>
+  </div>
+</div>
+<button id="shopBtn" title="Open the shop (B)">🛍️ Shop</button>
 <div id="prompts"></div>
 <div id="meter"><div class="mtop"><span>🤪 Goofy meter</span><span id="mName">Normal</span></div><div class="mbar"><i id="mFill"></i></div></div>
 <div id="uberBanner">🤪 UBER GOOBER MODE! 🤪</div>
@@ -134,6 +154,7 @@ function render(){
   if(done&&!c.classList.contains('got')){c.classList.replace('locked','got');c.querySelector('.medal').textContent='🏅';if(gotBefore!==null)say(`🏅 Achievement unlocked: ${a.t}! (press Q)`)}
   c.querySelector('.prog i').style.width=Math.min(100,v/a.n*100)+'%'});
  ACH_CATS.forEach(cat=>{const v=cat.val();$('achCat_'+cat.id).textContent=`${cat.list.filter(([n])=>v>=n).length} / ${cat.list.length}`});
+ if($('shopOverlay').classList.contains('open'))renderShop();
  gotBefore=got;$('achCount').textContent=`${got} / ${ACH.length}`;$('achBar').firstElementChild.style.width=got/ACH.length*100+'%';
 }
 
@@ -175,13 +196,12 @@ function faceTex(mood='happy'){const sad=mood==='sad',scared=mood==='scared';ret
  const drop=(tx,ty,k,col)=>{x.fillStyle=col;x.strokeStyle=INK;x.lineWidth=4;x.beginPath();x.moveTo(tx,ty);x.bezierCurveTo(tx-20*k,ty+34*k,tx-14*k,ty+50*k,tx,ty+50*k);x.bezierCurveTo(tx+14*k,ty+50*k,tx+20*k,ty+34*k,tx,ty);x.fill();x.stroke();
   x.fillStyle='rgba(255,255,255,.8)';x.beginPath();x.ellipse(tx-5*k,ty+36*k,4*k,7*k,0,0,7);x.fill()};
  const teeth=(xs,ty,tw,th)=>{x.fillStyle='#fff';x.strokeStyle=INK;x.lineWidth=5;for(const tx of xs){x.beginPath();x.roundRect(tx,ty,tw,th,[0,0,7,7]);x.fill();x.stroke()}};
- const chin=cy=>{x.strokeStyle='#d9534f';x.lineWidth=5;for(const dx of[-16,16]){x.beginPath();x.arc(256+dx,cy,12,.15*Math.PI,.85*Math.PI);x.stroke()}};
  if(scared){const lip=()=>{x.beginPath();x.ellipse(256,428,64,72,0,0,7)};           // scared: tall "AAH" mouth, sweat drop on the temple
   lip();x.fillStyle='#6b1410';x.fill();x.save();x.clip();
   x.fillStyle='#ff7f8f';x.beginPath();x.ellipse(256,502,56,34,0,0,7);x.fill();
   teeth([218,258],346,36,44);x.restore();
   x.strokeStyle=INK;x.lineWidth=8;lip();x.stroke();
-  drop(444,168,.95,'#bfe8ff');chin(524)}
+  drop(444,168,.95,'#bfe8ff')}
  else if(sad){                                                                  // sad: big shiny puppy-dog eyes, welling tears, worried brows, open frown
   for(const ex of[180,332]){const eye=()=>{x.beginPath();x.ellipse(ex,212,78,86,0,0,7)};
    x.fillStyle='#fff';eye();x.fill();x.save();eye();x.clip();
@@ -195,8 +215,7 @@ function faceTex(mood='happy'){const sad=mood==='sad',scared=mood==='scared';ret
   lip();x.fillStyle='#6b1410';x.fill();x.save();x.clip();
   x.fillStyle='#ff7f8f';x.beginPath();x.ellipse(256,452,44,12,0,0,7);x.fill();
   teeth([222,258],380,32,34);x.restore();
-  x.strokeStyle=INK;x.lineWidth=8;lip();x.stroke();
-  chin(486)}
+  x.strokeStyle=INK;x.lineWidth=8;lip();x.stroke();}
  else{const L=146,Rt=366,y=352;                                        // open grin: dark mouth, tongue, buck teeth hanging from the upper lip, clear of the cheeks
   const lip=()=>{x.beginPath();x.moveTo(L,y);x.bezierCurveTo(204,388,308,388,Rt,y);x.bezierCurveTo(350,458,300,476,256,476);x.bezierCurveTo(212,476,162,458,L,y);x.closePath()};
   lip();x.fillStyle='#6b1410';x.fill();x.save();x.clip();
@@ -204,10 +223,26 @@ function faceTex(mood='happy'){const sad=mood==='sad',scared=mood==='scared';ret
   x.fillStyle='#fff';x.lineWidth=5;for(const tx of[216,258]){x.beginPath();x.roundRect(tx,366,38,50,[0,0,7,7]);x.fill();x.stroke()}x.restore();
   x.lineWidth=8;lip();x.stroke();
   x.lineWidth=6;x.beginPath();x.moveTo(134,340);x.quadraticCurveTo(134,356,150,358);x.stroke();x.beginPath();x.moveTo(378,340);x.quadraticCurveTo(378,356,362,358);x.stroke();   // dimples hug the corners
-  x.strokeStyle='#d9534f';x.lineWidth=5;for(const dx of[-16,16]){x.beginPath();x.arc(256+dx,506,12,.15*Math.PI,.85*Math.PI);x.stroke()}}   // chin
+  }
 })}
 const sideTex=()=>canvasTex(256,320,(x,w,h)=>{x.fillStyle=SIDE;x.fillRect(0,0,w,h);holes(x,Array.from({length:9},()=>[rnd(20,236),rnd(20,300),rnd(10,24),rnd(12,28)]),SIDEHOLE)});
+// How each skin's outfit covers the butt (colour, height, depth, size); skins without an entry use default
+const BUTT={default:{col:0x9a5a28,y:1.26,z:-.3,k:.72},classic:{col:0x9a5a28,y:1.26,z:-.3,k:.72},princess:{col:0xffb0d8,x:.26,y:1.4,z:-.5,s:[.92,.86,.7],tilt:-.15}};
 const pantsTex=()=>canvasTex(256,96,(x,w,h)=>{x.fillStyle='#9a5a28';x.fillRect(0,0,w,h);x.fillStyle=INK;for(let i=0;i<w;i+=42)x.fillRect(i+6,10,28,16);x.fillStyle='#7d4618';x.fillRect(0,h-6,w,6)});
+// Princess ball gown
+const DV={col:0xffb0d8,dark:0xd94f9a,skirt:[[.9,0],[1.02,-.2],[1.25,-.58],[1.45,-.98],[1.55,-1.28]],waves:7,tiers:[-.5,-.92],sleeve:.4,sleeveArm:.22};
+const SPARKLE=canvasTex(128,128,(x,w,h)=>{x.translate(64,64);x.fillStyle='#fff';x.beginPath();for(let i=0;i<8;i++){const a=i/8*Math.PI*2,r=i%2?10:60;x.lineTo(Math.sin(a)*r,-Math.cos(a)*r)}x.fill()});
+const DRESS=DV.col,DRESS_DARK=DV.dark;
+// Skirt: lathe profile (radius, height below the waist), squashed front-to-back, with a wavy hem.
+const SKIRT_TOP=1.63,SKIRT_Z=.6,SKIRT=DV.skirt,SKIRT_LEN=-SKIRT[SKIRT.length-1][1];
+const profR=(pr,dy)=>{for(let i=1;i<pr.length;i++){const[a,ya]=pr[i-1],[b,yb]=pr[i];if(dy>=yb)return a+(b-a)*(dy-ya)/(yb-ya)}return pr[pr.length-1][0]};
+const skirtR=dy=>profR(SKIRT,dy);
+function skirtGeo(extra,k,waves,phase,pr=SKIRT,amp=.06,grow=0){const len=-pr[pr.length-1][1],pts=pr.map(([r,y],i)=>new THREE.Vector2(r*k+grow,i===pr.length-1?y-extra-grow:y)).reverse(),g=new THREE.LatheGeometry(pts,128),p=g.attributes.position;
+ for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),f=Math.pow(-y/len,2),a=Math.atan2(x,z)*waves*2+phase,w=1+amp*f*Math.sin(a);
+  p.setXYZ(i,x*w,y+.02*f*Math.cos(a)*(amp/.06),z*w*(SKIRT_Z*(1+grow*.6)))}
+ g.computeVertexNormals();const nr=g.attributes.normal,np=pr.length,last=128*np;   // weld the lathe seam so no fold line shows
+ for(let j=0;j<np;j++){const a=V(nr.getX(j),nr.getY(j),nr.getZ(j)).add(V(nr.getX(last+j),nr.getY(last+j),nr.getZ(last+j))).normalize();nr.setXYZ(j,a.x,a.y,a.z);nr.setXYZ(last+j,a.x,a.y,a.z)}
+ return g}
 function flowerTex(col){return canvasTex(256,256,(x,w,h)=>{x.translate(128,128);x.strokeStyle=col;x.lineWidth=11;const n=5+(Math.random()<.4);
  x.beginPath();for(let i=0;i<=360;i++){const a=i/360*Math.PI*2,r=48+62*Math.pow(Math.abs(Math.sin(a*n/2)),.6);i?x.lineTo(r*Math.cos(a),r*Math.sin(a)):x.moveTo(r,0)}
  x.globalAlpha=.12;x.fillStyle=col;x.fill();x.globalAlpha=1;x.stroke();x.lineWidth=8;x.beginPath();x.arc(0,0,22,0,7);x.stroke()})}
@@ -240,16 +275,65 @@ function makeTorso(M,ol){
  const side=M(sideTex()),face=M(faceTex()),faces={happy:face.map,scared:faceTex('scared'),sad:faceTex('sad')};
  add(new THREE.Mesh(spongeGeo(1.6,1.9,.74),[side,side,side,side,face,side]),0,2.62,0);
  const setFace=mood=>{const m=faces[mood]||faces.happy;if(face.map!==m){face.map=m;face.needsUpdate=true}};
- add(new THREE.Mesh(new THREE.BoxGeometry(1.5,.2,.7),M(0xffffff)),0,1.57,0);
- add(new THREE.Mesh(new THREE.BoxGeometry(1.52,.36,.72),M(pantsTex())),0,1.29,0);
- [-1,1].forEach(s=>{const c=add(new THREE.Mesh(new THREE.ConeGeometry(.15,.26,3),M(0xffffff)),s*.17,1.62,.37);c.rotation.set(Math.PI/2,0,s*-.7)});
- const tie=new THREE.Group();tie.position.set(0,1.6,.4);body.add(tie);
- add(new THREE.Mesh(new THREE.BoxGeometry(.14,.1,.05),M(0xe33a2c)),0,0,0,tie);
- const blade=add(new THREE.Mesh(new THREE.ConeGeometry(.13,.36,4),M(0xe33a2c)),0,-.23,0,tie);blade.rotation.x=Math.PI;
+ // Skins: every outfit is its own group under the body; setSkin shows one of them
+ const tie=new THREE.Group();tie.position.set(0,1.6,.4);body.add(tie);   // the tie spring swings this group
+ const outfits={},dressUp=(id,build)=>{const mark=body.children.length;build();const g=new THREE.Group();body.children.slice(mark).forEach(c=>g.add(c));body.add(g);outfits[id]=g};
+ const classicTie=new THREE.Group();tie.add(classicTie);
+ dressUp('classic',()=>{   // white shirt, collar, square brown pants and a red tie
+  add(new THREE.Mesh(new THREE.BoxGeometry(1.5,.2,.7),M(0xffffff)),0,1.57,0);
+  add(new THREE.Mesh(new THREE.BoxGeometry(1.52,.36,.72),M(pantsTex())),0,1.29,0);
+  [-1,1].forEach(s=>{const c=add(new THREE.Mesh(new THREE.ConeGeometry(.15,.26,3),M(0xffffff)),s*.17,1.62,.37);c.rotation.set(Math.PI/2,0,s*-.7)});
+  add(new THREE.Mesh(new THREE.BoxGeometry(.14,.1,.05),M(0xe33a2c)),0,0,0,classicTie);
+  const blade=add(new THREE.Mesh(new THREE.ConeGeometry(.13,.36,4),M(0xe33a2c)),0,-.23,0,classicTie);blade.rotation.x=Math.PI});
+ dressUp('princess',()=>{   // princess ball gown: sweetheart bodice, bell skirt with ruffle bands, big puff sleeves, heart tiara
+ const pink=M(DRESS),rose=M(DRESS_DARK);pink.side=rose.side=THREE.DoubleSide;
+ const skirt=(args,mat,y)=>{const m=new THREE.Mesh(skirtGeo(...args),mat);m.position.set(0,y,0);body.add(m);   // skirt with an outline that follows its curve
+  if(ol!==NOOP){const a=[...args,SKIRT,.06,.028];const o=new THREE.Mesh(skirtGeo(...a),inkMat);o.userData.line=true;m.add(o);
+   const p=m.geometry.attributes.position,n=m.geometry.parameters.points.length,hem=[];for(let i=0;i<128;i+=2){const k=i*n;hem.push(V(p.getX(k),p.getY(k),p.getZ(k)))}   // ink line along the wavy hem
+   const hl=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(hem,true),128,.022,6,true),new THREE.MeshBasicMaterial({color:INK}));hl.userData.line=true;m.add(hl)}return m};
+ const ring=(r,y,mat,th=.05)=>{const tr=new THREE.Mesh(new THREE.TorusGeometry(r,th,8,48),mat);tr.position.set(0,y,0);tr.rotation.x=Math.PI/2;tr.scale.y=SKIRT_Z;body.add(tr);   // own even-width outline (a bbox-scaled one pokes through the skirt)
+  if(ol!==NOOP){const o=new THREE.Mesh(new THREE.TorusGeometry(r+.012,th+.012,8,48),inkMat);o.userData.line=true;tr.add(o)}return tr};
+  skirt([0,1,DV.waves,Math.PI/2],pink,SKIRT_TOP);   // phase must match SKIRT_PHASE below: puts a wave trough at both sides, so the side silhouette never folds
+ {const lid=add(new THREE.Mesh(new THREE.CircleGeometry(.95,48),pink),0,SKIRT_TOP-.005,0);lid.rotation.x=-Math.PI/2;lid.scale.y=SKIRT_Z}   // closes the skirt's waist opening so you can't look into the dress from above
+ const SKIRT_PHASE=Math.PI/2,tier=(dy,th)=>{const f=(-dy/SKIRT_LEN)**2,pts=[];for(let i=0;i<192;i++){const t=i/192*Math.PI*2,a=t*DV.waves*2+SKIRT_PHASE,R=skirtR(dy-th*1.5)*(1+.042*f*Math.sin(a))+th+.015+(dy<-.7?.04*Math.max(0,(Math.abs(Math.sin(t))-.85)/.15)**2:0);   // lower band eases out at the sides so it doesn't curl behind the wide tier   // softer wave than the hem so it never folds
+   pts.push(V(Math.sin(t)*R,SKIRT_TOP+dy+.014*f*Math.cos(a),Math.cos(t)*R*SKIRT_Z))}body.add(inkTube(new THREE.CatmullRomCurve3(pts,true),th,rose,ol===NOOP?0:.012,288))};
+ DV.tiers.forEach(dy=>tier(dy,.03));   // thin trim that hugs the skirt   // ruffle bands ride on the skirt's wave, so they never cut into it
+ const bodiceR=a=>1/Math.pow(Math.pow(Math.abs(Math.sin(a))/.95,3)+Math.pow(Math.abs(Math.cos(a))/.56,3),1/3);   // rounded-rectangle cross-section around the sponge
+ {const g=new THREE.CylinderGeometry(1,1,.29,64,8,true),p=g.attributes.position;for(let i=0;i<p.count;i++){const a=Math.atan2(p.getX(i),p.getZ(i)),k=(p.getY(i)+.145)/.29,r=bodiceR(a)*1.03*(1-.09*Math.sin(a)**4*k**4);p.setX(i,Math.sin(a)*r);p.setZ(i,Math.cos(a)*r)}   // straight neckline covers the body top; straight sides (no light band) and a smooth corner bevel
+  g.computeVertexNormals();const m=new THREE.Mesh(g,pink);m.position.y=1.745;body.add(m)}
+ {const sh=new THREE.Shape();for(let i=0;i<=128;i++){const a=i/128*Math.PI*2,r=bodiceR(a)*1.03*(1-.09*Math.sin(a)**4);i?sh.lineTo(Math.sin(a)*r,Math.cos(a)*r):sh.moveTo(Math.sin(a)*r,Math.cos(a)*r)}
+  const lid=new THREE.Mesh(new THREE.ShapeGeometry(sh,64),pink);lid.rotation.x=Math.PI/2;lid.position.y=1.745+.145-.004;body.add(lid)}   // closes the bodice top around the sponge, so you can't look down into the dress
+ {const g=new THREE.CylinderGeometry(1,1,.11,128,1,true),p=g.attributes.position,R=a=>bodiceR(a)*1.03+.01;for(let i=0;i<p.count;i++){const a=Math.atan2(p.getX(i),p.getZ(i));p.setX(i,Math.sin(a)*R(a));p.setZ(i,Math.cos(a)*R(a))}
+  g.computeVertexNormals();const m=new THREE.Mesh(g,rose);m.position.y=1.6;body.add(m);   // waist sash: a flat ribbon sewn onto the bodice, covers its bottom edge
+  if(ol!==NOOP)for(const y of[-.055,.055]){const pts=[];for(let i=0;i<128;i++){const a=i/128*Math.PI*2;pts.push(V(Math.sin(a)*(R(a)+.004),y,Math.cos(a)*(R(a)+.004)))}
+   const e=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts,true),192,.012,6,true),inkMat);e.userData.line=true;m.add(e)}}   // ink along both edges   // bodice wraps all the way round, no box edges
+ [-1,1].forEach(s=>{const h=add(new THREE.Mesh(new THREE.SphereGeometry(.42,24,10,0,Math.PI*2,0,Math.PI/2),pink),s*.37,1.775,.38);h.scale.set(1,.36,.16)});   // sweetheart neckline: two wide rounded tops, below the mouth
+ [-1,1].forEach(s=>add(new THREE.Mesh(new THREE.SphereGeometry(.24,24,16),pink),s*.34,1.84,.45).scale.set(1,.72,.8));   // padded bust, sits above the sash, sticks out past the face so it shows from above
+ // diamond tiara: silver band on the front edge of the head, pearls, a heart frame with a pink diamond
+ {const top=3.57;
+  const silver=M(0xdfe4ec),gem=c=>{const m=M(c);m.flatShading=true;m.needsUpdate=true;return m},pinkGem=gem(0xff5fb0),blueGem=gem(0xa9dcff),pearl=M(0xffffff);
+  const g=new THREE.Group();body.add(g);
+  const shell=(m,t=.022)=>{if(ol===NOOP)return m;m.geometry.computeBoundingBox();const sz=V(0,0,0);m.geometry.boundingBox.getSize(sz);const o=new THREE.Mesh(m.geometry,inkMat);o.userData.line=true;
+   o.onBeforeRender=()=>o.scale.set(1+2*t/(sz.x*m.scale.x),1+2*t/(sz.y*m.scale.y),1+2*t/(sz.z*m.scale.z));m.add(o);return m};
+  const dia=(x,y,z,w,h,mat,rx=0)=>{const d=shell(new THREE.Mesh(new THREE.OctahedronGeometry(1,0),mat));d.position.set(x,y,z);g.add(d);d.scale.set(w,h,w*.7);d.rotation.set(rx,Math.PI/4,0);return d};   // faceted diamond
+  const arc=(r,z0,y,bend)=>u=>V(u*r,y,z0-bend*u*u);                     // headband curve across the top front of the head, ends bend back
+  const band=(f,rad,mat=silver,y0=0)=>{const pts=[];for(let i=0;i<=12;i++)pts.push(f(-1+i/6).add(V(0,y0,0)));g.add(inkTube(new THREE.CatmullRomCurve3(pts),rad,mat,ol===NOOP?0:.018,40));
+   for(const e of[pts[0],pts[pts.length-1]]){const cap=shell(new THREE.Mesh(new THREE.SphereGeometry(rad,12,8),mat),.018);cap.position.copy(e);g.add(cap)}return pts};   // round caps close the tube ends
+  const twinkle=(x,y,z,s0)=>{const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:SPARKLE,transparent:true,depthWrite:false,fog:false}));sp.position.set(x,y,z);g.add(sp);const ph=Math.random()*6;
+   sp.onBeforeRender=()=>{const t=performance.now()/1000,k=Math.max(0,Math.sin(t*2.2+ph));sp.scale.setScalar(s0*(.25+k))};return sp};
+  const f=arc(.8,.37,top-.03,.26);band(f,.05);   // band sits on the front edge of the head, so it shows
+  for(const u of[-.88,-.66,.66,.88]){const p=f(u);const pr=shell(new THREE.Mesh(new THREE.SphereGeometry(.065,14,10),pearl),.016);pr.position.set(p.x,p.y+.08,p.z+.01);g.add(pr)}
+  const c=f(0),hk=.021,hy=c.y+.36,hp=[];for(let i=0;i<=40;i++){const t=i/40*Math.PI*2;hp.push(V(c.x+hk*16*Math.pow(Math.sin(t),3),hy+hk*(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t)),c.z))}
+  g.add(inkTube(new THREE.CatmullRomCurve3(hp,true),.035,silver,ol===NOOP?0:.02,60));dia(c.x,hy-.01,c.z,.17,.2,pinkGem).scale.z=.075;   // flat enough to sit inside the heart frame
+  [-1,1].forEach(s=>dia(c.x+s*.42,c.y+.17,c.z-.02,.08,.11,blueGem));twinkle(c.x+.26,hy+.3,c.z+.1,.6);twinkle(c.x-.5,c.y+.35,c.z+.05,.35)}});
+ // Butt: part of the body, so every skin (also future ones) has it; BUTT says how each skin covers it
+ const buttMat=M(0xffffff),butt=[-1,1].map(s=>add(new THREE.Mesh(new THREE.SphereGeometry(.36,24,16),buttMat),s*.33,0,0));
+ const setSkin=id=>{for(const k in outfits)outfits[k].visible=k===id;classicTie.visible=id==='classic';
+  const b=BUTT[id]||BUTT.default;buttMat.color.set(b.col);butt.forEach((m,i)=>{const x=b.x??.33;m.position.set(i?x:-x,b.y,b.z);m.rotation.x=b.tilt||0;if(b.s)m.scale.set(...b.s);else m.scale.set(b.k,.9*b.k,.85*b.k)})};   // x: cheek spacing, s: cheek scale (else k), tilt: lean
  const nose=new THREE.CatmullRomCurve3([V(0,2.76,.34),V(0,2.73,.58),V(0,2.6,.74)]);
  body.add(inkTube(nose,.075,M(YEL),ol===NOOP?0:.022,12));
  const tip=add(new THREE.Mesh(new THREE.SphereGeometry(.078,12,10),M(YEL)),0,2.6,.74);
- return {root,body,tie,add,setFace}}
+ return {root,body,tie,add,setFace,outfits,setSkin,butt}}
 const NOOP=()=>{};
 
 function shoe(M,ol){const g=new THREE.Group();const s=new THREE.Mesh(new THREE.SphereGeometry(.2,22,16),new THREE.MeshBasicMaterial({color:0x111111}));s.scale.set(1,.62,1.65);s.position.z=.12;g.add(s);ol(s);
@@ -301,7 +385,9 @@ function buildC(){
  const fl=skyFlowers();
 
  // rubber-hose sponge: bezier-arc limbs, geometry reused every frame
- const t=makeTorso(M,ol),root=t.root;const skin=M(YEL),white=M(0xffffff),red=M(0xe33a2c),blue=M(0x2f6fe0),brown=M(0x9a5a28);brown.side=THREE.DoubleSide;   // pant legs are open tubes: render the inside too
+ const t=makeTorso(M,ol),root=t.root;const skin=M(YEL),white=M(0xffffff),red=M(0xe33a2c),blue=M(0x2f6fe0),brown=M(0x9a5a28),bloomer=M(DRESS),sleeve=M(0xffd0e8);   // sleeves a shade lighter so they stand apart from the bodice
+ brown.side=bloomer.side=THREE.DoubleSide;   // pant legs are open tubes: render the inside too
+ const limbs={classic:new THREE.Group(),princess:new THREE.Group()};root.add(limbs.classic,limbs.princess);   // per-skin pant legs and sleeves
  const bez=()=>new THREE.QuadraticBezierCurve3(V(0,0,0),V(0,0,0),V(0,0,0));
  function cartoonHand(){   // show-style hand: small flat palm, three chunky two-joint fingers with round tips, separate thumb
   const g=new THREE.Group(),sk=M(YEL);
@@ -315,9 +401,12 @@ function buildC(){
   const thumbBase=new THREE.Group();thumbBase.position.set(.08,-.05,.03);thumbBase.rotation.set(-.3,0,.9);g.add(thumbBase);
   const thumb=digit(thumbBase,0,0,0,.032,.045,.04);
   return {g,index,curled:[middle,ring],thumb}}
- const legs=[0,1].map(()=>{const s=shoe(M,ol);root.add(s);return {curve:bez(),shoe:s,parts:[hose(root,skin,.05,.022),hose(root,brown,.15,.02,0,.27),hose(root,white,.075,.02,.62,1),hose(root,red,.08,0,.66,.71),hose(root,blue,.08,0,.74,.79)]}});
- const arms=[0,1].map((_,i)=>{const h=cartoonHand();h.g.scale.x=i?-1:1;root.add(h.g);return {curve:bez(),hand:h.g,index:h.index,curled:h.curled,thumb:h.thumb,pos:null,parts:[hose(root,skin,.045,.022),hose(root,white,.14,.02,0,.13)]}});
- [-1,1].forEach(s=>{const sh=new THREE.Mesh(new THREE.SphereGeometry(.17,18,14),white);sh.scale.set(1,.9,1.05);sh.position.set(s*.8,1.58,0);t.body.add(sh);ol(sh)});   // round shirt shoulders, part of the body
+ const legs=[0,1].map(()=>{const s=shoe(M,ol);root.add(s);return {curve:bez(),shoe:s,parts:[hose(root,skin,.05,.022),hose(limbs.classic,brown,.15,.02,0,.27),hose(limbs.princess,bloomer,.15,.02,0,.27),hose(root,white,.075,.02,.62,1),hose(root,red,.08,0,.66,.71),hose(root,blue,.08,0,.74,.79)]}});
+ const arms=[0,1].map((_,i)=>{const h=cartoonHand();h.g.scale.x=i?-1:1;root.add(h.g);return {curve:bez(),hand:h.g,index:h.index,curled:h.curled,thumb:h.thumb,pos:null,parts:[hose(root,skin,.045,.022),hose(limbs.classic,white,.14,.02,0,.13),hose(limbs.princess,sleeve,.07,.02,0,.1)]}});
+ [-1,1].forEach(s=>{const sh=new THREE.Mesh(new THREE.SphereGeometry(.17,18,14),white);sh.scale.set(1,.9,1.05);sh.position.set(s*.8,1.58,0);t.outfits.classic.add(sh);ol(sh)});   // round shirt shoulders
+ arms.forEach(A=>{A.puff=new THREE.Mesh(new THREE.SphereGeometry(DV.sleeve*.79,20,14),sleeve);limbs.princess.add(A.puff);ol(A.puff);   // puff sleeve rides on the upper arm
+  A.cuff=new THREE.Mesh(new THREE.TorusGeometry(.062,.016,8,24),M(DRESS_DARK));limbs.princess.add(A.cuff);ol(A.cuff)});
+ let dressed=false;   // princess skin: hands ride on the skirt
  root.traverse(o=>{if(o.isMesh&&!o.userData.line)o.castShadow=true});
  // Goofy meter: level 0 (normal) .. 6 (max). Each row is one multiplier per level; live values ease toward the chosen level.
  const GOOFY_NAMES=['Normal','A bit silly','Goofy','Very goofy','Wacky','Bonkers','Goofy Goober MAX'];
@@ -335,7 +424,7 @@ function buildC(){
  const gp={};for(const k in GOOFY)gp[k]=GOOFY[k][0];let goofyLevel=0;
  const BASE_A=.46,BASE_LIFT=.34,BASE_LEG=1.12,OMEGA=5.2;   // stride half-length, foot lift, rest leg length, step speed
  legs.forEach(L=>{L.A=BASE_A;L.Afrom=BASE_A;L.swinging=false});let stanceA=BASE_A;
- const tie={z:0,vz:0,x:0,vx:0},inv=new THREE.Matrix4(),loc=V(0,0,0);
+ const ZAX=V(0,0,1),tie={z:0,vz:0,x:0,vx:0},inv=new THREE.Matrix4(),loc=V(0,0,0);
  const P={t:0,flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0},FT=V(0,0,0),XAX=V(1,0,0),tgt=V(0,0,0),mid=V(0,0,0),bx=V(0,0,0),by_=V(0,0,0),bz=V(0,0,0),basis=new THREE.Matrix4(),BM=t.body.matrix,SH=V(0,0,0);
  function walkHose(r,ph,dt){
   const ke=1-Math.exp(-dt*4);for(const k in GOOFY)gp[k]+=(GOOFY[k][goofyLevel]-gp[k])*ke;
@@ -369,6 +458,7 @@ function buildC(){
    SH.set(side*.84,1.56,0);
    tgt.set(side*lerp(1.0,1.05,up),lerp(.88,2.0,up)+Math.sin(ph*4)*.03*up,lerp(.12+a*.32,.55,up));   // hanging arm swings straight fore/aft along the side
    tgt.sub(SH).multiplyScalar(gp.arm).add(SH);                                           // goofy: longer reach from the shoulder
+   if(dressed){SH.x+=side*.06;tgt.x+=side*(.28+.55*up+.2*(gp.arm-1)+.25*(gp.arm-1)*up);tgt.z+=.4*up;tgt.y+=.35*(gp.arm-1)*(1-up)-(.35+.1*(gp.arm-1))*up}   // forward hand waves at chest height, not in front of the face   // gown: arms swing wide around the skirt and bust instead of across them
    tgt.applyMatrix4(BM);
    if(P.flail>0){const w=P.t*22+i*Math.PI;tgt.lerp(FT.set(side*(1.25+Math.cos(w)*.25),3.05+Math.sin(w)*.45,.35+Math.cos(w)*.4).applyMatrix4(BM),P.flail)}   // falling: arms windmill above the head
    if(P.cheer>0)tgt.lerp(FT.set(side*1.35,3.35,.25).applyMatrix4(BM),P.cheer);   // stand-up: arms flung up, ta-da!
@@ -376,11 +466,16 @@ function buildC(){
    if(!Ar.pos)Ar.pos=tgt.clone();else Ar.pos.lerp(tgt,1-Math.exp(-dt*lerp(12,40,P.plant)));               // springy follow-through
    // keep the hand outside sponge + pants, checked in body space after the spring (body sways/twists under it)
    inv.copy(BM).invert();loc.copy(Ar.pos).applyMatrix4(inv);
+   if(dressed&&loc.y>SKIRT_TOP-SKIRT_LEN-.05&&loc.y<SKIRT_TOP){const rx=skirtR(loc.y-SKIRT_TOP)+.48,rz=rx*SKIRT_Z,d=Math.hypot(loc.x/rx,loc.z/rz);if(d<1){loc.x/=d;loc.z/=d;Ar.pos.copy(loc).applyMatrix4(BM)}}   // hands ride on the skirt, not through it
    {const hw=(loc.y>1.6?.8*(1+.12*(loc.y-2.62)/1.9):.78)+.2;if(loc.y>.85&&loc.y<3.65&&Math.abs(loc.z)<.6&&Math.abs(loc.x)<hw){loc.x=side*hw;Ar.pos.copy(loc).applyMatrix4(BM)}}
    const S=Ar.curve.v0.copy(SH).applyMatrix4(BM);Ar.curve.v2.copy(Ar.pos);
    const w=gp.wiggle*.3;   // arms stay calmer than legs
-   Ar.curve.v1.copy(mid.addVectors(S,Ar.pos).multiplyScalar(.5)).add(tgt.set(side*(lerp(.05,.45,up)+Math.cos(ph*3+i)*w),lerp(.04,-.1,up)+Math.sin(ph*3+i*2)*w,lerp(-.06,0,up)));
+   Ar.curve.v1.copy(mid.addVectors(S,Ar.pos).multiplyScalar(.5)).add(tgt.set(side*((dressed?.22+.1*(gp.arm-1)*(1-up)+.1*up:0)+lerp(.05,.45,up)+Math.cos(ph*3+i)*w),lerp(.04,-.1,up)+Math.sin(ph*3+i*2)*w,lerp(-.06,0,up)));
    Ar.parts.forEach(f=>f(Ar.curve));Ar.hand.position.copy(Ar.pos);
+   if(dressed){Ar.puff.position.lerpVectors(S,Ar.curve.getPoint(.05,mid),.3);Ar.puff.position.y+=.1;Ar.puff.position.x+=side*.05;   // puff stays on the shoulder, leans only a little toward the arm
+    Ar.puff.quaternion.setFromUnitVectors(_Y,Ar.curve.getTangent(.05,_T).normalize().multiplyScalar(-1)).slerp(t.body.quaternion,.7);
+    let u=.05;const pr=DV.sleeve*.79;while(u<.5&&Ar.curve.getPoint(u,Ar.cuff.position).distanceTo(Ar.puff.position)<pr)u+=.01;   // cuff sits where the arm leaves the puff
+   Ar.cuff.quaternion.setFromUnitVectors(ZAX,Ar.curve.getTangent(u,_T).normalize())}
    // orient hand along the arm, thumb toward the front; index straightens as the arm comes up
    Ar.curve.getTangent(1,_T);by_.copy(_T).normalize().negate();bz.set(0,0,1).addScaledVector(by_,-by_.z).normalize();bx.crossVectors(by_,bz);
    Ar.hand.quaternion.setFromRotationMatrix(basis.makeBasis(bx,by_,bz));// hanging: all fingers loosely curled (limp wrist); pointing: index straight, others in a fist, thumb tucked
@@ -388,20 +483,45 @@ function buildC(){
    Ar.curled.forEach(([k1,k2])=>{k1.rotation.x=lerp(.6,1.35,up);k2.rotation.x=lerp(.75,1.5,up)});
    Ar.thumb[0].rotation.x=lerp(.2,.7,up);Ar.thumb[1].rotation.x=lerp(.3,.9,up)});
  }
- return {rig:{root,body:t.body},pose:P,walk:walkHose,omega:OMEGA,get speed(){return 2*stanceA*OMEGA/Math.PI},
+ const outfitParts=new Set();[...Object.values(t.outfits),...Object.values(limbs),t.tie,...t.butt].forEach(g=>g.traverse(o=>outfitParts.add(o)));   // everything that is clothing, for the viewer's outfit-only mode
+ return {rig:{root,body:t.body},isOutfit:o=>outfitParts.has(o),pose:P,walk:walkHose,omega:OMEGA,get speed(){return 2*stanceA*OMEGA/Math.PI},
   goofyNames:GOOFY_NAMES,setFace(m){t.setFace(m);const sel=document.getElementById('dvFace');if(sel)sel.value=m},   // keep the model viewer's Face setting in sync
+  setSkin(id){t.setSkin(id);for(const k in limbs)limbs[k].visible=k===id;dressed=id==='princess'},
   setGoofy(l){goofyLevel=Math.max(0,Math.min(GOOFY_NAMES.length-1,l|0))},
   update(dt,t2,v){drumG.rotation.x-=v/R;fl(t2)}}}
 
 // ---------- Game loop ----------
 const env=buildC();world.add(env.rig.root);
 
+// ---------- Shop: skins bought with steps ----------
+const SKINS=[
+ {id:'classic',name:'Classic Sponge',pic:'👔',desc:'White shirt, red tie and square brown pants.',price:0},
+ {id:'princess',name:'Princess',pic:'👸',desc:'Pink ball gown with big puff sleeves and a heart diamond tiara.',price:1000},
+];
+if(!Array.isArray(S.skins))S.skins=['classic'];
+if(!SKINS.some(k=>k.id===S.skin&&S.skins.includes(k.id)))S.skin='classic';
+const shop=$('shopOverlay');let shopKey='';
+function renderShop(){   // rebuilds the cards only when something on them changed
+ $('shopWallet').textContent=fmt(S.steps)+' steps';
+ const key=SKINS.map(k=>[S.skin===k.id,S.skins.includes(k.id),S.steps>=k.price]).join();if(key===shopKey)return;shopKey=key;
+ $('skinList').innerHTML=SKINS.map(k=>{const own=S.skins.includes(k.id),on=S.skin===k.id;
+  return `<div class="skin${on?' wearing':''}"><div class="pic">${k.pic}</div><b>${k.name}</b><small>${k.desc}</small>
+   <button data-id="${k.id}"${on||(!own&&S.steps<k.price)?' disabled':''}>${on?'✅ Wearing':own?'Wear':`Buy · ${fmt(k.price)} steps`}</button></div>`}).join('')}
+$('skinList').addEventListener('click',e=>{const id=e.target.dataset&&e.target.dataset.id;if(!id)return;const k=SKINS.find(s=>s.id===id);
+ if(!S.skins.includes(id)){if(S.steps<k.price)return;S.steps-=k.price;S.skins.push(id);say(`🛍️ Bought ${k.name}! Looking fabulous.`)}
+ S.skin=id;env.setSkin(id);render()});
+const toggleShop=open=>{shop.classList.toggle('open',open??!shop.classList.contains('open'));render()};
+$('shopBtn').onclick=()=>toggleShop(true);
+addEventListener('keydown',e=>{if(e.repeat||viewer.on)return;if(e.key==='b'||e.key==='B')toggleShop();else if(e.key==='Escape')toggleShop(false)});
+shop.addEventListener('pointerdown',e=>{if(e.target===shop)toggleShop(false)});
+env.setSkin(S.skin);
+
 let gameGoofy=()=>0;   // set by the key rush below
 // ---------- Model viewer (only with ?developer-mode=true) ----------
 const viewer={on:false,paused:false,speed:1};
 if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  const css=document.createElement('style');css.textContent=`
- #devBtn{position:fixed;top:56px;right:14px;z-index:15;font:inherit;background:#1c1c1c;color:#fff25a;border:2px solid #fff25a;border-radius:10px;padding:5px 10px;cursor:pointer}
+ #devBtn{position:fixed;top:100px;right:14px;z-index:15;font:inherit;background:#1c1c1c;color:#fff25a;border:2px solid #fff25a;border-radius:10px;padding:5px 10px;cursor:pointer}
  #devPanel{position:fixed;top:14px;right:14px;z-index:15;width:250px;background:#1c1c1ce6;color:#fff;border:2px solid #fff25a;border-radius:14px;padding:12px 14px;font-size:.85rem;display:none}
  #devPanel.open{display:block}
  #devPanel h3{margin:0 0 8px;color:#fff25a;font-size:1rem}
@@ -433,6 +553,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
   <label>Speed<input type="range" id="dvSpeed" min="0.1" max="3" step="0.1" value="1"></label>
   <label>Pose<input type="range" id="dvPhase" min="0" max="6.283" step="0.01" value="0"></label>
   <label>World<input type="checkbox" id="dvWorld" checked></label>
+  <label>Show sponge<input type="checkbox" id="dvSponge" checked></label>
   <label>Ink outlines<input type="checkbox" id="dvInk" checked></label>
   <label>Wireframe<input type="checkbox" id="dvWire"></label>
   <button id="dvFall">Play fall + stand up</button><button id="dvReset">Reset camera</button><button id="dvClose" style="background:#fff25a;color:#1c1c1c;font-weight:700">⬅ Back to game</button>
@@ -446,7 +567,9 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
   if(on){orbit.target.set(0,1.7,0);camera.position.set(3.6,2.4,7.5);frame(+dv('dvGoofy').value)}else{viewer.paused=false;viewer.speed=1;dv('dvPlay').checked=true;dv('dvSpeed').value=1;
    camera.position.copy(home.pos);camera.lookAt(home.target);setWorld(true);dv('dvWorld').checked=true;
    {const l=gameGoofy();dv('dvGoofy').value=l;setGoofy(l)}   // back to the game's own goofy level
-   dv('dvInk').checked=true;dv('dvWire').checked=false;rigMeshes.forEach(m=>{if(m.userData.line)m.visible=true;else [].concat(m.material).forEach(mm=>mm.wireframe=false)})}};
+   dv('dvInk').checked=true;dv('dvWire').checked=false;dv('dvSponge').checked=true;setSponge(true);rigMeshes.forEach(m=>{if(m.userData.line)m.visible=true;else [].concat(m.material).forEach(mm=>mm.wireframe=false)})}};
+ const spongeMeshes=rigMeshes.filter(m=>!env.isOutfit(m));let spongeOn=true;   // everything that is not clothing: body, face, yellow limbs, hands, shoes
+ const setSponge=v=>{spongeOn=v;spongeMeshes.forEach(m=>m.visible=v&&(!m.userData.line||dv('dvInk').checked))};
  const setWorld=v=>{worldParts.forEach(o=>o.visible=v);scene.background=v?null:new THREE.Color(0x3a4a5a);scene.fog.far=v?46:1e4};
  $('devBtn').onclick=()=>setOn(true);   // only opens; leaving is done with the Back button
  dv('dvClose').onclick=()=>setOn(false);
@@ -460,7 +583,8 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  dv('dvSpeed').oninput=e=>viewer.speed=+e.target.value;
  dv('dvPhase').oninput=e=>{viewer.paused=true;dv('dvPlay').checked=false;phase=+e.target.value};
  dv('dvWorld').onchange=e=>setWorld(e.target.checked);
- dv('dvInk').onchange=e=>rigMeshes.forEach(m=>{if(m.userData.line)m.visible=e.target.checked});
+ dv('dvInk').onchange=e=>rigMeshes.forEach(m=>{if(m.userData.line)m.visible=e.target.checked&&(spongeOn||env.isOutfit(m))});
+ dv('dvSponge').onchange=e=>setSponge(e.target.checked);   // outfit only: review a dress without SpongeBob in it
  dv('dvWire').onchange=e=>rigMeshes.forEach(m=>{if(!m.userData.line)[].concat(m.material).forEach(mm=>mm.wireframe=e.target.checked)});
  // Camera angle in the sponge's own frame (0° = front, 90° = his left, 180° = back, 270° = his right), so outfit feedback can name the exact angle
  const DEG=180/Math.PI,ANGLE_NAMES=['front','front, his left','his left side','back, his left','back','back, his right','his right side','front, his right'],camL=V(0,0,0),tgtL=V(0,0,0);
@@ -483,7 +607,7 @@ function popText(x,y,text,size=22){const d=document.createElement('div');d.textC
 // clicking the scene does nothing for now
 
 // ---------- Key rush: press the keys that pop up to fill the goofy meter; full meter = Uber Goober mode ----------
-const KEYS='ASDFGHJKLZXCVBNUIOPERTYW';      // no Q (achievements) or M (model viewer)
+const KEYS='ASDFGHJKLZXCVNUIOPERTYW';      // no Q (achievements), M (model viewer) or B (shop)
 const UBER_TIME=12,HIT_FILL=4,KEY_SLOW=1.9,KEY_FAST=.8,FALL_TIME=3;
 const rush={meter:0,level:0,uber:0,cur:null,next:1.5,fall:0};
 gameGoofy=()=>rush.level;
@@ -528,7 +652,8 @@ addEventListener('keydown',e=>{if(viewer.on||e.repeat||!rush.cur||e.metaKey||e.c
  if(k.length!==1||!KEYS.includes(k))return;if(k===rush.cur.k)hitKey();else missKey()});
 // dev only: press 1 to toggle auto mode, which hits every key for you
 const DEV=new URLSearchParams(location.search).get('developer-mode')==='true';let autoPlay=false;
-if(DEV)addEventListener('keydown',e=>{if(e.key==='1'&&!e.repeat){autoPlay=!autoPlay;say(autoPlay?'🤖 Auto mode ON (press 1 to stop)':'🤖 Auto mode OFF')}});
+if(DEV)addEventListener('keydown',e=>{if(e.repeat)return;if(e.key==='1'){autoPlay=!autoPlay;say(autoPlay?'🤖 Auto mode ON (press 1 to stop)':'🤖 Auto mode OFF')}
+ else if(e.key==='2'){S.steps+=1000;say('🤖 +1000 steps (dev)');render()}});
 function rushTick(dt){if(viewer.on&&rush.fall<=0||overlay.classList.contains('open'))return;                     // paused while viewing or reading achievements
  if(rush.fall>0){rush.fall=Math.max(0,rush.fall-dt);fallPose();if(rush.fall<=0){Object.assign(env.pose,{flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0});env.rig.root.position.y=0;stars.visible=false}return}                              // no keys while he's on the ground
  if(rush.uber>0){S.uberTime=(S.uberTime||0)+Math.min(dt,rush.uber);rush.uber-=dt;if(rush.uber<=0){rush.uber=0;rush.meter=0;document.body.classList.remove('uber');say('Phew… back to normal walking.')}syncLevel()}

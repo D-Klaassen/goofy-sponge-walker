@@ -120,19 +120,20 @@ Leave at least the outline width between a piece and the body, or the black outl
 
 ## Princess gown (fitted reference)
 
-The princess skin is the first fully fitted outfit (on `feature/next`, in progress). Its numbers show what a big garment needs:
+The princess skin is the first fully fitted outfit . Its numbers show what a big garment needs:
 
 | Piece | Value |
 |---|---|
 | Skirt top | y **1.63** |
 | Skirt profile | (radius, height below the top): (0.90, 0), (1.02, −0.20), (1.25, −0.58), (1.45, −0.98), (1.55, −1.28). Hem at y ≈ 0.35 |
 | Skirt depth | front-to-back squashed to 0.6 of its width |
-| Bodice | y 1.60 – 1.89, half-width 0.98, half-depth 0.58 |
-| Sweetheart tops | (±0.37, 1.805, 0.38) |
+| Bodice | y 1.60 – 1.89, half-width 0.98, half-depth 0.58; the top is closed with a flat lid so you can't look into the dress |
+| Sweetheart tops | (±0.37, 1.775, 0.38) |
 | Bust | spheres r 0.24, scale (1, 0.72, 0.8) at (±0.34, 1.84, 0.45). Top at y 2.01, just under the mouth |
-| Waist sash | ring r 0.93 at y 1.58 |
-| Bustle | one lobe r 0.36, scale (1.7, 0.7, 0.7) at (0, 1.45, −0.50), tilted −0.25 |
-| Hand rule | hands kept outside skirt radius + 0.45 |
+| Waist sash | flat ribbon 0.11 tall at y 1.60, on the bodice outline + 0.01 |
+| Ruffle trim | thin tubes (r 0.03) 0.50 and 0.92 below the skirt top, following the hem wave |
+| Butt | two cheeks r 0.36, scale (0.92, 0.86, 0.70) at (±0.26, 1.40, −0.50), tilted −0.15 (`BUTT.princess`) |
+| Hand rule | hands kept outside skirt radius + 0.48 |
 
 ## Checklist for a new outfit
 
