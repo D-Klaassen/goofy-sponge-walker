@@ -544,6 +544,8 @@ function buildPlankton(C,R){   // R: road drum radius
  const bodyR=y=>{if(y<=PROF[0][1]||y>=PROF[PROF.length-1][1])return 0;for(let i=1;i<PROF.length;i++){const[a,ya]=PROF[i-1],[b,yb]=PROF[i];if(y<=yb)return a+(b-a)*(y-ya)/(yb-ya)}return 0};
  add(new THREE.Mesh(new THREE.LatheGeometry(PROF.map(([r,y])=>new THREE.Vector2(r,y)),56),skin),0,0,0).scale.z=BZ;
  const onBody=(x,y,out)=>V(x,y,BZ*Math.sqrt(Math.max(0,bodyR(y)**2-x*x))+out);   // a point on the body's front surface, lifted by out
+ // butt: two small cheeks low on his back, like the sponge's but sized to his little egg
+ const BY=.95;[-1,1].forEach(sd=>{const x=sd*.18,c=add(new THREE.Mesh(new THREE.SphereGeometry(.17,20,14),skin),x,BY,-BZ*Math.sqrt(Math.max(0,bodyR(BY)**2-x*x))+.07);c.scale.set(1,.9,.85)});
  // the one big eye: pale yellow ball, red iris, black pupil, a glint
  const EY=2.0,EZ=.26,ER=.38,eye=new THREE.Group();eye.position.set(0,EY,EZ);eye.scale.z=.75;body.add(eye);   // one group flattened front to back, so ball, iris, pupil and glint stay together; front just 0.05 proud of the body
  {const e=new THREE.Mesh(new THREE.SphereGeometry(ER,28,20),M(0xfff2a0));e.castShadow=true;eye.add(e)}   // no outline shell: it only showed as a stray hairline
