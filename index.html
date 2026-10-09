@@ -57,7 +57,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 #coinBox button:disabled{opacity:.5;cursor:default}
 #coinBox .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 #coinBox .pack,#coinBox .prem{flex:1 1 150px;background:#fff;border:2px solid #1c1c1c;border-radius:10px;padding:6px 8px;display:flex;flex-direction:column;gap:4px}
-#coinBox small{color:#6b6250}#coinBox .note{margin:6px 0 0;font-size:.85rem}
+#coinBox small{color:#6b6250}#coinBox .note{margin:6px 0 0;font-size:.85rem}#coinBox .waiver{display:flex;gap:6px;align-items:flex-start;cursor:pointer}
 #coinBox h4{margin:10px 0 0}
 .gift{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
 .gift svg{display:block;width:100%;height:100%}
@@ -795,14 +795,14 @@ addEventListener('keydown',e=>{if(e.repeat||viewer.on)return;if(numKey(e)==='2')
 shop.addEventListener('pointerdown',e=>{if(e.target===shop)toggleShop(false)});
 // ---------- Coins: bought with real money, kept on the server against an Account (docs/specs/buy-coins.md) ----------
 // The browser only shows and asks; the server decides every balance, Return and Withdrawal.
-const coins={on:false,player:null,acct:null,packs:false,busy:false,note:''};let supa=null;
+const coins={on:false,player:null,acct:null,packs:false,busy:false,note:'',waiver:false};let supa=null;
 const esc=t=>String(t).replace(/[&<>"']/g,c=>`&#${c.charCodeAt(0)};`);   // text from outside (email, error messages) never becomes HTML
 const euro=c=>'€'+(c/100).toFixed(2).replace('.',',');
 const ownsPremium=id=>!!coins.acct?.owned.includes(id);
 async function api(path,body){const {data}=await supa.auth.getSession(),t=data.session?.access_token;
  const r=await fetch('/api/'+path,{method:body?'POST':'GET',headers:{'content-type':'application/json',...(t?{authorization:'Bearer '+t}:{})},body:body&&JSON.stringify(body)});
  const j=await r.json().catch(()=>({error:'server_error'}));if(!r.ok)throw new Error(j.error||'server_error');return j}
-const WHY={not_enough_coins:'Not enough Coins. Buy more below!',negative_balance:'Your Coin balance is negative after a reversed payment. Buy a Coin pack before buying Premium items.',already_owned:'You already own that.',not_withdrawable:'That pack can no longer be withdrawn.',sign_in_required:'Please sign in first.'};
+const WHY={not_enough_coins:'Not enough Coins. Buy more below!',negative_balance:'Your Coin balance is negative after a reversed payment. Buy a Coin pack before buying Premium items.',already_owned:'You already own that.',not_withdrawable:'That pack can no longer be withdrawn.',sign_in_required:'Please sign in first.',waiver_required:'Tick the box above the packs first.'};
 async function loadAccount(){if(!coins.player){coins.acct=null;dropUnowned();return renderCoins()}
  try{coins.acct=await api('account')}catch(e){coins.note='Could not load your Coins: '+(WHY[e.message]||e.message)}dropUnowned();renderCoins()}
 function dropUnowned(){let changed=false;for(const c in S.outfits)if(premiumById(S.outfits[c])&&!ownsPremium(S.outfits[c])){delete S.outfits[c];changed=true}if(changed)showSaved()}   // never wear something the Account doesn't own
@@ -816,16 +816,17 @@ function renderCoins(){const box=$('coinBox');
   return `<div class="prem"><b>💎 ${k.name}</b><small>${k.desc}</small>`+(own?`<button data-wear="${k.id}"${on?' disabled':d}>${on?'✅ Wearing':'Wear'}</button><button data-return="${k.id}"${d}>Return for ${returnValue(k.price)} Coins</button>`:`<button data-premium="${k.id}"${d}>Buy · ${k.price} Coins</button>`)+'</div>'}).join('');
  const wd=(a?.withdrawable||[]).map(w=>`<div class="pack"><b>${w.coins} Coins</b><small>Untouched: money back until ${new Date(w.until).toLocaleDateString()}</small><button data-withdraw="${w.session}"${d}>Withdraw</button></div>`).join('');
  box.innerHTML=`<div class="ctop"><b class="bal${a&&a.balance<0?' neg':''}">🪙 ${a?a.balance:'–'} Coins</b><span>`+(coins.player?`<small>${esc(coins.player.email)}</small> <button data-signout${d}>Sign out</button>`:`<button data-signin${d}>Sign in</button>`)+` <button data-packs${d}>${coins.packs?'Hide packs':'Buy coins'}</button></span></div>`
-  +(coins.packs?`<div class="row">${COIN_PACKS.map(p=>`<div class="pack"><b>${p.coins} Coins</b><small>${p.name} · incl. VAT</small><button data-pack="${p.id}"${d}>${euro(p.cents)}</button></div>`).join('')}</div><p class="note"><small>Coins are delivered right away, so the legal right of withdrawal ends at delivery. Untouched packs can still be withdrawn (money back) within ${WITHDRAW_DAYS} days. Returned items give Coins, never money.</small></p>`:'')
+  +(coins.packs?`<div class="row">${COIN_PACKS.map(p=>`<div class="pack"><b>${p.coins} Coins</b><small>${p.name} · incl. VAT</small><button data-pack="${p.id}"${d}>${euro(p.cents)}</button></div>`).join('')}</div><label class="note waiver"><input type="checkbox" data-waiver${coins.waiver?' checked':''}${d}> <small>I want my Coins delivered right away and I understand that I lose my right of withdrawal once they are delivered. I agree to the <a href="/terms" target="_blank">terms</a>.</small></label><p class="note"><small>Coins are delivered right away, so the legal right of withdrawal ends at delivery. Untouched packs can still be withdrawn (money back) within ${WITHDRAW_DAYS} days. Returned items give Coins, never money.</small></p>`:'')
   +(prem?`<h4>💎 Premium outfits for ${CHARS[ch].name}</h4><div class="row">${prem}</div>`:'')
   +(wd?`<h4>↩️ Withdrawable packs</h4><div class="row">${wd}</div><p class="note"><small>Spending uses your oldest Coins first. Coins from a Return don't make a pack withdrawable again.</small></p>`:'')
   +(coins.note?`<p class="note">${esc(coins.note)}</p>`:'')}
+$('coinBox').addEventListener('change',e=>{if('waiver' in e.target.dataset){coins.waiver=e.target.checked;if(coins.note===WHY.waiver_required)coins.note='';renderCoins()}});
 $('coinBox').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const ds=b.dataset;
  if('packs' in ds){coins.packs=!coins.packs;return renderCoins()}
  if('signin' in ds)return signIn();
  if('signout' in ds)return act(async()=>{await supa.auth.signOut()});
  const needPlayer=()=>{if(!coins.player){signIn();return false}return true};
- if(ds.pack){if(needPlayer())act(async()=>{const {url}=await api('checkout',{packId:ds.pack});location.href=url});return}
+ if(ds.pack){if(!coins.waiver){coins.note=WHY.waiver_required;return renderCoins()}if(needPlayer())act(async()=>{const {url}=await api('checkout',{packId:ds.pack,waiver:true});location.href=url});return}
  if(ds.premium){if(!needPlayer())return;const k=premiumById(ds.premium);
   if(coins.acct&&coins.acct.balance<0){coins.note=WHY.negative_balance;return renderCoins()}
   if(coins.acct&&coins.acct.balance<k.price){coins.note=WHY.not_enough_coins;coins.packs=true;return renderCoins()}

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import Stripe from 'stripe';
-import { makeHandlers } from '../lib/handlers.js';
+import { makeHandlers, WAIVER } from '../lib/handlers.js';
 
 const SECRET = 'whsec_test';
 const stripe = new Stripe('sk_test_fake');
@@ -72,15 +72,19 @@ describe('endpoints', () => {
     expect(r.json.withdrawable).toHaveLength(1);
   });
 
-  it('starts a Stripe checkout with the waiver checkbox', async () => {
+  it('starts a Stripe checkout only after the waiver was ticked in the shop', async () => {
     const { h, fakeStripe } = setup();
-    const r = await h.checkout({ headers: user, body: JSON.stringify({ packId: 'small' }) });
+    expect(await h.checkout({ headers: user, body: JSON.stringify({ packId: 'small' }) })).toEqual({ status: 400, json: { error: 'waiver_required' } });
+    expect(fakeStripe.checkout.sessions.create).not.toHaveBeenCalled();
+    const r = await h.checkout({ headers: user, body: JSON.stringify({ packId: 'small', waiver: true }) });
     expect(r).toEqual({ status: 200, json: { url: 'https://checkout.stripe.test/cs_1' } });
     const args = fakeStripe.checkout.sessions.create.mock.calls[0][0];
     expect(args.line_items[0].price_data.unit_amount).toBe(99);
-    expect(args.consent_collection).toEqual({ terms_of_service: 'required' });
-    expect(args.metadata).toEqual({ accountId: 'acc_1', packId: 'small' });
-    expect((await h.checkout({ headers: user, body: '{"packId":"huge"}' })).status).toBe(400);
+    expect(args.consent_collection).toBeUndefined();
+    expect(args.custom_text.submit.message).toBe(WAIVER);
+    expect(args.metadata).toMatchObject({ accountId: 'acc_1', packId: 'small', waiver: 'accepted' });
+    expect(new Date(args.metadata.waiverAt).getTime()).not.toBeNaN();
+    expect((await h.checkout({ headers: user, body: '{"packId":"huge","waiver":true}' })).status).toBe(400);
   });
 
   it('buys and returns a Premium item', async () => {
