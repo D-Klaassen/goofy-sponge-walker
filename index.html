@@ -532,6 +532,10 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  #devPanel .gbar{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
  #devPanel .gbar i{height:8px;border-radius:3px;background:#444}
  #devPanel .gbar i.on{background:linear-gradient(90deg,#4fc98a,#fff25a,#ff6f61);background-size:700% 100%}
+ #devPanel .angle{background:#2c2c2c;border:1px solid #555;border-radius:10px;padding:6px 8px;margin-bottom:6px}
+ #devPanel .angle b{color:#fff25a}
+ #devPanel .angle label{margin:4px 0}
+ #devPanel .angle input{width:56px;font:inherit;background:#111;color:#fff25a;border:1px solid #666;border-radius:6px;padding:1px 4px}
  #devPanel label{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:7px 0}
  #devPanel input[type=range]{width:120px}
  #devPanel button{font:inherit;width:100%;margin-top:8px;background:#333;color:#fff;border:1px solid #666;border-radius:8px;padding:5px;cursor:pointer}
@@ -541,6 +545,9 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
   <div class="goofy"><div class="gtop"><span>🤪 Goofy meter</span><b id="dvGoofyName">0 · Normal</b></div>
    <input type="range" id="dvGoofy" min="0" max="6" step="1" value="0" aria-label="Goofy meter level">
    <div class="gbar" id="dvGoofyBar">${'<i></i>'.repeat(7)}</div></div>
+  <div class="angle"><div>📐 Camera: <b id="dvAngleName">front</b></div>
+   <label>Around<span><input type="number" id="dvAz" min="-5" max="360" step="5" aria-label="Camera angle around the sponge, 0 is front, 90 is his left">°</span></label>
+   <label>Height<span><input type="number" id="dvEl" min="-85" max="85" step="5" aria-label="Camera height angle">°</span></label></div>
   <label>Face<select id="dvFace"><option value="happy">😁 Smiling</option><option value="scared">😱 Scared</option><option value="sad">😢 Sad</option></select></label>
   <label>Animate<input type="checkbox" id="dvPlay" checked></label>
   <label>Speed<input type="range" id="dvSpeed" min="0.1" max="3" step="0.1" value="1"></label>
@@ -579,8 +586,17 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  dv('dvInk').onchange=e=>rigMeshes.forEach(m=>{if(m.userData.line)m.visible=e.target.checked&&(spongeOn||env.isOutfit(m))});
  dv('dvSponge').onchange=e=>setSponge(e.target.checked);   // outfit only: review a dress without SpongeBob in it
  dv('dvWire').onchange=e=>rigMeshes.forEach(m=>{if(!m.userData.line)[].concat(m.material).forEach(mm=>mm.wireframe=e.target.checked)});
+ // Camera angle in the sponge's own frame (0° = front, 90° = his left, 180° = back, 270° = his right), so outfit feedback can name the exact angle
+ const DEG=180/Math.PI,ANGLE_NAMES=['front','front, his left','his left side','back, his left','back','back, his right','his right side','front, his right'],camL=V(0,0,0),tgtL=V(0,0,0);
+ const showAngle=()=>{const r=env.rig.root;r.worldToLocal(camL.copy(camera.position));r.worldToLocal(tgtL.copy(orbit.target));camL.sub(tgtL);
+  const az=(Math.round(Math.atan2(camL.x,camL.z)*DEG)+360)%360,el=Math.round(Math.atan2(camL.y,Math.hypot(camL.x,camL.z))*DEG);
+  if(document.activeElement!==dv('dvAz'))dv('dvAz').value=az;if(document.activeElement!==dv('dvEl'))dv('dvEl').value=el;   // don't overwrite while typing
+  dv('dvAngleName').textContent=ANGLE_NAMES[Math.round(az/45)%8]};
+ const setAngle=()=>{const az=(+dv('dvAz').value||0)/DEG,el=Math.max(-85,Math.min(85,+dv('dvEl').value||0))/DEG,r=env.rig.root,d=camera.position.distanceTo(orbit.target);   // type an angle to look from there
+  r.worldToLocal(tgtL.copy(orbit.target));camera.position.copy(r.localToWorld(camL.set(Math.sin(az)*Math.cos(el),Math.sin(el),Math.cos(az)*Math.cos(el)).multiplyScalar(d).add(tgtL)));orbit.update()};
+ dv('dvAz').oninput=dv('dvEl').oninput=setAngle;dv('dvAz').onkeydown=dv('dvEl').onkeydown=e=>e.stopPropagation();   // typing digits here must not trigger the dev keys
  addEventListener('keydown',e=>{if((e.key==='m'||e.key==='M')&&!e.repeat&&!viewer.on)setOn(true)});
- viewer.tick=()=>{if(viewer.on){orbit.update();if(!viewer.paused)dv('dvPhase').value=phase%(Math.PI*2)}};
+ viewer.tick=()=>{if(viewer.on){orbit.update();showAngle();if(!viewer.paused)dv('dvPhase').value=phase%(Math.PI*2)}};
 }
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=camera.aspect<1?58:38;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
