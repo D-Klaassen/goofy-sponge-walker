@@ -788,8 +788,10 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  viewer.reframe=()=>{if(viewer.on)home3()};
  dv('dvReset').onclick=home3;
  const gbars=[...$('dvGoofyBar').children];
- const frame=l=>{const v=hero.char.view,k=v.dist/8.4,off=camera.position.clone().sub(orbit.target).normalize().multiplyScalar(v.dist*(1+l*.035));
-  orbit.target.set(0,v.ty+(.1+l*.2)*k,0);camera.position.copy(orbit.target).add(off)};
+ // zoom is shared with the game: the same per-character range (CHARS[..].zoom) and the same saved value, around the viewer's own distance
+ const baseDist=()=>hero.char.view.dist*(1+(+dv('dvGoofy').value)*.035);
+ const frame=l=>{const v=hero.char.view,k=v.dist/8.4,{v:zv,z}=zoomOf(),b=baseDist(),off=camera.position.clone().sub(orbit.target).normalize().multiplyScalar(b*zv);
+  orbit.minDistance=b*z.in;orbit.maxDistance=b*z.out;orbit.target.set(0,v.ty+(.1+l*.2)*k,0);camera.position.copy(orbit.target).add(off)};
  const setGoofy=l=>{env.setGoofy(l);plank.setGoofy(l);if(viewer.on)frame(l);dv('dvGoofyName').textContent=`${l} · ${env.goofyNames[l]}`;gbars.forEach((b,i)=>{b.classList.toggle('on',i<=l);b.style.backgroundPosition=`${i/6*100}% 0`})};
  dv('dvGoofy').oninput=e=>setGoofy(+e.target.value);setGoofy(0);
  dv('dvPlay').onchange=e=>viewer.paused=!e.target.checked;
@@ -816,7 +818,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
   try{await navigator.clipboard.writeText(txt);b.textContent='✅ Copied'}catch{b.textContent='❌ Copy failed'}setTimeout(()=>b.textContent='📋 Copy angle',1200)};
  dv('dvAz').oninput=dv('dvEl').oninput=setAngle;dv('dvAz').onkeydown=dv('dvEl').onkeydown=e=>e.stopPropagation();   // typing digits here must not trigger the dev keys
  addEventListener('keydown',e=>{if((e.key==='m'||e.key==='M')&&!e.repeat&&!viewer.on)setOn(true)});
- viewer.tick=()=>{if(viewer.on){orbit.update();showAngle();if(!viewer.paused)dv('dvPhase').value=phase%(Math.PI*2)}};
+ viewer.tick=()=>{if(viewer.on){orbit.update();showAngle();{const {k,z}=zoomOf();S.zoom[k]=Math.min(z.out,Math.max(z.in,camera.position.distanceTo(orbit.target)/baseDist()))}if(!viewer.paused)dv('dvPhase').value=phase%(Math.PI*2)}};   // viewer zoom carries back to the game
 }
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=camera.aspect<1?58:38;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
