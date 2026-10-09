@@ -143,7 +143,7 @@ body.viewing #meter,body.viewing #prompts,body.viewing #uberBanner{display:none}
 <div id="uberBanner">🤪 UBER GOOBER MODE! 🤪</div>
 <div id="msg">Press the keys that pop up to fill the goofy meter! 🧽</div>
 
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
@@ -823,7 +823,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=camera.aspect<1?58:38;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
 
-let boost=0,phase=0,lastStep=0;
+let phase=0,lastStep=0;
 function popText(x,y,text,size=22){const d=document.createElement('div');d.textContent=text;Object.assign(d.style,{position:'fixed',left:x+'px',top:y+'px',color:'#ffe14d',fontWeight:'bold',fontSize:size+'px',pointerEvents:'none',transition:'all .9s ease-out',textShadow:'0 2px 0 #0006',zIndex:6});
  document.body.appendChild(d);requestAnimationFrame(()=>{d.style.transform='translateY(-60px)';d.style.opacity='0'});setTimeout(()=>d.remove(),900)}
 // clicking the scene does nothing for now
@@ -843,7 +843,7 @@ function spawnKey(){const k=KEYS[Math.random()*KEYS.length|0],el=document.create
  el.addEventListener('pointerdown',e=>{e.stopPropagation();if(rush.cur&&rush.cur.el===el)hitKey()});
  $('prompts').appendChild(el);rush.cur={k,el,t:life,life}}
 function clearKey(cls){const c=rush.cur;if(!c)return;c.el.classList.add(cls);c.el.style.pointerEvents='none';setTimeout(()=>c.el.remove(),400);rush.cur=null;rush.next=rnd(.3,1)}
-function hitKey(){const r=rush.cur.el.getBoundingClientRect();popText(r.left+10,r.top-10,['Nice!','Goofy!','Yes!','Wheee!'][Math.random()*4|0],26);boost=1;   // keys only fill the meter, no steps
+function hitKey(){const r=rush.cur.el.getBoundingClientRect();popText(r.left+10,r.top-10,['Nice!','Goofy!','Yes!','Wheee!'][Math.random()*4|0],26);   // keys only fill the meter, no steps
  hero.setFace('happy');   // any hit cheers him up
  if(rush.uber<=0){rush.meter=Math.min(100,rush.meter+HIT_FILL);if(rush.meter>=100){rush.uber=UBER_TIME;rush.next=1;document.body.classList.add('uber');say('🤪 UBER GOOBER MODE!')}}
  clearKey('hit');syncLevel();render()}
@@ -915,8 +915,7 @@ const clock=new THREE.Clock();let acc=0,gameT=0;
 renderer.setAnimationLoop(()=>{const real=Math.min(.1,clock.getDelta()),dt=viewer.fixedDt||real,t=gameT+=dt;   // the GIF export sets a fixed step
  gain(sps()*dt);acc+=dt;if(acc>.25){acc=0;render()}
  // walks faster with more steps/s and briefly after a click; road speed scales with it so the feet stay planted
- const mult=(1+Math.min(1.2,Math.log10(1+sps())*.25)+boost*.8)*(1+camL*.1);   // goofier = walks a bit faster (up to +60% at level 6)
- boost=Math.max(0,boost-dt*1.5);
+ const mult=(1+Math.min(1.2,Math.log10(1+sps())*.25))*(1+camL*.1);   // goofier = walks a bit faster (up to +60% at level 6)
  let vs=viewer.on?(viewer.paused?0:viewer.speed):1;      // model viewer can pause / slow down the walk
  rushTick(dt);
  if(!viewer.on){camL+=(rush.level-camL)*(1-Math.exp(-dt*3));const c=hero.char.cam,f=hero.char.height/CHARS.sponge.height;   // framing per character; goofy pull-back scales with his size
