@@ -709,7 +709,7 @@ async function exportGif(){const bs=[...document.querySelectorAll('[data-gif]')]
   const src=renderer.domElement,W=480,H=Math.round(W*src.height/src.width),c=document.createElement('canvas');c.width=W;c.height=H;
   const x=c.getContext('2d',{willReadFrequently:true}),STEP=1/50,frames=[];   // 50 fps: the fastest frame delay browsers play as written (20 ms)
   const tick=grab=>new Promise(done=>viewer.afterRender=()=>{if(grab){x.drawImage(src,0,0,W,H);frames.push(x.getImageData(0,0,W,H).data)}done()});
-  boost=0;viewer.fixedDt=STEP;const p0=phase;await tick(false);const dp=phase-p0;   // no click boost, so the speed stays the same; one test frame: how far the walk moves per step
+  viewer.fixedDt=STEP;const p0=phase;await tick(false);const dp=phase-p0;   // one test frame: how far the walk moves per step
   const n=dp>1e-4?Math.min(150,Math.round(Math.PI*2/dp)):1;   // frames in exactly one walk cycle (two steps); paused: a still
   if(n>1){viewer.fixedDt=STEP*Math.PI*2/n/dp;
    for(let i=0;i<n;i++){await tick(false);show(`⏳ Warming up ${Math.round(i/n*100)}%`)}   // one cycle unrecorded: springs (hands, tie, antennae) and easing settle into the loop
