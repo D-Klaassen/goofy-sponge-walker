@@ -49,6 +49,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 .keys kbd{justify-self:start;min-width:1.6em;text-align:center;background:#fff25a;color:#1c1c1c;border:2px solid #1c1c1c;border-radius:6px;padding:0 6px;font-family:inherit;font-weight:700;box-shadow:0 2px 0 #1c1c1c;white-space:nowrap}
 .shopSub{margin:0 0 4px;color:#6b6250}
 .gifts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;padding-top:70px}
+.noOutfits{opacity:.7;text-align:center;margin:16px 0}
 .gift{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
 .gift svg{display:block;width:100%;height:100%}
 .gift b{font-size:1.05rem}
@@ -143,7 +144,7 @@ body.viewing #meter,body.viewing #prompts,body.viewing #uberBanner{display:none}
 <div id="uberBanner">🤪 UBER GOOBER MODE! 🤪</div>
 <div id="msg">Press the keys that pop up to fill the goofy meter! 🧽</div>
 
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
@@ -691,7 +692,7 @@ function renderShop(){   // rebuilds the cards only when something on them chang
    <b>${own?k.name:ch?'Mystery character':'Mystery outfit'}</b>
    <button data-id="${k.id}"${on||(!own&&S.steps<k.price)?' disabled':''}>${on?(ch?'✅ Playing':'✅ Wearing'):own?(ch?'Play':'Wear'):`Buy · ${fmt(k.price)} steps`}</button></div>`};
  const group=(title,list)=>list.length?`<h3>${title}</h3><div class="gifts">${list.map(card).join('')}</div>`:'';
- $('skinList').innerHTML=group('🧍 Characters',SKINS.filter(k=>k.type==='character'))+Object.keys(CHARS).map(c=>group(`👗 Outfits for ${CHARS[c].name}`,SKINS.filter(k=>k.type==='outfit'&&k.char===c))).join('')}
+ $('skinList').innerHTML=group('🧍 Characters',SKINS.filter(k=>k.type==='character'))+(group(`👗 Outfits for ${CHARS[S.char].name}`,SKINS.filter(k=>k.type==='outfit'&&k.char===S.char))||`<h3>👗 Outfits for ${CHARS[S.char].name}</h3><p class="noOutfits">No outfits yet. Coming soon!</p>`)}   // only the outfits of the character you're playing
 $('skinList').addEventListener('click',e=>{const id=e.target.dataset&&e.target.dataset.id;if(!id)return;const k=SKINS.find(s=>s.id===id);
  if(!S.skins.includes(id)){if(S.steps<k.price)return;S.steps-=k.price;S.skins.push(id);say(`🎁 Unwrapped ${k.name}! Looking fabulous.`);unwrap=id;setTimeout(()=>{unwrap=null;render()},1800)}
  S.char=k.char;if(k.type==='outfit')S.outfits[k.char]=id;showSaved();render()});   // wearing an outfit also switches to its character
@@ -835,7 +836,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=camera.aspect<1?58:38;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
 
-let boost=0,phase=0,lastStep=0;
+let phase=0,lastStep=0;
 function popText(x,y,text,size=22){const d=document.createElement('div');d.textContent=text;Object.assign(d.style,{position:'fixed',left:x+'px',top:y+'px',color:'#ffe14d',fontWeight:'bold',fontSize:size+'px',pointerEvents:'none',transition:'all .9s ease-out',textShadow:'0 2px 0 #0006',zIndex:6});
  document.body.appendChild(d);requestAnimationFrame(()=>{d.style.transform='translateY(-60px)';d.style.opacity='0'});setTimeout(()=>d.remove(),900)}
 // clicking the scene does nothing for now
@@ -855,7 +856,7 @@ function spawnKey(){const k=KEYS[Math.random()*KEYS.length|0],el=document.create
  el.addEventListener('pointerdown',e=>{e.stopPropagation();if(rush.cur&&rush.cur.el===el)hitKey()});
  $('prompts').appendChild(el);rush.cur={k,el,t:life,life}}
 function clearKey(cls){const c=rush.cur;if(!c)return;c.el.classList.add(cls);c.el.style.pointerEvents='none';setTimeout(()=>c.el.remove(),400);rush.cur=null;rush.next=rnd(.3,1)}
-function hitKey(){const r=rush.cur.el.getBoundingClientRect();popText(r.left+10,r.top-10,['Nice!','Goofy!','Yes!','Wheee!'][Math.random()*4|0],26);boost=1;   // keys only fill the meter, no steps
+function hitKey(){const r=rush.cur.el.getBoundingClientRect();popText(r.left+10,r.top-10,['Nice!','Goofy!','Yes!','Wheee!'][Math.random()*4|0],26);   // keys only fill the meter, no steps
  hero.setFace('happy');   // any hit cheers him up
  if(rush.uber<=0){rush.meter=Math.min(100,rush.meter+HIT_FILL);if(rush.meter>=100){rush.uber=UBER_TIME;rush.next=1;document.body.classList.add('uber');say('🤪 UBER GOOBER MODE!')}}
  clearKey('hit');syncLevel();render()}
@@ -927,8 +928,7 @@ const clock=new THREE.Clock();let acc=0,gameT=0;
 renderer.setAnimationLoop(()=>{const real=Math.min(.1,clock.getDelta()),dt=viewer.fixedDt||real,t=gameT+=dt;   // the GIF export sets a fixed step
  gain(sps()*dt);acc+=dt;if(acc>.25){acc=0;render()}
  // walks faster with more steps/s and briefly after a click; road speed scales with it so the feet stay planted
- const mult=(1+Math.min(1.2,Math.log10(1+sps())*.25)+boost*.8)*(1+camL*.1);   // goofier = walks a bit faster (up to +60% at level 6)
- boost=Math.max(0,boost-dt*1.5);
+ const mult=(1+Math.min(1.2,Math.log10(1+sps())*.25))*(1+camL*.1);   // goofier = walks a bit faster (up to +60% at level 6)
  let vs=viewer.on?(viewer.paused?0:viewer.speed):1;      // model viewer can pause / slow down the walk
  rushTick(dt);
  if(!viewer.on){camL+=(rush.level-camL)*(1-Math.exp(-dt*3));const c=hero.char.cam,f=hero.char.height/CHARS.sponge.height;   // framing per character; goofy pull-back scales with his size
