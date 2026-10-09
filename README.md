@@ -4,6 +4,8 @@ A goofy idle walker game in a single `index.html` (Three.js from a CDN, no build
 
 A cartoon sponge struts along a rolling hill road. Keys pop up on screen: press the key (or click it) before its timer runs out to fill the **goofy meter**. Every 20% the walk gets goofier and a bit faster; a full meter starts **UBER GOOBER MODE**. A miss resets the meter and the sponge falls flat on its face. Steps are counted per footfall; distance and achievements follow. Distance depends on the character's real stride, so tiny Plankton covers about 3 cm per step.
 
+Plankton has an **evil meter** instead: every level makes him more evil (Scheming, Sly, Plotting, Sinister, Diabolical, Maniacal, EVIL GENIUS MAX). His eyelid drops, his pupil shrinks, his grin opens into teeth and fangs, and his hands rub, fling out or shake overhead; a full meter is **EVIL GENIUS MODE** with a glowing red eye.
+
 ## Run
 
 Any static file server works, for example:
@@ -22,7 +24,7 @@ Then open http://localhost:8765.
 - `Q`: achievements
 - `B` / 🛍 button: shop, spend steps on skins (Classic, Princess: pink ball gown with a heart diamond tiara) and characters (Plankton). Each item is a wrapped gift showing only a silhouette; buying it unwraps the box
 - `G` / 🎞 button: save a GIF of one seamless walk cycle (50 fps, the game's camera view); the key rush pauses while it records
-- `M` / 🛠 button: model viewer (only with `?developer-mode=true`; opens at the game's own slanted camera angle, **Reset camera** goes back there), with a goofy meter slider (levels 0–6), a camera angle box in the top left (0° = front, 90° = his left, 180° = back, 270° = his right; type a number to jump there, 📋 copies it), a character picker and an outfit picker (only the outfits that fit that character), pose scrubber, wireframe and outline toggles, and a **Show body** switch to view an outfit on its own, a 🎞 **Export GIF** button (same as `G`, but from the viewer's current camera), a 👣 **+10,000 steps** button and a 🔄 **Restart game** button
+- `M` / 🛠 button: model viewer (only with `?developer-mode=true`; opens at the game's own slanted camera angle, **Reset camera** goes back there), with a goofy meter slider (levels 0–6; the evil meter for Plankton), a camera angle box in the top left (0° = front, 90° = his left, 180° = back, 270° = his right; type a number to jump there, 📋 copies it), a character picker and an outfit picker (only the outfits that fit that character), pose scrubber, wireframe and outline toggles, and a **Show body** switch to view an outfit on its own, a 🎞 **Export GIF** button (same as `G`, but from the viewer's current camera), a 👣 **+10,000 steps** button and a 🔄 **Restart game** button
 - Dev keys (only with `?developer-mode=true`): `1` auto mode, `2` +1000 steps, `0` restart the game (wipes the save after a confirm)
 
 ## Skins
@@ -39,7 +41,7 @@ All body measurements for clothes (head top, face features, shoulders, waist, ar
 
 ## Review agents
 
-`.claude/agents/` holds read-only reviewers: `dress-designer` (outfit fit and style on the character), `dress-modeler` (the outfit as a 3D model, from renders with the sponge hidden), `character-designer` (a character's look, faces and size read) and `animator` (motion of every character, clipping while walking, fall and stand-up).
+`.claude/agents/` holds read-only reviewers: `dress-designer` (outfit fit and style on the character), `dress-modeler` (the outfit as a 3D model, from renders with the sponge hidden), `character-designer` (a character's look, faces and size read), `animator` (motion of every character, clipping while walking, fall and stand-up) and `expressions` (reads reference clips of a character's faces, ranks them and checks the 3D faces against them).
 
 ## Note
 
