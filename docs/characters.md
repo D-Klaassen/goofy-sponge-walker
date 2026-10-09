@@ -105,5 +105,5 @@ A character is built by a function like `buildPlankton(C, R)` (C = its `CHARS` r
 | Arms | hoses r 0.05 from shoulders (±0.6, 1.45), ending at 93% inside the fist; fists r 0.11 with a small thumb on top; kept outside the egg + 0.14 |
 | Legs | hoses r 0.06 from hips (±0.24, 0.74), rest length 0.8; feet r 0.13 scaled (1, 0.55, 1.5) |
 | Colours | body 0x58a83e, antennae 0x3f7f2c, eye 0xfff2a0, iris 0xd8262e |
-| Walk | stride 0.30, lift 0.22, rest leg 0.8; leans forward 0.1; twist capped at 0.25 rad and roll at 0.2; fists pump up to (±1.15, 1.95, 0.65) |
+| Walk | stride 0.30, lift 0.22, rest leg 0.8; leans forward 0.1; twist capped at 0.25 rad and roll at 0.2; fists pump fore and aft close to his sides, up to (±0.86, 1.6, 0.62) |
 | Fall | same `fallPose()` timing as the sponge; feet gather under him in the crouch, stretched up to 0.3 in the air, a 0.22 s squash on landing |
