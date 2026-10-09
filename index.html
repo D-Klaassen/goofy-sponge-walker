@@ -544,6 +544,8 @@ function buildPlankton(C,R){   // R: road drum radius
  const bodyR=y=>{if(y<=PROF[0][1]||y>=PROF[PROF.length-1][1])return 0;for(let i=1;i<PROF.length;i++){const[a,ya]=PROF[i-1],[b,yb]=PROF[i];if(y<=yb)return a+(b-a)*(y-ya)/(yb-ya)}return 0};
  add(new THREE.Mesh(new THREE.LatheGeometry(PROF.map(([r,y])=>new THREE.Vector2(r,y)),56),skin),0,0,0).scale.z=BZ;
  const onBody=(x,y,out)=>V(x,y,BZ*Math.sqrt(Math.max(0,bodyR(y)**2-x*x))+out);   // a point on the body's front surface, lifted by out
+ // butt: two small cheeks low on his back, like the sponge's but sized to his little egg
+ const BY=.95;[-1,1].forEach(sd=>{const x=sd*.18,c=add(new THREE.Mesh(new THREE.SphereGeometry(.17,20,14),skin),x,BY,-BZ*Math.sqrt(Math.max(0,bodyR(BY)**2-x*x))+.07);c.scale.set(1,.9,.85)});
  // the one big eye: pale yellow ball, red iris, black pupil, a glint
  const EY=2.0,EZ=.26,ER=.38,eye=new THREE.Group();eye.position.set(0,EY,EZ);eye.scale.z=.75;body.add(eye);   // one group flattened front to back, so ball, iris, pupil and glint stay together; front just 0.05 proud of the body
  {const e=new THREE.Mesh(new THREE.SphereGeometry(ER,28,20),M(0xfff2a0));e.castShadow=true;eye.add(e)}   // no outline shell: it only showed as a stray hairline
@@ -676,7 +678,6 @@ function show(c,outfit){const next=HEROES[c];
  if(next!==hero){hero.rig.root.visible=false;next.rig.root.visible=true;hero=next;stepM=hero.char.stepM;
   hero.setGoofy(gameGoofy());stars.removeFromParent();hero.rig.body.add(stars);stars.position.y=hero.char.stars;camera.near=hero===plank?.02:.1;camera.updateProjectionMatrix();viewer.reframe?.()}
  hero.setSkin(outfit)}
-const showItem=id=>{const k=item(id);show(k.char,k.type==='outfit'?k.id:outfitOf(k.char))};   // model viewer: try anything
 const showSaved=()=>show(S.char,outfitOf(S.char));
 const shop=$('shopOverlay');let shopKey='',unwrap=null;   // unwrap: the skin whose gift is opening right now
 function renderShop(){   // rebuilds the cards only when something on them changed
@@ -752,8 +753,8 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
   <div class="goofy"><div class="gtop"><span>🤪 Goofy meter</span><b id="dvGoofyName">0 · Normal</b></div>
    <input type="range" id="dvGoofy" min="0" max="6" step="1" value="0" aria-label="Goofy meter level">
    <div class="gbar" id="dvGoofyBar">${'<i></i>'.repeat(7)}</div></div>
-  <label>Outfit / character<select id="dvSkin"><optgroup label="Characters">${SKINS.filter(k=>k.type==='character').map(k=>`<option value="${k.id}">${k.pic} ${k.name}</option>`).join('')}</optgroup>
-   ${Object.keys(CHARS).map(c=>{const l=SKINS.filter(k=>k.type==='outfit'&&k.char===c);return l.length?`<optgroup label="Outfits for ${CHARS[c].name}">${l.map(k=>`<option value="${k.id}">${k.pic} ${k.name}</option>`).join('')}</optgroup>`:''}).join('')}</select></label>
+  <label>Character<select id="dvChar">${SKINS.filter(k=>k.type==='character').map(k=>`<option value="${k.char}">${k.pic} ${k.name}</option>`).join('')}</select></label>
+  <label>Outfit<select id="dvOutfit"></select></label>
   <label>Face<select id="dvFace"><option value="happy">😁 Smiling</option><option value="scared">😱 Scared</option><option value="sad">😢 Sad</option></select></label>
   <label>Animate<input type="checkbox" id="dvPlay" checked></label>
   <label>Speed<input type="range" id="dvSpeed" min="0.1" max="3" step="0.1" value="1"></label>
@@ -770,7 +771,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  const worldParts=[...scene.children,...world.children].filter(o=>o!==world&&o!==env.rig.root&&o!==plank.rig.root&&!o.isLight);
  const panel=$('devPanel'),dv=id=>$(id);
  const setOn=on=>{viewer.on=on;panel.classList.toggle('open',on);document.body.classList.toggle('viewing',on);orbit.enabled=on;
-  if(on){dv('dvSkin').value=S.char==='sponge'?outfitOf('sponge'):S.char;home3()}else{viewer.paused=false;viewer.speed=1;dv('dvPlay').checked=true;dv('dvSpeed').value=1;
+  if(on){viewChar(S.char);home3()}else{viewer.paused=false;viewer.speed=1;dv('dvPlay').checked=true;dv('dvSpeed').value=1;
    camera.position.copy(home.pos);camera.lookAt(home.target);setWorld(true);dv('dvWorld').checked=true;
    {const l=gameGoofy();dv('dvGoofy').value=l;setGoofy(l)}   // back to the game's own goofy level
    showSaved();   // the viewer only tries things on; the game keeps what you chose in the shop
@@ -796,7 +797,11 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  dv('dvPhase').oninput=e=>{viewer.paused=true;dv('dvPlay').checked=false;phase=+e.target.value};
  dv('dvWorld').onchange=e=>setWorld(e.target.checked);
  dv('dvInk').onchange=e=>rigMeshes.forEach(m=>{if(m.userData.line)m.visible=e.target.checked&&(spongeOn||env.isOutfit(m))});
- dv('dvSkin').onchange=e=>showItem(e.target.value);   // try any outfit or character, bought or not
+ // try any character and any of its outfits, bought or not; the outfit list only holds clothes that fit the chosen character
+ const viewChar=c=>{const l=SKINS.filter(k=>k.type==='outfit'&&k.char===c),o=outfitOf(c),sel=dv('dvOutfit');dv('dvChar').value=c;
+  sel.innerHTML=l.length?l.map(k=>`<option value="${k.id}">${k.pic} ${k.name}</option>`).join(''):'<option value="">— none yet —</option>';sel.disabled=!l.length;sel.value=o||'';show(c,o)};
+ dv('dvChar').onchange=e=>viewChar(e.target.value);
+ dv('dvOutfit').onchange=e=>show(dv('dvChar').value,e.target.value);
  dv('dvSponge').onchange=e=>setSponge(e.target.checked);   // outfit only: review a dress without SpongeBob in it
  dv('dvWire').onchange=e=>rigMeshes.forEach(m=>{if(!m.userData.line)[].concat(m.material).forEach(mm=>mm.wireframe=e.target.checked)});
  // Camera angle in the sponge's own frame (0° = front, 90° = his left, 180° = back, 270° = his right), so outfit feedback can name the exact angle
