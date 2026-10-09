@@ -49,6 +49,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 .keys kbd{justify-self:start;min-width:1.6em;text-align:center;background:#fff25a;color:#1c1c1c;border:2px solid #1c1c1c;border-radius:6px;padding:0 6px;font-family:inherit;font-weight:700;box-shadow:0 2px 0 #1c1c1c;white-space:nowrap}
 .shopSub{margin:0 0 4px;color:#6b6250}
 .gifts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;padding-top:70px}
+.noOutfits{opacity:.7;text-align:center;margin:16px 0}
 .gift{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
 .gift svg{display:block;width:100%;height:100%}
 .gift b{font-size:1.05rem}
@@ -691,7 +692,7 @@ function renderShop(){   // rebuilds the cards only when something on them chang
    <b>${own?k.name:ch?'Mystery character':'Mystery outfit'}</b>
    <button data-id="${k.id}"${on||(!own&&S.steps<k.price)?' disabled':''}>${on?(ch?'✅ Playing':'✅ Wearing'):own?(ch?'Play':'Wear'):`Buy · ${fmt(k.price)} steps`}</button></div>`};
  const group=(title,list)=>list.length?`<h3>${title}</h3><div class="gifts">${list.map(card).join('')}</div>`:'';
- $('skinList').innerHTML=group('🧍 Characters',SKINS.filter(k=>k.type==='character'))+Object.keys(CHARS).map(c=>group(`👗 Outfits for ${CHARS[c].name}`,SKINS.filter(k=>k.type==='outfit'&&k.char===c))).join('')}
+ $('skinList').innerHTML=group('🧍 Characters',SKINS.filter(k=>k.type==='character'))+(group(`👗 Outfits for ${CHARS[S.char].name}`,SKINS.filter(k=>k.type==='outfit'&&k.char===S.char))||`<h3>👗 Outfits for ${CHARS[S.char].name}</h3><p class="noOutfits">No outfits yet. Coming soon!</p>`)}   // only the outfits of the character you're playing
 $('skinList').addEventListener('click',e=>{const id=e.target.dataset&&e.target.dataset.id;if(!id)return;const k=SKINS.find(s=>s.id===id);
  if(!S.skins.includes(id)){if(S.steps<k.price)return;S.steps-=k.price;S.skins.push(id);say(`🎁 Unwrapped ${k.name}! Looking fabulous.`);unwrap=id;setTimeout(()=>{unwrap=null;render()},1800)}
  S.char=k.char;if(k.type==='outfit')S.outfits[k.char]=id;showSaved();render()});   // wearing an outfit also switches to its character
