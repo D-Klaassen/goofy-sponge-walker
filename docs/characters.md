@@ -89,7 +89,7 @@ A character is built by a function like `buildPlankton(C, R)` (C = its `CHARS` r
 2. Add it to `HEROES` (`{sponge:env,plankton:plank,crab}`), so `show()` can find it.
 3. Add a shop item to `SKINS` with `type:'character'`, `char:'crab'`, a `paper` colour, a price and a drawn icon in `SKIN_ICON` (SVG, 100 × 100, `SVG_G` ink style). The shop shows it as a "Mystery character" gift until bought.
 4. Add the new rig to the model viewer lists (`rigMeshes`, `worldParts` filter, `setGoofy`, `syncLevel`, and `setSponge` if it has mood parts that must stay hidden) the same way `plank` is.
-5. Check it in the model viewer (`?developer-mode=true`, `M`, Outfit / character): goofy 0 and 6, the pose slider, all three faces, **Play fall + stand up**, and the in-game view after buying it.
+5. Check it in the model viewer (`?developer-mode=true`, `M`, Character, then Outfit): goofy 0 and 6, the pose slider, all three faces, **Play fall + stand up**, and the in-game view after buying it.
 6. Let the review agents look at screenshots: `character-designer` for the look, `animator` for the motion.
 7. Add the character's row to the table above.
 
