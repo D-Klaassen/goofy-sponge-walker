@@ -598,7 +598,7 @@ function buildPlankton(C,R){   // R: road drum radius
  const tips=ants.map(()=>{const b=new THREE.Mesh(new THREE.SphereGeometry(.05,10,8),M(0x3f7f2c));add(b,0,0,0,root);return b});
  // evil meter: level 0 (scheming) .. 6 (EVIL GENIUS MAX), ranked from evil Plankton clips. Each row is one value per level; live values ease toward the chosen level.
  // walk feel (multipliers, gentle on his short legs); face: brow middle and end y, top and bottom lid cover, top lid tilt (sly, one-sided), pupil and iris scale, eye roll up, mouth half width, open depth, tooth height,
- // bottom teeth (1 = clenched), fangs, iris glow; acting on the walk: hands at the chest (rubbing, or reaching out like claws), hands on hips, lean (rad, + = forward), arms flung out, fists shaken overhead, laugh bounce, antennae droop and quiver
+ // bottom teeth (1 = clenched), fangs, iris glow, hysterical laugh (EVIL GENIUS MODE: jaw flaps, eye squeezes, tongue out, spit flies); acting on the walk: hands at the chest (rubbing, or reaching out like claws), hands on hips, lean (rad, + = forward), arms flung out, fists shaken overhead, laugh bounce, antennae droop and quiver
  const EVIL_NAMES=['Scheming','Sly','Plotting','Sinister','Diabolical','Maniacal','EVIL GENIUS MAX'];
  const EVIL={      //  0    1    2    3    4    5    6
   arm:    [1,   1,   1.05,1.05,1.1, 1.15,1.2], leg:   [1,   1,   1,   1,   1.05,1.1, 1.15],
@@ -612,38 +612,55 @@ function buildPlankton(C,R){   // R: road drum radius
   bite:   [0,   0,   0,   1,   0,   .6,  0],   fang:  [0,   0,   0,   0,   0,   1,   .3],  glow:[0,0,0,0,0,0,1],
   rub:    [0,   1,   1,   .9,  0,   0,   0],   rubbing:[0,  0,   1,   0,   0,   0,   0],  claw:[0,0,0,1,0,0,0], hips:[0,0,0,0,1,0,0],
   lean:   [0,   0,   .05, .14, -.3, -.12,-.36],fling: [0,   0,   0,   0,   0,   1,   0],  raise:[0,0,0,0,0,0,1], laugh:[0,0,0,0,.05,.08,.1],
-  droop:  [0,   0,   0,   1,   0,   0,   0],   quiver:[0,   0,   0,   0,   .3,  1,   .6]};
+  droop:  [0,   0,   0,   1,   0,   0,   0],   quiver:[0,   0,   0,   0,   .3,  1,   .6],  cackle:[0,0,0,0,0,0,1]};
  const gp={};for(const k in EVIL)gp[k]=EVIL[k][0];let goofyLevel=0;
  // reshape the evil face from the live values; the tubes and patches are only rebuilt when a shape value changed
- let faceKey='';
- function shapeFace(){const g=gp,happy=mood==='happy',on=happy&&egg.visible,w=g.mouthW,d=g.open;
+ let faceKey='';const fx={open:0,lid:0,low:0,brow:0,bite:0,tongue:0};   // the laugh's per-frame offsets on top of the level's face
+ function shapeFace(){const g=gp,happy=mood==='happy',on=happy&&egg.visible,w=g.mouthW,d=g.open+fx.open,lid=g.lid+fx.lid,low=g.low+fx.low,bm=g.browM+fx.brow,be=g.browE+fx.brow*.4,bite=g.bite+fx.bite;
   const ps=mood==='scared'?.6:happy?g.pupil:1,is=happy?g.iris:1,ry=happy?g.roll:0;
   pupil.scale.set(ps,ps,ps*.4);iris.scale.set(is,is,.4);iris.position.set(0,ry,Math.sqrt((ER-.06)**2-ry*ry));pupil.position.set(0,ry*1.1,iris.position.z+.08*is-.02);   // pupil stays just proud of the iris front, also when the iris grows   // eye rolls up a little when maniacal
-  lids.top.visible=on&&g.lid>.01;lids.top.rotation.set(Math.asin(2*g.lid-1),0,g.tilt);lids.low.visible=on&&g.low>.01;lids.low.rotation.x=Math.asin(1-2*g.low);   // front edge of the lid at cover × eye height
+  lids.top.visible=on&&lid>.01;lids.top.rotation.set(Math.asin(2*lid-1),0,g.tilt);lids.low.visible=on&&low>.01;lids.low.rotation.x=Math.asin(1-2*low);   // front edge of the lid at cover × eye height
   for(const k of ['low','inside','teeth'])evil[k].visible=on&&d>.006;
-  const key=[g.browM,g.browE,w,d,g.bite,g.fang,g.tooth].map(v=>v.toFixed(3)).join();if(key===faceKey)return;faceKey=key;
-  retube(evil.brow,curve(12,-.4,.4,x=>{const t=Math.abs(x)/.4;return g.browM+(g.browE-g.browM)*(1.1667*t-.1667*t*t)},.035,onFace));   // V scowl, rides over the eye and lids
   const top=x=>{const u=x*.44/w;return 1.44+1.25*u*u*(1+.6*u*u)},bot=x=>top(x)-d*(1-(x/w)**2);   // grin with curled corners; open: a crescent below it
+  {const t=fx.tongue,x=.1,y=bot(x)+.08-.07*t;tongue.visible=on&&t>.02;tongue.position.copy(onBody(x,y,.02+.07*t));tongue.rotation.set(.9*t,0,-.35-.15*t);tongue.scale.set(1,1,1).multiplyScalar(.8+.4*t)}   // tongue flops out over the lower lip, to one side
+  const key=[bm,be,w,d,bite,g.fang,g.tooth].map(v=>v.toFixed(3)).join();if(key===faceKey)return;faceKey=key;
+  retube(evil.brow,curve(12,-.4,.4,x=>{const t=Math.abs(x)/.4;return bm+(be-bm)*(1.1667*t-.1667*t*t)},.035,onFace));   // V scowl, rides over the eye and lids
   retube(evil.top,curve(12,-w,w,top,.02));if(d<=.006)return;
   retube(evil.low,curve(12,-w,w,bot,.02));
   patch(evil.inside,[(u,v)=>{const x=-w+2*w*u;return [x,lerp(bot(x),top(x),v)]}],24,2,.012);
-  const K=8,gap=.012,tt=Math.min(g.tooth,d*(1-g.bite/2)),bt=g.bite*Math.min(g.tooth,d/2),q=[];   // top teeth hang from the top lip; clenched bottom teeth meet them
-  for(let k=0;k<K;k++){const xa=-w+2*w*k/K+gap,xb=-w+2*w*(k+1)/K-gap,tri=u=>1-Math.abs(2*u-1),ft=g.fang*(k===1||k===K-2?2:.3),fb=g.fang*(k===2||k===K-3?.8:0);   // teeth turn pointy, two long fangs
+  const K=8,gap=.012,tt=Math.min(g.tooth,d*(1-bite/2)),bt=bite*Math.min(g.tooth,d/2),q=[];   // top teeth hang from the top lip; clenched bottom teeth meet them
+  for(let k=0;k<K;k++){const xa=-w+2*w*k/K+gap,xb=-w+2*w*(k+1)/K-gap,tri=u=>1-Math.abs(2*u-1),ft=g.fang*(k===1||k===K-2?2:.3),fb=g.fang*(k===2||k===K-3?.8:0)+fx.bite*1.5;   // laughing: the bottom teeth turn pointy too   // teeth turn pointy, two long fangs
    q.push((u,v)=>{const x=lerp(xa,xb,u),h=Math.min(top(x)-bot(x),tt*(1+ft*tri(u)));return [x,lerp(top(x)-h,top(x),v)]});
    if(bt>.002)q.push((u,v)=>{const x=lerp(xa,xb,u),h=Math.min(top(x)-bot(x),bt*(1+fb*tri(u)));return [x,lerp(bot(x),bot(x)+h,v)]})}
   patch(evil.teeth,q,4,1,.02)}
+ // hysterical laugh parts: a pink tongue and spit streaks (pale blue capsules with ink) that fly out of the mouth corners on every HA
+ const tongue=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),M(0xf08a8a));tongue.geometry.scale(.3,.11,.22);ol(tongue);tongue.castShadow=true;tongue.userData.mood=true;tongue.visible=false;body.add(tongue);
+ const spitM=M(0x8fbce8),spit=[...Array(12)].map(()=>{const m=new THREE.Mesh(new THREE.CapsuleGeometry(.06,.34,3,8),spitM);ol(m);m.visible=false;root.add(m);return m});
+ const SPIT_LIFE=.55,SPIT_G=6,hash=n=>{const x=Math.sin(n*12.9898)*43758.5453;return x-Math.floor(x)},_sv=V(0,0,0),_sp=V(0,0,0),_Y=V(0,1,0);
+ // spit from the walk phase alone, so a GIF of one cycle still loops: 4 HAs per cycle, two sets of 6 streaks take turns, each fired just before its HA peaks (lives longer than one HA, shorter than two)
+ function spitFly(ph,k){const q=((ph*2/Math.PI)%4+4)%4;
+  spit.forEach((m,j)=>{const set=j/6|0,i=j%6,loc2=((q-set-.4)%2+2)%2,age=loc2*Math.PI/2/OMEGA+.05,n=(Math.floor((q-set-.4)/2)%2+2)%2,h=hash(j*7.3+n*13.1);
+   m.visible=k>.05&&egg.visible&&age<SPIT_LIFE;if(!m.visible)return;
+   const side=i<3?-1:1,a=side*(.35+.6*hash(h*91))+(hash(h*37)-.5)*.2;   // wide fan out of each mouth corner, so it shows even when he faces the camera
+   _sv.set(Math.sin(a)*2.6,1.2+1.2*hash(h*53),Math.cos(a)*3).applyQuaternion(body.quaternion);
+   _sp.copy(onBody(side*(.3+.1*hash(h*17)),1.5,.2)).applyMatrix4(BM).addScaledVector(_sv,age);_sp.y-=.5*SPIT_G*age*age;m.position.copy(_sp);
+   _sv.y-=SPIT_G*age;m.quaternion.setFromUnitVectors(_Y,_sv.normalize());m.scale.setScalar(k*(.6+.4*hash(h*71))*(1-(age/SPIT_LIFE)**3))})}
  setFace('happy');
  const BASE_A=C.stride,BASE_LIFT=.22,BASE_LEG=.8,OMEGA=C.omega,RD=R/s;   // RD: road curve radius in his design units
  legs.forEach(L=>{L.A=BASE_A;L.Afrom=BASE_A;L.swinging=false});let stanceA=BASE_A,lastRy=0,landT=0;
  const P={t:0,flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0},BM=body.matrix,XAX=V(1,0,0),inv=new THREE.Matrix4(),loc=V(0,0,0),tgt=V(0,0,0),mid=V(0,0,0),FT=V(0,0,0),SH=V(0,0,0);
  function walk(r,ph,dt){
   const ke=1-Math.exp(-dt*4);for(const k in EVIL)gp[k]+=(EVIL[k][goofyLevel]-gp[k])*ke;
-  shapeFace();{const k=mood==='happy'?gp.glow*(.7+.3*Math.sin(ph*2)):0;irisM.emissive.setRGB(.8*k,.1*k,0);ballM.emissive.setRGB(.45*k,.05*k,0)}   // EVIL GENIUS MAX: the eye glows hot, pulsing with his steps
+  // hysterical laugh (EVIL GENIUS MODE): two HAs per step; jaw drops, eye squeezes shut, every 4th HA it pops wide open
+  const cack=mood==='happy'?gp.cackle:0,ha=Math.sin(2*ph)**2,wide=(Math.floor(((ph*2/Math.PI)%4+4)%4)===3?ha:0)*cack;
+  fx.open=cack*(lerp(.4,.6,ha)-gp.open);fx.lid=cack*(lerp(.1,.7,ha)-gp.lid)-wide*lerp(.1,.7,ha);fx.low=cack*(lerp(.45,.2,ha)-gp.low)*(1-wide);   // mouth never shuts while laughing; the squeezed eye keeps a sliver
+  fx.brow=-.08*cack*ha;fx.bite=.5*cack;fx.tongue=cack*(.35+.65*ha);
+  shapeFace();spitFly(ph,cack);{const k=mood==='happy'?gp.glow*(.7+.3*Math.sin(ph*2)):0;irisM.emissive.setRGB(.8*k,.1*k,0);ballM.emissive.setRGB(.45*k,.05*k,0)}   // EVIL GENIUS MAX: the eye glows hot, pulsing with his steps
   const A=BASE_A*gp.stride,LIFT=BASE_LIFT*gp.lift,LEG=BASE_LEG*gp.leg,rise=(gp.leg-1)*BASE_LEG*.8;
   const c2=Math.cos(2*ph),pass=(1-c2)/2,sq=Math.min(.2,.05*gp.squash*Math.pow(Math.max(0,c2),8)),st=Math.min(.1,.025*(gp.squash-1)*pass);
-  body.position.set(Math.sin(ph)*.04*gp.sway,pass*.07*gp.bounce+rise+gp.laugh*Math.abs(Math.sin(2*ph)),0);   // evil laugh: a chuckle bounce twice per step
+  body.position.set(Math.sin(ph)*.04*gp.sway,pass*.07*gp.bounce+rise+gp.laugh*Math.abs(Math.sin(2*ph))+.04*cack*ha,0);   // evil laugh: a chuckle bounce twice per step
   body.scale.set(1+sq*.7-st*.4,1-sq+st,1+sq*.7-st*.4);
-  body.rotation.set(.1+gp.lean,-Math.sin(ph)*Math.min(.25,.12*gp.sway),Math.sin(ph)*Math.min(.2,.07*gp.sway));   // leans into the walk: a small guy on a mission; twist and roll capped so goofy 6 doesn't read as staggering
+  body.rotation.set(.1+gp.lean-.08*cack*ha,-Math.sin(ph)*Math.min(.25,.12*gp.sway),Math.sin(ph)*Math.min(.2,.07*gp.sway)+.05*cack*Math.sin(ph*12));   // laughing: head thrown back on each HA, shaking   // leans into the walk: a small guy on a mission; twist and roll capped so goofy 6 doesn't read as staggering
   const ry=r.root.position.y/s;   // stand-up hop height, design units
   body.rotation.x+=P.bx-.35*P.plant*Math.min(1,P.knee/.6);body.rotation.y+=P.by;body.rotation.z+=P.bz;   // push-up: arms lift the chest well off the road before the crouch
   if(lastRy>.02&&ry<=.01)landT=.22;lastRy=ry;landT=Math.max(0,landT-dt);   // touchdown after the hop: a quick squash that eases out
@@ -684,7 +701,7 @@ function buildPlankton(C,R){   // R: road drum radius
   // antennae: lag behind the bob and sway (cheap follow-through)
   [-1,1].forEach((side,i)=>{const An=ants[i],w=gp.ant,lag=ph-.9,dx=Math.sin(lag)*.08*w+gp.quiver*.05*Math.sin(ph*10+i*2),dy=-Math.cos(2*lag)*.15*w,dz=-Math.sin(2*lag)*.1*w,fall=Math.max(P.trip,P.flail);
    const B=An.curve.v0.set(side*.1,2.82,-.02).applyMatrix4(BM);
-   const T=An.curve.v2.set(side*.48+dx,3.85+dy+P.flail*Math.sin(P.t*30+i)*.15+fall*.15,-.12+dz-fall*.45).add(FT.set(0,-.5*gp.droop,.5*gp.droop)).applyMatrix4(BM);   // tips lag the bob; trail up and back when he trips
+   const T=An.curve.v2.set(side*.48+dx,3.85+dy+P.flail*Math.sin(P.t*30+i)*.15+fall*.15,-.12+dz-fall*.45).add(FT.set(0,-.5*gp.droop-.15*cack,.5*gp.droop-.4*cack+.06*cack*Math.sin(4*ph-1))).applyMatrix4(BM);   // tips lag the bob; trail up and back when he trips; swept back, wobbling, while he laughs
    An.curve.v1.set(side*.29-dx*.4/Math.max(1,w*.6),3.34-dy*.4/Math.max(1,w*.6),-.07-dz*.4/Math.max(1,w*.6)-fall*.1).applyMatrix4(BM);   // middle swings against the tip, so the stalk bends
    An.parts.forEach(f=>f(An.curve));tips[i].position.copy(T)});
  }
@@ -899,7 +916,7 @@ function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWi
 addEventListener('resize',resize);resize();
 
 let phase=0,lastStep=0;
-function popText(x,y,text,size=22){const d=document.createElement('div');d.textContent=text;Object.assign(d.style,{position:'fixed',left:x+'px',top:y+'px',color:'#ffe14d',fontWeight:'bold',fontSize:size+'px',pointerEvents:'none',transition:'all .9s ease-out',textShadow:'0 2px 0 #0006',zIndex:6});
+function popText(x,y,text,size=22,color='#ffe14d'){const d=document.createElement('div');d.textContent=text;Object.assign(d.style,{position:'fixed',left:x+'px',top:y+'px',color,fontWeight:'bold',fontSize:size+'px',pointerEvents:'none',transition:'all .9s ease-out',textShadow:'0 2px 0 #0006',zIndex:6});
  document.body.appendChild(d);requestAnimationFrame(()=>{d.style.transform='translateY(-60px)';d.style.opacity='0'});setTimeout(()=>d.remove(),900)}
 // clicking the scene does nothing for now
 
@@ -966,10 +983,16 @@ if(DEV)addEventListener('keydown',e=>{if(e.repeat)return;if(e.key==='1'){autoPla
 function rushTick(dt){if((viewer.on||viewer.fixedDt)&&rush.fall<=0||overlay.classList.contains('open')||help.classList.contains('open'))return;   // paused while viewing, recording a GIF, or reading achievements or the key menu
  if(rush.fall>0){rush.fall=Math.max(0,rush.fall-dt);fallPose();if(rush.fall<=0){[env,plank].forEach(h=>{Object.assign(h.pose,{flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0});h.rig.root.position.y=0;h.rig.root.rotation.x=0});stars.visible=false}return}                              // no keys while he's on the ground
  if(rush.uber>0){S.uberTime=(S.uberTime||0)+Math.min(dt,rush.uber);rush.uber-=dt;if(rush.uber<=0){rush.uber=0;rush.meter=0;document.body.classList.remove('uber');say('Phew… back to normal walking.')}syncLevel()}
- if(rush.uber>0){if(rush.cur)clearKey('hit');return}   // Uber Goober: no keys to press, so no misses and no falls
+ if(rush.uber>0){if(rush.cur)clearKey('hit');if(hero===plank)haTick();return}   // Uber Goober: no keys to press, so no misses and no falls; Plankton cackles
+
  const c=rush.cur;if(c&&autoPlay&&c.life-c.t>.25){hitKey();return}   // dev auto mode: hits every key after a short beat
  if(c){c.t-=dt;c.el.querySelector('.time i').style.width=Math.max(0,c.t/c.life*100)+'%';c.el.classList.toggle('hurry',c.t<c.life*.35);if(c.t<=0)missKey()}
  else if((rush.next-=dt)<=0)spawnKey()}
+// EVIL GENIUS MODE: a red "HA!" pops above Plankton's head on every HA of his laugh (two per step, from the walk phase)
+let lastHa=-1;const _ha=new THREE.Vector3();
+function haTick(){const k=Math.floor(phase*2/Math.PI);if(k===lastHa)return;lastHa=k;
+ const p=plank.rig.root.localToWorld(_ha.set((k%2?1:-1)*1.8,4.3,0)).project(camera),x=(p.x+1)/2*innerWidth,y=(1-p.y)/2*innerHeight;
+ popText(x-20+Math.random()*16,y,['HA!','HA HA!','HA!','MWAHA!'][k%4],22+Math.random()*10,'#ff4d4d')}
 syncLevel();
 let camL=0;   // game camera pulls back and up as the sponge gets taller
 // Game zoom: wheel, pinch or + / -. 1 = the character's own framing; CHARS[..].zoom limits it (small characters can zoom out much further). Saved per character.
