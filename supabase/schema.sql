@@ -11,3 +11,13 @@ create unique index if not exists coin_entries_one_credit on coin_entries ((entr
 create index if not exists coin_entries_payment on coin_entries ((entry->>'paymentIntent')) where entry->>'type' = 'pack_credited';
 -- only the server (service role) reads and writes; the browser never touches this table
 alter table coin_entries enable row level security;
+
+-- Saved progress: Steps, step-bought upgrades and items, records. One row per Player (anonymous ones too).
+-- The browser keeps none of it; the server checks every save (lib/progress.js) before storing it.
+create table if not exists progress (
+  account_id uuid primary key references auth.users (id) on delete cascade,
+  state jsonb not null,
+  saved_at timestamptz not null      -- also the optimistic lock: a save only lands if nobody saved in between
+);
+-- only the server (service role) reads and writes; the browser never touches this table
+alter table progress enable row level security;
