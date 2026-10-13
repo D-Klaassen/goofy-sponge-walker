@@ -213,6 +213,8 @@ const UPS=[   // bought with steps in the shop; each one costs 15% more than the
 const DIFFS=[{name:'Normal',life:1,mult:1},{name:'🌶️ Hard',life:.8,mult:1.5},{name:'🌶️🌶️ Expert',life:.65,mult:2},{name:'🌶️🌶️🌶️ Insane',life:.5,mult:3}];
 const diff=()=>DIFFS[Math.min(S.diff||0,cnt('diff'))];
 const comboMult=c=>1+Math.floor(c/10)*.1*(1+cnt('juice'))*diff().mult;   // ×1 below 10 in a row, then grows every 10
+// four ways to stretch Plankton's 9.5 s laugh over his whole Uber mode (see evilLaugh); picked in the model viewer
+const LAUGH_MIXES=['Crossfade loop','Slowed down to fit','Two laughs layered','Long fade-out'];
 const STEP_M=.3;   // metres per step
 const fmtDist=m=>m<100?(Math.floor(m*10)/10)+' m':m<1000?Math.floor(m)+' m':(m/1000).toLocaleString('en',{maximumFractionDigits:m<1e4?2:m<1e5?1:0})+' km';
 const fmtTime=s=>s<60?Math.floor(s)+' s':s<3600?Math.floor(s/60)+' min '+String(Math.floor(s%60)).padStart(2,'0')+' s':(s/3600).toFixed(1)+' h';
@@ -1071,7 +1073,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
   <label class="forChar">Show body<input type="checkbox" id="dvSponge" checked></label>
   <label>Ink outlines<input type="checkbox" id="dvInk" checked></label>
   <label>Wireframe<input type="checkbox" id="dvWire"></label>
-  <label>Sound<select id="dvSound">${['hit','cheer','uber','miss','boing','splat','idle','standUp','record','chime','daily','buy','blip'].map(k=>`<option value="${k}">${k}</option>`).join('')}<option value="music:uber">🎵 Uber beat</option><option value="music:evil">🎵 Uber beat (Plankton)</option><option value="music:sad">🎻 Sad violin</option></select></label>
+  <label>Sound<select id="dvSound">${['hit','cheer','uber','evil','miss','boing','splat','idle','standUp','record','chime','daily','buy','blip'].map(k=>`<option value="${k}">${k}</option>`).join('')}<option value="music:uber">🎵 Uber beat</option><option value="music:evil">🎵 Uber beat (Plankton)</option><option value="music:sad">🎻 Sad violin</option>${LAUGH_MIXES.map((n,i)=>`<option value="laugh:${i}">😈 Laugh ${i+1}: ${n}</option>`).join('')}</select></label>
   <button id="dvSndPlay">▶ Play sound</button><button id="dvStop">⏹ Stop music</button>
   <button id="dvFall" class="forChar">Play fall + stand up</button><button id="dvReroll" class="forModel">🎲 New random shape</button><button id="dvReset">Reset camera</button><button id="dvGif" class="forChar" data-gif="🎞 Export GIF" title="Record one walk cycle of the 3D view and download it as an animated GIF (3)">🎞 Export GIF</button><button id="dvSteps">👣 +10,000 steps</button><button id="dvRestart" style="background:#7a2020">🔄 Restart game</button><button id="dvClose" style="background:#fff25a;color:#1c1c1c;font-weight:700">⬅ Back to game</button>
   <div style="margin-top:8px;color:#aaa">Drag: rotate · Scroll: zoom · Right-drag: pan</div></div>`);
@@ -1219,6 +1221,21 @@ function sadSynth(bus){try{const B=60/66;let pass=0;
   sadTimer=setTimeout(()=>{if(sadBus===bus){stopSadMusic(true);sadDone()}},(t-t0+.3)*1000)};   // one pass, then he stops crying
  loop()}catch(e){}}
 function stopSadMusic(now){clearTimeout(sadTimer);if(!sadBus)return;try{const t=actx.currentTime,b=sadBus;if(now){b.onstop?.();b.disconnect();sadBus=null;return}setTimeout(()=>b.onstop?.(),500);b.gain.cancelScheduledValues(t);b.gain.setValueAtTime(b.gain.value,t);b.gain.linearRampToValueAtTime(0,t+.4);setTimeout(()=>b.disconnect(),500)}catch(e){}sadBus=null}
+// Plankton's evil laugh: a recording in sounds/evil-laugh.mp3 ("Evil Laugh MUAHAHA" by WannyManny on Freesound, CC0)
+const laughLoad=fetch('sounds/evil-laugh.mp3').then(r=>r.ok?r.arrayBuffer():null).catch(()=>null);let laughBuf=null;
+let laughSrcs=[];
+// four ways to fill the whole mode with the 9.5 s laugh; pick one in the model viewer (saved as S.laughMix)
+async function evilLaugh(secs=UBER_TIME,mix=S.laughMix??2){stopLaugh();if(S.muted)return;try{audio();const raw=await laughLoad;if(!raw)return;if(!laughBuf)laughBuf=await actx.decodeAudioData(raw.slice(0)).catch(()=>null);if(!laughBuf)return;
+ const t0=actx.currentTime,L=laughBuf.duration,out=actx.createGain();out.connect(master);out.gain.setValueAtTime(.8,t0);
+ const play=(at,{rate=1,vol=1,fadeIn=0,fadeOut=.4,len=L/rate}={})=>{const src=actx.createBufferSource(),g=actx.createGain(),t=t0+at,end=Math.min(t+len,t0+secs);src.buffer=laughBuf;src.playbackRate.value=rate;
+  g.gain.setValueAtTime(fadeIn?.0001:vol,t);if(fadeIn)g.gain.linearRampToValueAtTime(vol,t+fadeIn);g.gain.setValueAtTime(vol,Math.max(t+fadeIn,end-fadeOut));g.gain.linearRampToValueAtTime(.0001,end);   // smooth in and out, no clicks
+  src.connect(g).connect(out);src.start(t);src.stop(end+.05);laughSrcs.push(src)};
+ if(mix===0){const X=1.2;for(let at=0;at<secs;at+=L-X)play(at,{fadeIn:at?X:0,fadeOut:X})}   // 1: the end of each laugh blends into the start of the next
+ else if(mix===1)play(0,{rate:L/secs,fadeOut:.6});   // 2: one laugh, slowed down (deeper) to last exactly the whole mode
+ else if(mix===2){play(0,{fadeOut:1});play(L*.45,{rate:1.12,vol:.7,fadeIn:.3,fadeOut:1.2})}   // 3: a second, higher laugh joins halfway: a cackling crowd
+ else{play(0,{fadeOut:.1});play(L-.8,{rate:.9,vol:.9,fadeIn:.8,fadeOut:secs-L-.5})}   // 4: one laugh, then a slower one that slowly fades away until the mode ends
+ }catch(e){}}
+function stopLaugh(){laughSrcs.forEach(s=>{try{s.stop()}catch(e){}});laughSrcs=[]}
 const C5=523.25,note=n=>C5*2**(n/12),PENTA=[0,2,4,7,9];   // all jingles share the key of C
 const sfx={
  hit:c=>{const d=Math.min(Math.floor(c/3),10),f=note(PENTA[d%5]+12*Math.floor(d/5)-12);tone(f,.09,{type:'sine',vol:d>5?.09:.11,slide:1.6})},   // round underwater bubble "bloop", climbs the C pentatonic scale every 3 hits, two octaves at most (a bit softer up high)
@@ -1233,6 +1250,7 @@ const sfx={
  blip:()=>tone(note(7),.06,{type:'sine',vol:.05}),   // sound switched back on
  splat:()=>{hit808(0,master,'kick');hit808(0,master,'clap');tone(180,.25,{type:'sine',vol:.12,slide:.4})},   // SPLAT on the road: thud plus a squishy drop
  idle:()=>tone(note(-5),.25,{type:'sine',vol:.06,slide:.7}),   // a key timed out while nothing was going on: a soft little "bwoop"
+ evil:()=>evilLaugh(),   // MUAHAHA for all of his Uber mode (Plankton gets no fanfare or beat)
  standUp:()=>tone(330,.2,{vol:.06,slide:2})};   // springing back up after a fall
 let shake=0,freeze=0,bump=0;   // camera shake, hit-pause and a small zoom kick per hit
 function uberBurst(){for(let i=0;i<14;i++){const a=i/14*Math.PI*2,r=rnd(90,190);setTimeout(()=>popText(innerWidth/2+Math.cos(a)*r-15,innerHeight*.42+Math.sin(a)*r*.7,'✨',rnd(24,40),'#fff'),i*25)}}
@@ -1258,7 +1276,7 @@ function hitKey(){const r=rush.cur.el.getBoundingClientRect(),c=++rush.combo,id=
  if(c>(S.best[id]||0)){if(!rush.record&&S.best[id]>=5){rush.record=true;big=true;sfx.record();say('🏆 New best combo!')}S.best[id]=c}
  sfx.hit(c);if(COMBO_CHEERS[c]&&!big)sfx.cheer();showCombo();dailyProgress('hits',1);dailyProgress('combo',c);bump=1;
  stopSadMusic();rush.idle=0;hero.setFace('happy');   // any hit cheers him up
- if(rush.uber<=0){rush.meter=Math.min(100,rush.meter+HIT_FILL);if(rush.meter>=100){rush.uber=UBER_TIME;rush.next=1;document.body.classList.add('uber');sfx.uber();uberMusic(UBER_TIME,hero===plank);dailyProgress('uber',1);uberBurst()}}   // the banner itself says Steps ×3, so no message bubble on top of it
+ if(rush.uber<=0){rush.meter=Math.min(100,rush.meter+HIT_FILL);if(rush.meter>=100){rush.uber=UBER_TIME;rush.next=1;document.body.classList.add('uber');if(hero===plank)sfx.evil();else{sfx.uber();uberMusic(UBER_TIME,false)}dailyProgress('uber',1);uberBurst()}}   // the banner itself says Steps ×3, so no message bubble on top of it
  clearKey('hit');syncLevel();render()}
 // a miss resets everything: meter to 0, Uber mode ends, and the sponge falls over and has to get back up
 function missKey(){clearKey('miss');rush.splat=rush.sprung=false;const c=rush.combo,best=S.best[heroId()]||0;rush.combo=0;rush.record=false;showCombo();
@@ -1286,8 +1304,8 @@ function fallPose(){const e=FALL_TIME-rush.fall,FLAT=1.45,P=hero.pose;let a,fl=0
  if(e>=.35)hero.setFace('sad');P.t=e;P.flail=fl;P.plant=pl;P.splat=sp;P.bx=bx;P.by=by;P.bz=bz;P.stretch=st;P.kick=kk;P.trip=tr;P.knee=kn;P.cheer=ch;hero.rig.root.position.y=hop*hero.char.scale;hero.rig.root.rotation.x=a;   // the hop scales with his size
  stars.visible=dz>0;if(dz>0){stars.rotation.y=e*6;stars.children.forEach((s,k)=>{const w=k*2.094;s.position.set(Math.cos(w)*.9,Math.sin(e*8+k)*.08,Math.sin(w)*.9);s.material.opacity=dz})}}
 $('dvFace')?.addEventListener('change',e=>hero.setFace(e.target.value));   // dev viewer: pick the face
-$('dvSndPlay')?.addEventListener('click',()=>{const v=$('dvSound').value,m=S.muted;S.muted=false;stopUberMusic();stopSadMusic();if(v==='music:sad')sadMusic();else if(v.startsWith('music:'))uberMusic(UBER_TIME,v==='music:evil');else sfx[v](v==='hit'?15:undefined);S.muted=m});   // dev viewer: audition every sound, even while the game is muted
-$('dvStop')?.addEventListener('click',()=>{stopUberMusic();stopSadMusic(true)});   // dev viewer: cut the music right away
+$('dvSndPlay')?.addEventListener('click',()=>{const v=$('dvSound').value,m=S.muted;S.muted=false;stopUberMusic();stopSadMusic();stopLaugh();if(v.startsWith('laugh:')){S.laughMix=+v.slice(6);evilLaugh(UBER_TIME,S.laughMix);say(`😈 Plankton now uses laugh ${S.laughMix+1}: ${LAUGH_MIXES[S.laughMix]}`)}else if(v==='music:sad')sadMusic();else if(v.startsWith('music:'))uberMusic(UBER_TIME,v==='music:evil');else sfx[v](v==='hit'?15:undefined);S.muted=m});   // dev viewer: audition every sound, even while the game is muted
+$('dvStop')?.addEventListener('click',()=>{stopUberMusic();stopSadMusic(true);stopLaugh()});   // dev viewer: cut the music right away
 $('dvFall')?.addEventListener('click',()=>{rush.fall=FALL_TIME;rush.splat=rush.sprung=false;hero.setFace('scared')});   // dev viewer: preview the fall
 addEventListener('keydown',e=>{if(viewer.on||e.repeat||!rush.cur||e.metaKey||e.ctrlKey||e.altKey||help.classList.contains('open'))return;const k=e.key.toUpperCase();
  if(k.length!==1||!KEYS.includes(k))return;if(k===rush.cur.k)hitKey();else missKey()});
@@ -1308,7 +1326,7 @@ let dailyT=0;$('daily').onclick=e=>{e.stopPropagation();const d=$('daily');d.cla
 $('menuBtn').onclick=e=>{e.stopPropagation();toggleHelp()};
 const sndIcon=()=>{$('sndBtn').textContent=S.muted?'🔇 Sound off':'🔊 Sound on';document.querySelectorAll('[data-m="snd"]').forEach(b=>b.textContent=$('sndBtn').textContent)};   // the button shows the current state; tap to switch
 sndIcon();
-const toggleSound=()=>{S.muted=!S.muted;if(S.muted){stopUberMusic();stopSadMusic()}sndIcon();say(S.muted?'🔇 Sound off (press 5)':'🔊 Sound on');if(!S.muted)sfx.blip()};
+const toggleSound=()=>{S.muted=!S.muted;if(S.muted){stopUberMusic();stopSadMusic();stopLaugh()}sndIcon();say(S.muted?'🔇 Sound off (press 5)':'🔊 Sound on');if(!S.muted)sfx.blip()};
 $('sndBtn').onclick=e=>{e.stopPropagation();toggleSound()};
 $('helpList').addEventListener('click',e=>{const m=e.target.closest('[data-m]')?.dataset.m;if(!m)return;toggleHelp(false);
  if(m==='ach')toggleAch(true);else if(m==='shop')toggleShop(true);else if(m==='gif')exportGif();else toggleSound()});
@@ -1328,7 +1346,7 @@ function rushTick(dt){if((viewer.on||viewer.fixedDt)&&rush.fall<=0||overlay.clas
 let lastHa=-1;const _ha=new THREE.Vector3();
 function haTick(){const k=Math.floor(phase*2/Math.PI);if(k===lastHa)return;lastHa=k;
  const p=plank.rig.root.localToWorld(_ha.set((k%2?1:-1)*1.8,4.3,0)).project(camera),x=(p.x+1)/2*innerWidth,y=(1-p.y)/2*innerHeight;
- popText(x-20+Math.random()*16,y,['HA!','HA HA!','HA!','MWAHA!'][k%4],22+Math.random()*10,'#ff4d4d')}
+ const w=['HA!','HA HA!','HA!','MWAHA!'][k%4];popText(x-20+Math.random()*16,y,w,22+Math.random()*10,'#ff4d4d')}
 syncLevel();
 let camL=0;   // game camera pulls back and up as the sponge gets taller
 // Game zoom: wheel, pinch or + / -. 1 = the character's own framing; CHARS[..].zoom limits it (small characters can zoom out much further). Saved per character.
