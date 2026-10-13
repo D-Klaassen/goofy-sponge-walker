@@ -1206,7 +1206,7 @@ const SAD=[[19,2],[20,.5],[19,.5],[17,.5],[15,.5],[14,2.5],[13,.5],[null,1],[15,
 // the recording in sounds/sad-violin.mp3 (supplied by the owner; the CC0 "Hearts and Flowers" by andyssoundbox on Freesound is kept in sounds/hearts-and-flowers.mp3), looped; the synth version above is the fallback if it can't load
 let sadBuf=null;const sadLoad=fetch('sounds/sad-violin.mp3').then(r=>r.ok?r.arrayBuffer():null).catch(()=>null);
 async function sadFile(bus){const raw=await sadLoad;if(!raw)return false;if(!sadBuf)sadBuf=await actx.decodeAudioData(raw.slice(0)).catch(()=>null);if(!sadBuf)return false;
- if(sadBus!==bus)return true;const src=actx.createBufferSource();src.buffer=sadBuf;const g=actx.createGain();g.gain.value=.35;src.connect(g).connect(bus);src.start();
+ if(sadBus!==bus)return true;const src=actx.createBufferSource();src.buffer=sadBuf;const g=actx.createGain();g.gain.value=.18;src.connect(g).connect(bus);src.start();
  src.onended=()=>{if(sadBus===bus){stopSadMusic(true);sadDone()}};   // plays once (it doesn't loop cleanly), then he stops crying
  bus.onstop=()=>{try{src.stop()}catch(e){}};return true}
 // the cry is over: if he's still sad (no hit since), he cheers up on his own
