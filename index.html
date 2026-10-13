@@ -9,12 +9,24 @@
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:"Comic Sans MS","Chalkboard SE",system-ui,sans-serif;overflow:hidden}
 #scene{position:fixed;inset:0}
-#hud{position:fixed;top:12px;left:12px;right:12px;display:flex;gap:10px;flex-wrap:wrap;pointer-events:none}
+#hud{position:fixed;top:56px;left:12px;right:12px;display:flex;gap:10px;flex-wrap:wrap;pointer-events:none}
 .stat{background:var(--card);backdrop-filter:blur(6px);padding:6px 14px;border-radius:14px;border:2px solid #ffffff33}
 .stat b{display:block;font-size:1.3rem;color:var(--accent)}
-#msg{position:fixed;left:50%;top:14px;z-index:5;transform:translateX(-50%);background:rgba(10,40,70,.6);color:#fff;font-size:14px;backdrop-filter:blur(6px);padding:8px 16px;border-radius:999px;max-width:min(90vw,520px,calc(100vw - 490px));text-align:center;pointer-events:none}
-@media (max-width:760px){#msg{top:76px;max-width:min(90vw,520px)}}
-.hint{position:fixed;top:14px;right:14px;background:var(--card);backdrop-filter:blur(6px);border:2px solid #ffffff33;border-radius:12px;padding:6px 12px;font-size:.9rem;pointer-events:none}
+#msg{position:fixed;right:14px;top:104px;z-index:5;background:rgba(10,40,70,.6);color:#fff;font-size:14px;backdrop-filter:blur(6px);padding:8px 14px;border-radius:16px;max-width:min(320px,calc(100vw - 210px));text-align:left;pointer-events:none}   /* under the Shop button, away from the character */
+#daily .dshort{display:none}
+@media (max-width:760px){
+ #msg{font-size:13px;transition:opacity .4s}#msg:not(.show){opacity:0}
+ body #uberBanner{top:110px;font-size:1.5rem}
+ body #sndBtn,body #achBtn{display:none}
+ body #hud{top:12px;right:auto;gap:0;flex-direction:column;line-height:1.25;background:var(--card);backdrop-filter:blur(6px);border:2px solid #ffffff33;border-radius:14px;padding:5px 12px}
+ body .stat{font-size:0;background:none;border:0;padding:0;backdrop-filter:none}body .stat b{display:block;font-size:.95rem}
+ #steps::after{content:' steps';font-size:.7rem}
+ body #daily{top:12px;left:auto;right:104px;padding:7px 10px;pointer-events:auto;cursor:pointer}#daily .dshort{display:inline-flex;align-items:center}#daily .dshort .miniKey{position:relative;top:-2px}   /* -2px: the shadow under the key counts as part of it, so the key plus shadow sits in the middle */#daily .dfull,#daily .prog{display:none}
+ #daily.open{max-width:200px}#daily.open .dfull,#daily.open .prog{display:block}#daily.open .dshort{display:none}
+ body #combo{font-size:1.2rem}}
+.hint{position:fixed;top:14px;right:14px;background:var(--card);backdrop-filter:blur(6px);border:2px solid #ffffff33;border-radius:12px;padding:6px 12px;font:inherit;font-size:.9rem;color:inherit;cursor:pointer;z-index:15}
+.hint .touch{display:none;align-items:center;gap:6px}.burger{width:14px;height:11px;background:linear-gradient(currentColor 0 0) top/100% 2px no-repeat,linear-gradient(currentColor 0 0) center/100% 2px no-repeat,linear-gradient(currentColor 0 0) bottom/100% 2px no-repeat}   /* three drawn bars: centred exactly, unlike the ☰ glyph */@media (hover:none),(max-width:760px){.hint .desk{display:none}.hint .touch{display:inline-flex}}   /* small screens always get the short ☰ Menu label */
+.menuBtns{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}.menuBtns button{font:inherit;font-weight:700;background:#fff25a;color:#1c1c1c;border:3px solid #1c1c1c;border-radius:12px;padding:6px 12px;cursor:pointer;box-shadow:0 3px 0 #1c1c1c}
 .hint kbd{background:#fff25a;color:#1c1c1c;border:2px solid #1c1c1c;border-radius:6px;padding:0 6px;font-family:inherit;font-weight:700;box-shadow:0 2px 0 #1c1c1c}
 #achOverlay,#shopOverlay,#helpOverlay{position:fixed;inset:0;display:grid;place-items:center;background:#05233a99;backdrop-filter:blur(3px);z-index:20;opacity:0;pointer-events:none;transition:opacity .18s}
 #achOverlay.open,#shopOverlay.open,#helpOverlay.open{opacity:1;pointer-events:auto}
@@ -45,6 +57,8 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 #achBox footer,#shopBox footer,#helpBox footer{margin-top:14px;text-align:center;font-size:.85rem;color:#6b6250}
 #shopBox h3,#helpBox h3{margin:4px 0 8px;font-size:1.05rem}
 #helpBox{width:min(520px,calc(100vw - 32px))}
+#achCount,#shopWallet{margin-left:auto}
+.xBtn{margin-left:auto;flex:none;width:40px;height:40px;font:inherit;font-size:1.2rem;font-weight:900;background:#fff;color:#1c1c1c;border:3px solid #1c1c1c;border-radius:12px;cursor:pointer;box-shadow:0 3px 0 #1c1c1c}
 .keys{display:grid;grid-template-columns:6.5em 1fr;gap:6px 12px;align-items:center;margin:0 0 12px}
 .keys kbd{justify-self:start;min-width:1.6em;text-align:center;background:#fff25a;color:#1c1c1c;border:2px solid #1c1c1c;border-radius:6px;padding:0 6px;font-family:inherit;font-weight:700;box-shadow:0 2px 0 #1c1c1c;white-space:nowrap}
 .shopSub{margin:0 0 4px;color:#6b6250}
@@ -88,25 +102,43 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 .boxw .confetti{position:absolute;left:50%;bottom:70px;z-index:2}
 .boxw .confetti i{position:absolute;width:9px;height:14px;border:2px solid #1c1c1c;border-radius:3px;opacity:0;animation:confetti .9s ease-out .45s}
 @keyframes confetti{from{opacity:1;transform:rotate(var(--a)) translateY(0)}to{opacity:0;transform:rotate(var(--a)) translateY(-95px) rotate(320deg)}}
+#achBtn,#sndBtn{position:fixed;top:92px;left:12px;z-index:15;font:inherit;font-weight:700;background:#fff25a;color:#1c1c1c;border:3px solid #1c1c1c;border-radius:12px;padding:4px 12px;cursor:pointer;box-shadow:0 3px 0 #1c1c1c}
+#sndBtn{top:12px}#achBtn{top:136px}
+#daily{position:fixed;top:180px;left:12px;z-index:5;max-width:230px;background:rgba(10,40,70,.6);color:#fff;font-size:13px;backdrop-filter:blur(6px);padding:6px 12px;border-radius:12px;pointer-events:none}
+#daily b{color:#fff25a}.miniKey{display:inline-block;width:15px;height:15px;text-align:center;font-style:normal;box-sizing:border-box;margin-right:5px;vertical-align:middle;background:#fff25a;color:#1c1c1c;border:1.5px solid #1c1c1c;border-radius:4px;box-shadow:0 1.5px 0 #1c1c1c;font:900 9px/11px "Comic Sans MS","Chalkboard SE",sans-serif}   /* about the height of the numbers next to it */#daily.done .miniKey{background:#4fc98a}#daily.done b{color:#4fc98a}#daily .prog{height:6px;margin-top:4px;background:#ffffff33;border-radius:9px;overflow:hidden}#daily .prog i{display:block;height:100%;background:#fff25a}#daily.done .prog i{background:#4fc98a}
+#toast{position:fixed;left:50%;top:14px;z-index:30;transform:translate(-50%,-140%);background:#fff8d6;color:#1c1c1c;border:4px solid #1c1c1c;border-radius:16px;box-shadow:5px 5px 0 #1c1c1c;padding:8px 18px;text-align:center;pointer-events:none;transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+#toast:not(.on){opacity:0;transition:transform .35s,opacity 0s .35s}#toast.on{transform:translate(-50%,0)}#toast small{display:block;font-size:.8rem;color:#6b6250}#toast b{font-size:1.15rem}
+.ups{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:8px}
+.diffPick{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.diffPick:empty{display:none}.diffPick>small{width:100%;font-weight:700}
+.diffPick button{font:inherit;font-size:13px;background:#fff;color:#1c1c1c;border:2px solid #1c1c1c;border-radius:10px;padding:4px 8px;cursor:pointer}.diffPick button.on{background:#ffe14d;box-shadow:0 2px 0 #1c1c1c}
+#combo .cm{color:#ffe14d;font-size:.8em}
+.up{font:inherit;text-align:left;background:#fff;color:#1c1c1c;border:3px solid #1c1c1c;border-radius:14px;padding:8px 12px;cursor:pointer;box-shadow:0 3px 0 #1c1c1c;display:grid;gap:2px}
+.up:disabled{cursor:default;background:#efe9d6;color:#8a8270}.up small{font-size:.8rem}.up .cost{font-weight:700;color:#c0471c}.up:disabled .cost{color:inherit}
+body.viewing #daily{display:none}
 #shopBtn{position:fixed;top:56px;right:14px;z-index:15;font:inherit;font-weight:700;background:#fff25a;color:#1c1c1c;border:3px solid #1c1c1c;border-radius:12px;padding:4px 12px;cursor:pointer;box-shadow:0 3px 0 #1c1c1c}
-#gifBtn{position:fixed;top:100px;right:14px;z-index:15;font:inherit;font-weight:700;background:#fff;color:#1c1c1c;border:3px solid #1c1c1c;border-radius:12px;padding:4px 12px;cursor:pointer;box-shadow:0 3px 0 #1c1c1c}
-#gifBtn:disabled{cursor:default;background:#e4dfcf}
-body.viewing #shopBtn,body.viewing #gifBtn{display:none}
+body.viewing #achBtn,body.viewing #sndBtn,body.viewing #shopBtn{display:none}
 #prompts{position:fixed;inset:0;pointer-events:none;z-index:5}
-.key{position:fixed;width:84px;height:84px;pointer-events:auto;cursor:pointer;background:#fff25a;color:#1c1c1c;border:5px solid #1c1c1c;border-radius:22px;box-shadow:0 7px 0 #1c1c1c;
- font:900 2.6rem "Comic Sans MS","Chalkboard SE",system-ui,sans-serif;display:grid;place-items:center;padding:0;animation:keyIn .25s cubic-bezier(.3,1.7,.5,1)}
-.key .time{position:absolute;left:6px;right:6px;bottom:-19px;height:9px;background:#fff;border:3px solid #1c1c1c;border-radius:6px;overflow:hidden}
+.key{--k:clamp(54px,10vmin,88px);   /* key size follows the screen: small phones get small keys, big screens big ones */
+ position:fixed;width:var(--k);height:var(--k);pointer-events:auto;cursor:pointer;background:#fff25a;color:#1c1c1c;border:calc(var(--k)*.06) solid #1c1c1c;border-radius:calc(var(--k)*.26);box-shadow:0 calc(var(--k)*.08) 0 #1c1c1c;
+ font:900 calc(var(--k)*.5) "Comic Sans MS","Chalkboard SE",system-ui,sans-serif;display:grid;place-items:center;padding:0;animation:keyIn .25s cubic-bezier(.3,1.7,.5,1)}
+.key .time{position:absolute;left:7%;right:7%;bottom:calc(var(--k)*-.23);height:calc(var(--k)*.11);background:#fff;border:calc(var(--k)*.035) solid #1c1c1c;border-radius:6px;overflow:hidden}
 .key .time i{display:block;height:100%;width:100%;background:#4fc98a}
 .key.hurry .time i{background:#ff6f61}
+@media not (any-pointer:coarse){.key{pointer-events:none;cursor:default}}   /* no touch screen: letters are keyboard only, clicking them does nothing */
 .key.hit{animation:keyHit .3s forwards}.key.miss{animation:keyMiss .4s forwards;background:#ff8a7a}
 @keyframes keyIn{from{transform:scale(0) rotate(-20deg)}to{transform:none}}
-@keyframes keyHit{to{transform:scale(1.6) rotate(12deg);opacity:0}}
+@keyframes keyHit{30%{transform:scale(1.25,.8)}to{transform:scale(1.6) rotate(12deg);opacity:0}}
 @keyframes keyMiss{30%{transform:translateX(-10px) rotate(-6deg)}60%{transform:translateX(10px) rotate(6deg)}to{transform:translateY(40px);opacity:0}}
 #meter{position:fixed;left:50%;bottom:66px;transform:translateX(-50%);width:min(440px,calc(100vw - 32px));background:#fff8d6;color:#1c1c1c;border:4px solid #1c1c1c;border-radius:16px;box-shadow:5px 5px 0 #1c1c1c;padding:6px 12px 8px;pointer-events:none}
 #meter .mtop{display:flex;justify-content:space-between;font-weight:700}
 #meter .mbar{height:16px;margin-top:4px;border:3px solid #1c1c1c;border-radius:999px;background:#fff;overflow:hidden}
 #meter .mbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4fc98a,#fff25a,#ff8c42,#ff6f61);background-size:440px 100%;transition:width .2s}
 #uberBanner{position:fixed;left:50%;top:140px;transform:translateX(-50%);font:900 clamp(1.6rem,6vw,3.2rem) "Comic Sans MS","Chalkboard SE",sans-serif;color:#fff25a;-webkit-text-stroke:2px #1c1c1c;text-shadow:4px 4px 0 #1c1c1c;white-space:nowrap;pointer-events:none;display:none}
+#combo{position:fixed;left:50%;bottom:142px;transform:translateX(-50%);font:900 1.5rem "Comic Sans MS","Chalkboard SE",sans-serif;color:#fff;-webkit-text-stroke:1.5px #1c1c1c;text-shadow:3px 3px 0 #1c1c1c;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s}
+#combo.on{opacity:1}#combo.bump{animation:comboBump .25s}#combo.big{color:#fff25a}#combo small{font-size:.9rem;color:#fff8d6}
+@keyframes comboBump{40%{transform:translateX(-50%) scale(1.35)}}
+body.viewing #combo{display:none}
+#uberBanner small{display:block;text-align:center;font-size:.7em;color:#fff;-webkit-text-stroke:0;text-shadow:2px 2px 0 #1c1c1c,-1px -1px 0 #1c1c1c,1px -1px 0 #1c1c1c,-1px 1px 0 #1c1c1c}
 body.uber #uberBanner{display:block;animation:wobble .5s ease-in-out infinite alternate}
 body.uber #meter .mbar i{background:linear-gradient(90deg,red,orange,yellow,lime,cyan,violet,red);background-size:200% 100%;animation:rainbow 1s linear infinite}
 body.uber::after{content:"";position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 70px 18px #ff4fd8;animation:hue 1.2s linear infinite}
@@ -127,37 +159,42 @@ body.evil.uber::after{box-shadow:inset 0 0 80px 22px #d8262e;animation:none}
   <div class="stat">Steps<b id="steps">0</b></div>
   <div class="stat">Distance<b id="dist">0 m</b></div>
 </div>
-<div class="hint">Press <kbd>Esc</kbd> for all keys</div>
+<button class="hint" id="menuBtn" aria-label="Open the menu"><span class="desk">Press <kbd>Esc</kbd> for all keys</span><span class="touch"><i class="burger"></i>Menu</span></button>
 <div id="achOverlay" role="dialog" aria-modal="true" aria-labelledby="achTitle">
   <div id="achBox">
-    <header><h2 id="achTitle">🏅 Achievements</h2><span id="achCount">0 / 0</span></header>
+    <header><h2 id="achTitle">🏅 Achievements</h2><span id="achCount">0 / 0</span><button class="xBtn" aria-label="Close">✕</button></header>
     <div id="achBar"><i></i></div>
     <div id="achList"></div>
-    <footer>Press <b>Q</b> or <b>Esc</b> to close</footer>
+    <footer>Press <b>Esc</b> to close</footer>
   </div>
 </div>
 <div id="shopOverlay" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
   <div id="shopBox">
-    <header><h2 id="shopTitle">🎁 Shop</h2><span id="shopWallet">0 steps</span></header>
+    <header><h2 id="shopTitle">🎁 Shop</h2><span id="shopWallet">0 steps</span><button class="xBtn" aria-label="Close">✕</button></header>
     <p class="shopSub">You only see the shadow of what's inside. Buy it to unwrap!</p>
     <div id="coinBox"></div>
+    <h3>⬆️ Upgrades</h3><div id="ups" class="ups"></div>
     <div id="skinList"></div>
-    <footer>Pay with your steps · Press <b>B</b> or <b>Esc</b> to close</footer>
+    <footer>Pay with your steps · Press <b>Esc</b> to close</footer>
   </div>
 </div>
 <div id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
   <div id="helpBox">
-    <header><h2 id="helpTitle">⌨️ Keys</h2></header>
+    <header><h2 id="helpTitle">⌨️ Menu</h2><button class="xBtn" aria-label="Close">✕</button></header>
     <div id="helpList"></div>
     <footer>Press <b>Esc</b> to close</footer>
   </div>
 </div>
+<button id="achBtn" title="Achievements (1)">🏅 Achievements</button>
+<button id="sndBtn" title="Sound on/off (5)" >🔊 Sound on</button>
 <button id="shopBtn" title="Open the shop (2)">🛍️ Shop</button>
-<button id="gifBtn" data-gif="🎞 GIF" title="Record one walk cycle and download it as an animated GIF (3)">🎞 GIF</button>
 <div id="prompts"></div>
 <div id="meter"><div class="mtop"><span id="mLabel">🤪 Goofy meter</span><span id="mName">Normal</span></div><div class="mbar"><i id="mFill"></i></div></div>
+<div id="combo" aria-live="polite"></div>
+<div id="daily"></div>
+<div id="toast" role="status"></div>
 <div id="uberBanner">🤪 UBER GOOBER MODE! 🤪</div>
-<div id="msg">Press the keys that pop up to fill the meter! 🧽</div>
+<div id="msg" class="show">Press the keys that pop up to fill the meter! 🧽</div>
 
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
 <script type="module">
@@ -166,7 +203,16 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {COIN_PACKS,PREMIUM_ITEMS,premiumById,returnValue,RETURN_SHARE,WITHDRAW_DAYS} from './catalogue.js';
 
 // ---------- Idle game state ----------
-const UPS=[];   // upgrades removed for now; sps()=0 and spc()=1 until they come back
+const UPS=[   // bought with steps in the shop; each one costs 15% more than the last
+ {id:'shoes',name:'👟 Squeakier shoes',desc:'+1 step for every letter you hit',base:60,click:1},
+ {id:'stride',name:'🦵 Longer stride',desc:'+0.5 steps per second, even while you are away',base:250,sps:.5},
+ {id:'jelly',name:'🪼 Jellyfish buddy',desc:'+3 steps per second, even while you are away',base:2500,sps:3},
+ {id:'juice',name:'🧃 Juicier combos',desc:'Every 10 in a row adds +10% more steps per hit',base:1500},
+ {id:'diff',name:'🌶️ Spicier keys',desc:'Unlocks the next difficulty: faster keys, bigger combo multiplier',base:5000,max:3,grow:4}];
+// difficulty: keys last shorter, and each 10 in a row is worth more (the combo bonus is multiplied)
+const DIFFS=[{name:'Normal',life:1,mult:1},{name:'🌶️ Hard',life:.8,mult:1.5},{name:'🌶️🌶️ Expert',life:.65,mult:2},{name:'🌶️🌶️🌶️ Insane',life:.5,mult:3}];
+const diff=()=>DIFFS[Math.min(S.diff||0,cnt('diff'))];
+const comboMult=c=>1+Math.floor(c/10)*.1*(1+cnt('juice'))*diff().mult;   // ×1 below 10 in a row, then grows every 10
 const STEP_M=.3;   // metres per step
 const fmtDist=m=>m<100?(Math.floor(m*10)/10)+' m':m<1000?Math.floor(m)+' m':(m/1000).toLocaleString('en',{maximumFractionDigits:m<1e4?2:m<1e5?1:0})+' km';
 const fmtTime=s=>s<60?Math.floor(s)+' s':s<3600?Math.floor(s/60)+' min '+String(Math.floor(s%60)).padStart(2,'0')+' s':(s/3600).toFixed(1)+' h';
@@ -183,13 +229,18 @@ try{Object.assign(S,JSON.parse(localStorage.getItem('goofysponge')||'{}'))}catch
 if(S.dist==null)S.dist=S.total*STEP_M;   // old saves: distance was steps × 0.3 m
 const $=id=>document.getElementById(id);
 const fmt=n=>n<1e3?Math.floor(n)+'':n<1e6?(n/1e3).toFixed(1)+'K':n<1e9?(n/1e6).toFixed(2)+'M':(n/1e9).toFixed(2)+'B';
-const cnt=id=>S.owned[id]||0, cost=u=>Math.ceil(u.base*1.15**cnt(u.id));
+const cnt=id=>S.owned[id]||0, cost=u=>Math.ceil(u.base*(u.grow||1.15)**cnt(u.id));
 const sps=()=>UPS.reduce((a,u)=>a+(u.sps||0)*cnt(u.id),0);
 const spc=()=>1+UPS.reduce((a,u)=>a+(u.click||0)*cnt(u.id),0);
 const gain=n=>{S.steps+=n;S.total+=n;S.dist=(S.dist||0)+n*stepM};   // distance follows the step length of the character walking
-const say=t=>$('msg').textContent=t;
+let sayT=0;const say=t=>{const m=$('msg');m.textContent=t;m.classList.add('show');clearTimeout(sayT);sayT=setTimeout(()=>m.classList.remove('show'),3000)};
+sayT=setTimeout(()=>$('msg').classList.remove('show'),5000);   // on phones the bubble fades out (the first hint stays a bit longer)
 UPS.forEach(u=>{const b=document.createElement('button');b.className='up';b.id='u_'+u.id;
- b.onclick=e=>{e.stopPropagation();const c=cost(u);if(S.steps>=c){S.steps-=c;S.owned[u.id]=cnt(u.id)+1;say(`Got ${u.name}!`);render()}};$('ups').appendChild(b)});
+ b.onclick=e=>{e.stopPropagation();const c=cost(u);if(S.steps>=c&&!(u.max&&cnt(u.id)>=u.max)){S.steps-=c;S.owned[u.id]=cnt(u.id)+1;env.setDecor(S.owned);sfx.buy();
+  if(u.id==='diff'){S.diff=cnt('diff');toast(DIFFS[S.diff].name+' unlocked!',`Combo bonus ×${DIFFS[S.diff].mult}. Switch difficulty below.`)}else toast(u.name,u.id==='juice'?`Level ${cnt(u.id)}: combos pay more!`:`Level ${cnt(u.id)}: look along the road!`);render()}};$('ups').appendChild(b)});
+// difficulty picker: shows the levels bought so far
+{const d=document.createElement('div');d.id='diffPick';d.className='diffPick';$('ups').appendChild(d);
+ d.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();S.diff=+b.dataset.d;sfx.blip();render()})}
 ACH_CATS.forEach(cat=>{const sec=document.createElement('section');sec.className='achCat';
  sec.innerHTML=`<h3>${cat.title}<span id="achCat_${cat.id}"></span></h3><div class="achGrid"></div>`;$('achList').appendChild(sec)});
 ACH.forEach((a,i)=>{const c=document.createElement('div');c.className='card locked';c.id='a'+i;
@@ -201,13 +252,26 @@ const numKey=e=>e.metaKey||e.ctrlKey||e.altKey||!/^(Digit|Numpad)\d$/.test(e.cod
 addEventListener('keydown',e=>{if(e.repeat)return;if(numKey(e)==='1')toggleAch()});
 overlay.addEventListener('pointerdown',e=>{if(e.target===overlay)toggleAch(false)});
 let gotBefore=null;
+// a card that slides in at the top for big moments (achievements, upgrades, daily goal)
+let toastT=0;function toast(title,sub){const el=$('toast');el.innerHTML=`<small>${sub}</small><b>${title}</b>`;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2600)}
+// ---------- Daily goal: one per day (local date), the same for everyone that day; a step bonus the first time, nothing lost for skipping a day ----------
+const KEYBOX='<i class="miniKey">A</i>';   // a small letter key, like the ones you press, so the goal reads as "press letters"
+const DAILY=[{id:'uber',text:'Reach Uber Goober 3 times',n:3},{id:'combo',text:'Get a 30 combo',n:30},{id:'hits',text:'Hit 150 letters',n:150}],DAILY_BONUS=500;
+const today=()=>new Date().toLocaleDateString('sv');   // YYYY-MM-DD in the player's own time zone
+function dailyGoal(){const d=today();if(S.daily?.day!==d){const n=[...d].reduce((a,c)=>a*31+c.charCodeAt(0)|0,7);S.daily={day:d,id:DAILY[Math.abs(n)%DAILY.length].id,p:0,done:false}}return DAILY.find(g=>g.id===S.daily.id)}
+function dailyProgress(id,v){const g=dailyGoal();if(g.id!==id||S.daily.done)return;S.daily.p=id==='combo'?Math.max(S.daily.p,v):S.daily.p+v;
+ if(S.daily.p>=g.n){S.daily.done=true;gain(DAILY_BONUS);toast(`+${DAILY_BONUS} steps`,'📅 Daily goal done!');sfx.daily()}}
+function renderDaily(){const g=dailyGoal(),d=S.daily,el=$('daily'),h=`<span class="dshort">${KEYBOX} ${d.done?'✓':`${Math.min(d.p,g.n)}/${g.n}`}</span><span class="dfull">${KEYBOX} Daily: <b>${d.done?'done! ✓':g.text}</b>${d.done?'':` <span>${Math.min(d.p,g.n)}/${g.n}</span>`}</span><div class="prog"><i style="width:${Math.min(1,d.p/g.n)*100}%"></i></div>`;
+ el.classList.toggle('done',d.done);if(el.innerHTML!==h)el.innerHTML=h}
 function render(){
+ renderDaily();
  $('steps').textContent=fmt(S.steps);
  $('dist').textContent=fmtDist(S.dist);
- UPS.forEach(u=>{const b=$('u_'+u.id),c=cost(u);b.disabled=S.steps<c;
-  b.innerHTML=`<b>${u.name}</b> ×${cnt(u.id)}<small>${u.desc}</small><span class="cost">${fmt(c)} steps</span>`});
+ UPS.forEach(u=>{const b=$('u_'+u.id),c=cost(u),full=u.max&&cnt(u.id)>=u.max;b.disabled=full||S.steps<c;
+  const h=`<b>${u.name} · level ${cnt(u.id)}${u.max?' / '+u.max:''}</b><small>${u.desc}</small><span class="cost">${full?'MAX':fmt(c)+' steps'}</span>`;if(b.innerHTML!==h)b.innerHTML=h});
+ {const n=cnt('diff'),cur=Math.min(S.diff||0,n),h=n?'<small>Difficulty</small>'+DIFFS.slice(0,n+1).map((d,i)=>`<button data-d="${i}" class="${i===cur?'on':''}">${d.name} <small>×${d.mult}</small></button>`).join(''):'';if($('diffPick').innerHTML!==h)$('diffPick').innerHTML=h}
  let got=0;ACH.forEach((a,i)=>{const c=$('a'+i),v=a.cat.val(),done=v>=a.n;got+=done;
-  if(done&&!c.classList.contains('got')){c.classList.replace('locked','got');c.querySelector('.medal').textContent='🏅';if(gotBefore!==null)say(`🏅 Achievement unlocked: ${a.t}! (press 1)`)}
+  if(done&&!c.classList.contains('got')){c.classList.replace('locked','got');c.querySelector('.medal').textContent='🏅';if(gotBefore!==null){toast('🏅 '+a.t,'Achievement unlocked!');sfx.chime()}}
   c.querySelector('.prog i').style.width=Math.min(100,v/a.n*100)+'%'});
  ACH_CATS.forEach(cat=>{const v=cat.val();$('achCat_'+cat.id).textContent=`${cat.list.filter(([n])=>v>=n).length} / ${cat.list.length}`});
  if($('shopOverlay').classList.contains('open'))renderShop();
@@ -299,9 +363,12 @@ function skirtGeo(extra,k,waves,phase,pr=SKIRT,amp=.06,grow=0){const len=-pr[pr.
  g.computeVertexNormals();const nr=g.attributes.normal,np=pr.length,last=128*np;   // weld the lathe seam so no fold line shows
  for(let j=0;j<np;j++){const a=V(nr.getX(j),nr.getY(j),nr.getZ(j)).add(V(nr.getX(last+j),nr.getY(last+j),nr.getZ(last+j))).normalize();nr.setXYZ(j,a.x,a.y,a.z);nr.setXYZ(last+j,a.x,a.y,a.z)}
  return g}
-function flowerTex(col){return canvasTex(256,256,(x,w,h)=>{x.translate(128,128);x.strokeStyle=col;x.lineWidth=11;const n=5+(Math.random()<.4);
- x.beginPath();for(let i=0;i<=360;i++){const a=i/360*Math.PI*2,r=48+62*Math.pow(Math.abs(Math.sin(a*n/2)),.6);i?x.lineTo(r*Math.cos(a),r*Math.sin(a)):x.moveTo(r,0)}
- x.globalAlpha=.12;x.fillStyle=col;x.fill();x.globalAlpha=1;x.stroke();x.lineWidth=8;x.beginPath();x.arc(0,0,22,0,7);x.stroke()})}
+// sky flower (Bikini Bottom style): soft filled petals with a thick outline in the same hue and a ringed middle
+function flowerTex(col){const n=[4,5,5,6][Math.random()*4|0],tw=rnd(0,1),light=new THREE.Color(col).lerp(new THREE.Color('#ffffff'),.55).getStyle();
+ return canvasTex(256,256,(x,w,h)=>{x.translate(128,128);x.rotate(tw);
+  const petals=(r0,r1)=>{x.beginPath();for(let i=0;i<=360;i++){const a=i/360*Math.PI*2,r=r0+r1*Math.pow(Math.abs(Math.sin(a*n/2)),.55);i?x.lineTo(r*Math.cos(a),r*Math.sin(a)):x.moveTo(r,0)}x.closePath()};
+  petals(44,70);x.fillStyle=light;x.globalAlpha=.75;x.fill();x.globalAlpha=1;x.lineWidth=12;x.strokeStyle=col;x.stroke();
+  x.beginPath();x.arc(0,0,24,0,7);x.fillStyle=light;x.fill();x.lineWidth=9;x.stroke();x.beginPath();x.arc(0,0,9,0,7);x.fillStyle=col;x.fill()})}
 function skyFlowers(n=11){const cols=['#8a4fd8','#ff6f61','#4fc98a','#f5d94a','#3a5fd8','#ff8fd0'],arr=[];
  for(let i=0;i<n;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:flowerTex(cols[i%cols.length]),fog:false,transparent:true,depthWrite:false}));
   sp.position.set(rnd(-45,45),rnd(9,26),rnd(-75,-40));sp.scale.setScalar(rnd(4,8));sp.userData.p=rnd(0,6);scene.add(sp);arr.push(sp)}
@@ -317,6 +384,31 @@ const outliner=w=>m=>{if(!m.geometry)return;m.geometry.computeBoundingBox();cons
 function inkTube(curve,r,mat,w,seg=20){const g=new THREE.Group();g.add(new THREE.Mesh(new THREE.TubeGeometry(curve,seg,r,10),mat));
  if(w){const o=new THREE.Mesh(new THREE.TubeGeometry(curve,seg,r+w,10),inkMat);o.userData.line=true;g.add(o)}return g}
 
+// cartoon boulder: a smooth lumpy blob sitting on the sand, flat underneath, with a few darker pits
+function boulder(m,dark,r,pits=3){const g=new THREE.SphereGeometry(r,28,18),p=g.attributes.position,v=V(0,0,0),k=[rnd(1.5,2.5),rnd(1.5,2.5),rnd(2,3)],ph=rnd(0,6);   // a sphere shares its vertices, so the lumps shade smooth
+ for(let q=0;q<p.count;q++){v.fromBufferAttribute(p,q).normalize();const bump=1+.16*Math.sin(v.x*k[0]+ph)*Math.cos(v.z*k[1]+ph*1.7)+.07*Math.sin(v.y*k[2]+ph);
+  v.multiplyScalar(r*bump);v.y=Math.max(v.y*.78,-r*.05);v.x*=1.12;p.setXYZ(q,v.x,v.y+r*.05,v.z)}
+ g.computeVertexNormals();const b=new THREE.Mesh(g,m);outliner(.026)(b);
+ for(let q=0;q<pits;q++){const a=rnd(0,6),e=rnd(.25,.8),d=new THREE.Mesh(new THREE.SphereGeometry(r*rnd(.1,.16),10,8),dark),n=V(Math.cos(a)*Math.cos(e)*1.15,Math.sin(e)*.78,Math.sin(a)*Math.cos(e));
+  n.normalize();const hit=new THREE.Raycaster(n.clone().multiplyScalar(r*3).add(V(0,r*.05,0)),n.clone().negate()).intersectObject(b,false)[0];if(!hit)continue;d.position.copy(hit.point).addScaledVector(n,-r*.02);d.scale.set(1,1,.35);d.lookAt(d.position.clone().add(n));b.add(d)}   // sit on the real (lumpy) surface
+ return b}
+// rounded ink-outlined end cap for a tube (coral tips, kelp tips)
+function inkBall(p,r,mat,w=.025){const g=new THREE.Group(),b=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),mat),o=new THREE.Mesh(new THREE.SphereGeometry(r+w,12,10),inkMat);o.userData.line=true;b.position.copy(p);o.position.copy(p);g.add(b,o);return g}
+// branching coral: a wiggly trunk with n side branches that curve out and up, every end rounded
+function coralTree(m,h,n,r){const g=new THREE.Group(),lean=V(rnd(-.15,.15),0,rnd(-.15,.15)),trunk=new THREE.CatmullRomCurve3([V(0,0,0),V(lean.x*.5+rnd(-.06,.06),h*.35,lean.z*.5),V(lean.x,h*.7,lean.z+rnd(-.06,.06)),V(lean.x*1.3,h,lean.z*1.3)]);
+ g.add(inkTube(trunk,r,m,.025,24),inkBall(V(0,0,0),r*1.4,m));
+ for(let k=0;k<n;k++){const t=.3+k*.45/Math.max(1,n-1)+rnd(-.05,.05),p=trunk.getPoint(t),a=k*2.4+rnd(-.4,.4),out=V(Math.cos(a),0,Math.sin(a)),len=(1-t)*h*.85+.25;
+  const c=new THREE.CatmullRomCurve3([p,p.clone().addScaledVector(out,len*.45).add(V(0,len*.15,0)),p.clone().addScaledVector(out,len*.7).add(V(0,len*.65,0))]);
+  g.add(inkTube(c,r*.75,m,.025,16));fork(c.getPoint(1),out,len*.32,r*.6)}
+ fork(trunk.getPoint(1),V(1,0,0),h*.16,r*.7);
+ function fork(p,out,l,rr){const side=V(-out.z,0,out.x);[1,-1].forEach(sg=>{const e=p.clone().addScaledVector(side,sg*l*.55).addScaledVector(out,l*.2).add(V(0,l,0)),c=new THREE.CatmullRomCurve3([p,p.clone().add(V(0,l*.35,0)).addScaledVector(side,sg*l*.2),e]);g.add(inkTube(c,rr,m,.022,10),inkBall(e,rr,m,.022))})}   // coral tips split in two
+ return g}
+// kelp strand: a wavy ribbon-like stalk with leaf blobs on alternating sides
+function kelp(m,h){const g=new THREE.Group(),w=rnd(.08,.14),ph=rnd(0,6),pts=[];for(let q=0;q<=8;q++){const u=q/8;pts.push(V(Math.sin(u*Math.PI*2+ph)*w*u,u*h,Math.cos(u*Math.PI*1.5+ph)*w*.4*u))}
+ const c=new THREE.CatmullRomCurve3(pts);g.add(inkTube(c,.055,m,.022,32),inkBall(c.getPoint(1),.055,m,.022));
+ for(let q=1;q<6;q++){const u=q/6.5,p=c.getPoint(u),side=q%2?1:-1,leaf=new THREE.Mesh(new THREE.SphereGeometry(.2,12,8),m),ink=new THREE.Mesh(new THREE.SphereGeometry(.2,12,8),inkMat);
+  ink.userData.line=true;ink.scale.setScalar(1.12);leaf.add(ink);leaf.scale.set(1,.32,.6);leaf.position.copy(p).add(V(side*.2,.06,0));leaf.rotation.z=side*.55;g.add(leaf)}
+ return g}
 // ---------- the sponge ----------
 function spongeGeo(w,h,d){const g=new THREE.BoxGeometry(w,h,d,10,12,2),p=g.attributes.position;
  for(let i=0;i<p.count;i++){let x=p.getX(i),y=p.getY(i),z=p.getZ(i);
@@ -436,12 +528,59 @@ function buildC(){
  drumTex.wrapS=THREE.RepeatWrapping;drumTex.repeat.set(3,1);
  const drumG=new THREE.Group();drumG.position.y=-R;world.add(drumG);
  const drum=new THREE.Mesh(new THREE.CylinderGeometry(R,R,L,120,1),M(drumTex));drum.rotation.z=Math.PI/2;drum.receiveShadow=true;drumG.add(drum);
- const cols=[0x9b59d0,0xff8c42,0xff6fa8,0x4fc98a];
- for(let i=0;i<60;i++){const th=rnd(0,Math.PI*2),o=new THREE.Group();const m=M(cols[i%4]);
-  if(i%2){for(let j=0;j<3;j++){const b=new THREE.Mesh(new THREE.CylinderGeometry(.1,.14,rnd(.6,1.5),8),m);b.position.set(rnd(-.3,.3),.4,rnd(-.3,.3));b.rotation.z=rnd(-.5,.5);ol(b);o.add(b)}}
-  else{const r=new THREE.Mesh(new THREE.DodecahedronGeometry(rnd(.3,.7)),M(0xb8a98d));r.scale.y=.55;ol(r);o.add(r)}
+ // ---- background models: one builder each, used by the road and by the model viewer (developer mode) to look at a single model ----
+ // make(i) returns a group standing on y=0; userData.anim(o,t) animates it (optional)
+ const MODELS={
+  bush:{name:'🪸 Roadside coral',make:i=>coralTree(M([0x9b59d0,0xff8c42,0xff6fa8,0x4fc98a][i%4]),rnd(.6,1.1),2,.075)},
+  rock:{name:'🪨 Rock',make:i=>{const o=new THREE.Group(),col=[0xb8a98d,0xa59a8c,0xc4b08a][i%3],m=M(col),dark=M(new THREE.Color(col).multiplyScalar(.72));
+   o.add(boulder(m,dark,rnd(.45,.7)));for(let j=0;j<2;j++){const b=boulder(m,dark,rnd(.13,.2),0),a=rnd(0,6);b.position.set(Math.cos(a)*rnd(.8,1),0,Math.sin(a)*rnd(.8,1));o.add(b)}return o}},
+  shoes:{name:'🪸 Tall coral (Squeakier shoes)',make:i=>{const o=new THREE.Group(),m=M([0xff6f61,0xff9fcf,0xffb347][i%3]);
+   o.add(coralTree(m,rnd(1.6,2.2),3,.1));{const s=coralTree(m,rnd(.8,1.2),2,.07);s.position.set(.35,0,.15);s.rotation.y=2;o.add(s)}return o}},
+  stride:{name:'🌿 Seaweed (Longer stride)',make:i=>{const o=new THREE.Group(),m=M([0x3fae5a,0x4fc98a,0x2e8b57][i%3]);o.userData.ph=rnd(0,6);
+   for(let j=0;j<3;j++){const s=kelp(m,rnd(1.6,3)),a=j/3*Math.PI*2+rnd(-.3,.3);s.position.set(Math.cos(a)*.18,0,Math.sin(a)*.18);s.rotation.y=rnd(0,6);o.add(s)}
+   o.userData.anim=(o,t)=>o.children.forEach((s,j)=>{s.rotation.z=Math.sin(t*1.6+o.userData.ph+j)*.14;s.rotation.x=Math.cos(t*1.3+o.userData.ph+j*2)*.08});return o}},
+  jelly:{name:'🪼 Jellyfish (Jellyfish buddy)',make:i=>{const o=new THREE.Group(),col=[0xff9fd0,0xd59bff,0xffb0d8][i%3],m=M(col),under=M(new THREE.Color(col).multiplyScalar(.78)),ph=rnd(0,6);
+   // Jellyfish Fields style: fat closed bell with a rolled lip and a darker, slightly hollow underside, white spots, short wavy tentacles that sway
+   const bell=new THREE.Group();bell.position.y=.75;o.add(bell);   // bell profile below runs rim first so its faces point outward
+   const top=new THREE.Mesh(new THREE.LatheGeometry([[0,.5],[.2,.48],[.36,.41],[.47,.28],[.52,.14],[.52,.05],[.47,-.01],[.42,.01]].map(([r,y])=>new THREE.Vector2(r,y)).reverse(),32),m);ol(top);bell.add(top);
+   const belly=new THREE.Mesh(new THREE.CircleGeometry(.43,32),under);belly.rotation.x=Math.PI/2;belly.position.y=.03;bell.add(belly);   // underside, faces down; closes the bell so the ink never shows through
+   // white spots on the bell surface: the top one, then [angle, height, distance from the middle]
+   const spot=M(0xffffff);[[0,.5,0,.07],...[[.6,.45,.3,.05],[2.4,.41,.36,.045],[4.1,.43,.33,.05],[5.4,.38,.39,.04]].map(([a,y,d,r])=>[Math.cos(a)*d,y,Math.sin(a)*d,r])].forEach(([x,y,z,r])=>{const d=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),spot);d.position.set(x,y,z);d.scale.z=.4;d.lookAt(x*3,y*3-.6,z*3);top.add(d)});
+   const tents=[];for(let j=0;j<7;j++){const a=j/7*Math.PI*2+rnd(-.2,.2),r=rnd(.18,.34),len=rnd(.4,.62),w=rnd(.05,.08),pts=[];
+    for(let q=0;q<=6;q++){const u=q/6;pts.push(V(Math.sin(u*Math.PI*2.2+j)*w*u,-u*len,Math.cos(u*Math.PI*2.2+j)*w*.5*u))}
+    const curve=new THREE.CatmullRomCurve3(pts),h=new THREE.Group();h.position.set(Math.cos(a)*r,.02,Math.sin(a)*r);
+    h.add(new THREE.Mesh(new THREE.TubeGeometry(curve,24,.034,8),m),new THREE.Mesh(new THREE.TubeGeometry(curve,24,.05,8),inkMat));
+    {const tip=curve.getPoint(1),c=new THREE.Mesh(new THREE.SphereGeometry(.034,10,8),m),ci=new THREE.Mesh(new THREE.SphereGeometry(.05,10,8),inkMat);c.position.copy(tip);ci.position.copy(tip);h.add(c,ci)}   // round tip instead of an open hose end   // a fatter back-faced tube is the tentacle's ink line
+    bell.add(h);tents.push(h)}
+   o.userData.anim=(o,t)=>{const k=o.userData.k??1+Math.sin(t*3+ph)*.08;   // a school sets k itself, to match the bell to its swim strokes
+   top.scale.set(k,2-k,k);belly.scale.setScalar(k);bell.position.y=.75+Math.sin(t*1.5+ph)*.22;
+    tents.forEach((h,j)=>{h.rotation.x=Math.sin(t*2.4+ph+j)*.22;h.rotation.z=Math.cos(t*2+ph+j*1.3)*.18})};return o}},
+  flower:{name:'🌸 Sky flower',make:i=>{const o=new THREE.Group(),sp=new THREE.Sprite(new THREE.SpriteMaterial({map:flowerTex(['#8a4fd8','#ff6f61','#4fc98a','#f5d94a','#3a5fd8','#ff8fd0'][i%6]),transparent:true,depthWrite:false}));
+   sp.position.y=1;sp.scale.setScalar(2);o.add(sp);o.userData.anim=(o,t)=>{sp.material.rotation=Math.sin(t*.3)*.25};return o}}};
+ for(let i=0;i<60;i++){const th=rnd(0,Math.PI*2),o=MODELS[i%2?'bush':'rock'].make(i);
   const side=Math.random()<.5?-1:1;o.position.set(side*rnd(2.6,9),R*Math.cos(th),R*Math.sin(th));o.rotation.x=th;drumG.add(o)}
  const fl=skyFlowers();
+ // upgrade decorations: every upgrade level shows a few more of its own kind along the road (all built up front, hidden until bought)
+ const DECOR_PER=4,DECOR_MAX=24,decor={shoes:[],stride:[]};   // the Jellyfish buddy gets far-away schools instead (below)
+ const onDrum=(o,h=0,i=0,near=8)=>{const th=(i+rnd(0,.8))/DECOR_MAX*Math.PI*2,side=i%2?-1:1;o.position.set(side*rnd(2.8,near),(R+h)*Math.cos(th),(R+h)*Math.sin(th));o.rotation.x=th;o.visible=false;drumG.add(o);return o};   // spread evenly so a few are always in view
+ const NEAR={shoes:8,stride:6};   // furthest from the road
+ for(let i=0;i<DECOR_MAX;i++)for(const k in decor)decor[k].push(onDrum(MODELS[k].make(i),0,i,NEAR[k]));
+ // far-away schools of jellyfish drifting sideways across the background: one more school per Jellyfish buddy level
+ const FAR_MAX=6,schools=[],YTOP=16;
+ const halfW=z=>(camera.position.z-z)*Math.tan(camera.fov*Math.PI/360)*camera.aspect+4;   // half the view width at that depth, plus a school's size
+ const aim=(sc,lead=0)=>{const u=sc.userData,side=Math.random()<.5?1:-1,a=u.a=side>0?rnd(0,.6):Math.PI-rnd(0,.6);sc.rotation.z=a-Math.PI/2;   // the bell (+y) leads: head first; sideways or diagonally up, never diving, so never upside down
+  sc.position.set(-side*(halfW(u.z)+lead),rnd(1.5,7),u.z)};   // starts just past the left or right edge, off screen, and crosses the whole view
+ const fish=[];   // every school jelly in buy order: Jellyfish buddy level n shows the first n, filling one school before the next
+ for(let g=0;g<FAR_MAX;g++){const sc=new THREE.Group(),n=4;
+  for(let j=0,k=0;j<n&&k<300;k++){const p=V(rnd(-1.5,1.5),rnd(-1.8,1.8),rnd(-.5,.5));if(sc.children.some(o=>o.position.distanceTo(p)<1.5))continue;   // a tight group, but no two jellies overlap
+   const o=MODELS.jelly.make(g*5+j);o.position.copy(p);o.scale.setScalar(rnd(.7,1));o.userData.ph=rnd(-.35,.35);o.visible=false;sc.add(o);fish.push(o);j++}
+  sc.userData={speed:rnd(.35,.5),ph:rnd(0,6),school:true,z:-9-g*2.4};aim(sc,rnd(0,30));sc.visible=false;world.add(sc);schools.push(sc)}   // first pass: queued further out, so they swim in at different times
+ // a stroke: the bell swells while the school slows to a drift, then squeezes small and shoots forward; each jelly strokes a little out of step
+ const W=1.6;let swimT=0;
+ const schoolTick=dt=>{swimT+=dt;schools.forEach(sc=>{if(!sc.visible)return;const u=sc.userData,p=sc.position,w=swimT*W+u.ph,v=u.speed*(.15+2.6*Math.max(0,Math.cos(w))**2)*dt;p.x+=Math.cos(u.a)*v;p.y+=Math.sin(u.a)*v;   // fast while squeezing, slow while swelling
+  sc.children.forEach(o=>{o.userData.k=1-.12*Math.sin(w+o.userData.ph)});   // small while pushing, big while gliding
+  if(Math.abs(p.x)>halfW(u.z)+32||p.y>YTOP)aim(sc)})};   // well past the far edge (or the top), out of sight: start a new crossing
+ const decorAnim=t2=>{for(const k in decor)decor[k].forEach(o=>{if(o.visible)o.userData.anim?.(o,t2)});schools.forEach(sc=>{if(sc.visible)sc.children.forEach(o=>{if(o.visible)o.userData.anim?.(o,t2)})})};   // the viewer animates its single model itself (Animate / Speed)
 
  // rubber-hose sponge: bezier-arc limbs, geometry reused every frame
  const t=makeTorso(M,ol),root=t.root;const skin=M(YEL),white=M(0xffffff),red=M(0xe33a2c),blue=M(0x2f6fe0),brown=M(0x9a5a28),bloomer=M(DRESS),sleeve=M(0xffd0e8);   // sleeves a shade lighter so they stand apart from the bodice
@@ -547,7 +686,9 @@ function buildC(){
   meter:{icon:'🤪',name:'Goofy meter',names:GOOFY_NAMES,max:'UBER GOOBER MODE'},setFace(m){t.setFace(m);const sel=document.getElementById('dvFace');if(sel)sel.value=m},   // keep the model viewer's Face setting in sync
   setSkin(id){t.setSkin(id);for(const k in limbs)limbs[k].visible=k===id;dressed=id==='princess'},
   setGoofy(l){goofyLevel=Math.max(0,Math.min(GOOFY_NAMES.length-1,l|0))},
-  update(dt,t2,v){drumG.rotation.x-=v/R;fl(t2)}}}
+  models:MODELS,
+  setDecor(lv){for(const k in decor)decor[k].forEach((o,i)=>o.visible=i*7%DECOR_MAX<Math.min(DECOR_MAX,(lv[k]||0)*DECOR_PER));fish.forEach((o,i)=>o.visible=i<(lv.jelly||0));schools.forEach(sc=>sc.visible=sc.children.some(o=>o.visible))},   // i*7: the first few unlocked are spread around the whole road, not bunched   // lv: upgrade id -> level
+  update(dt,t2,v){drumG.rotation.x-=v/R;fl(t2);decorAnim(t2);schoolTick(dt)}}}
 
 // ---------- Plankton: a tiny one-eyed copepod, the second character (sizes and how to add more: docs/characters.md) ----------
 // Built in design units at roughly the sponge's height, so the numbers read the same; CHARS.plankton.scale shrinks the root to his real size.
@@ -721,7 +862,7 @@ function buildPlankton(C,R){   // R: road drum radius
   setFace,setGoofy(l){goofyLevel=Math.max(0,Math.min(6,l|0))}}}
 
 // ---------- Game loop ----------
-const env=buildC();world.add(env.rig.root);
+const env=buildC();world.add(env.rig.root);env.setDecor(S.owned);   // decorations for upgrades already bought
 // Characters: everything that depends on the hero's size lives here (docs/characters.md explains each number)
 const CHARS={
  sponge:{name:'Sponge',outfit:'classic',height:3.6,scale:1,cam:{y:2.9,z:10,ly:1.9},zoom:{in:.8,out:1.6},view:{ty:1.7,dist:8.4},stride:.46,omega:5.2,ink:1,stepM:STEP_M,stars:4.1},
@@ -771,7 +912,7 @@ function show(c,outfit){const next=HEROES[c];
   hero.setGoofy(gameGoofy());stars.removeFromParent();hero.rig.body.add(stars);stars.position.y=hero.char.stars;camera.near=hero===plank?.02:.1;camera.updateProjectionMatrix();viewer.reframe?.()}
  hero.setSkin(outfit);meterLabel()}
 // the meter belongs to the character: the goofy meter for the sponge, the evil meter for Plankton
-function meterLabel(){const m=hero.meter;$('mLabel').textContent=`${m.icon} ${m.name}`;$('uberBanner').textContent=`${m.icon} ${m.max}! ${m.icon}`;document.body.classList.toggle('evil',hero===plank)}
+function meterLabel(){const m=hero.meter;$('mLabel').textContent=`${m.icon} ${m.name}`;$('uberBanner').innerHTML=`${m.icon} ${m.max}! ${m.icon}<small>Steps ×${UBER_MULT}</small>`;document.body.classList.toggle('evil',hero===plank)}
 const showSaved=()=>show(S.char,outfitOf(S.char));
 const shop=$('shopOverlay');let shopKey='',unwrap=null;   // unwrap: the skin whose gift is opening right now
 function renderShop(){   // rebuilds the cards only when something on them changed
@@ -787,9 +928,10 @@ function renderShop(){   // rebuilds the cards only when something on them chang
  const group=(title,list)=>list.length?`<h3>${title}</h3><div class="gifts">${list.map(card).join('')}</div>`:'';
  $('skinList').innerHTML=group('🧍 Characters',SKINS.filter(k=>k.type==='character'))+(group(`👗 Outfits for ${CHARS[S.char].name}`,SKINS.filter(k=>k.type==='outfit'&&k.char===S.char))||`<h3>👗 Outfits for ${CHARS[S.char].name}</h3><p class="noOutfits">No outfits yet. Coming soon!</p>`)}   // only the outfits of the character you're playing
 $('skinList').addEventListener('click',e=>{const id=e.target.dataset&&e.target.dataset.id;if(!id)return;const k=SKINS.find(s=>s.id===id);
- if(!S.skins.includes(id)){if(S.steps<k.price)return;S.steps-=k.price;S.skins.push(id);say(`🎁 Unwrapped ${k.name}! Looking fabulous.`);unwrap=id;setTimeout(()=>{unwrap=null;render()},1800)}
+ if(!S.skins.includes(id)){if(S.steps<k.price)return;S.steps-=k.price;S.skins.push(id);sfx.buy();say(`🎁 Unwrapped ${k.name}! Looking fabulous.`);unwrap=id;setTimeout(()=>{unwrap=null;render()},1800)}
  S.char=k.char;if(k.type==='outfit')S.outfits[k.char]=id;showSaved();render()});   // wearing an outfit also switches to its character
 const toggleShop=open=>{shop.classList.toggle('open',open??!shop.classList.contains('open'));render()};
+$('achBtn').onclick=e=>{e.stopPropagation();toggleAch(true)};
 $('shopBtn').onclick=()=>toggleShop(true);
 addEventListener('keydown',e=>{if(e.repeat||viewer.on)return;if(numKey(e)==='2')toggleShop()});
 shop.addEventListener('pointerdown',e=>{if(e.target===shop)toggleShop(false)});
@@ -852,7 +994,7 @@ let gameGoofy=()=>0;   // set by the key rush below
 // ---------- Model viewer (only with ?developer-mode=true) ----------
 const viewer={on:false,paused:false,speed:1,fixedDt:0};
 // Export GIF (button or G, in the game and in the model viewer): run the game on a fixed clock and grab every frame, so frames are evenly spaced however slow the grab is; the step is fitted so one walk cycle fills a whole number of frames (seamless loop). One shared palette (no colour flicker)
-async function exportGif(){const bs=[...document.querySelectorAll('[data-gif]')];if(viewer.fixedDt||bs.some(b=>b.disabled))return;bs.forEach(b=>b.disabled=true);const show=t=>bs.forEach(b=>b.textContent=t);
+async function exportGif(){const bs=[...document.querySelectorAll('[data-gif]')];if(viewer.fixedDt||bs.some(b=>b.disabled))return;bs.forEach(b=>b.disabled=true);const show=t=>{bs.forEach(b=>b.textContent=t);say(`🎞 GIF: ${t}`)};   // the menu closes on GIF, so progress also goes to the message bubble
  try{const{GIFEncoder,quantize,applyPalette}=await import('https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js');
   const src=renderer.domElement,W=480,H=Math.round(W*src.height/src.width),c=document.createElement('canvas');c.width=W;c.height=H;
   const x=c.getContext('2d',{willReadFrequently:true}),STEP=1/50,frames=[];   // 50 fps: the fastest frame delay browsers play as written (20 ms)
@@ -881,10 +1023,10 @@ async function exportGif(){const bs=[...document.querySelectorAll('[data-gif]')]
   say('🎞 GIF saved to your downloads')}
  catch(e){viewer.afterRender=null;viewer.fixedDt=0;viewer.gifPh=null;say('🎞 GIF export failed: '+e.message)}
  bs.forEach(b=>{b.disabled=false;b.textContent=b.dataset.gif})}
-$('gifBtn').onclick=exportGif;
 if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  const css=document.createElement('style');css.textContent=`
- #devBtn{position:fixed;top:144px;right:14px;z-index:15;font:inherit;background:#1c1c1c;color:#fff25a;border:2px solid #fff25a;border-radius:10px;padding:5px 10px;cursor:pointer}
+ #devBtn{position:fixed;top:240px;left:12px;z-index:15;font:inherit;background:#1c1c1c;color:#fff25a;border:2px solid #fff25a;border-radius:10px;padding:5px 10px;cursor:pointer}
+ @media (max-width:760px){#devBtn{top:70px}}   /* under the steps / distance block */
  #devPanel{position:fixed;top:14px;right:14px;z-index:15;width:250px;background:#1c1c1ce6;color:#fff;border:2px solid #fff25a;border-radius:14px;padding:12px 14px;font-size:.85rem;display:none}
  #devPanel.open{display:block}
  #devPanel h3{margin:0 0 8px;color:#fff25a;font-size:1rem}
@@ -903,7 +1045,10 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  #dvAngle button{font:inherit;width:100%;margin-top:4px;background:#333;color:#fff;border:1px solid #666;border-radius:8px;padding:4px;cursor:pointer}
  #devPanel label{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:7px 0}
  #devPanel input[type=range]{width:120px}
+ #devPanel select{min-width:0;max-width:150px;text-overflow:ellipsis}   /* long option names must not push out of the panel */
+ #devPanel .forChar,#devPanel .forModel{display:none}body:not(.previewing) #devPanel .forChar{display:flex}body:not(.previewing) #devPanel .goofy.forChar{display:block}body.previewing #devPanel .forModel{display:flex}body:not(.previewing) #devPanel button.forChar,body.previewing #devPanel button.forModel{display:block}
  #devPanel button{font:inherit;width:100%;margin-top:8px;background:#333;color:#fff;border:1px solid #666;border-radius:8px;padding:5px;cursor:pointer}
+ body.previewing #dvAngle{display:none}
  body.viewing #hud,body.viewing .hint,body.viewing #msg,body.viewing #devBtn{display:none}`;document.head.appendChild(css);
  document.body.insertAdjacentHTML('beforeend',`<button id="devBtn" title="Open model viewer (4)">🛠 Model viewer</button>
  <div id="dvAngle"><div>📐 Camera: <b id="dvAngleName">front</b></div>
@@ -911,27 +1056,31 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
   <label>Height<span><input type="number" id="dvEl" min="-85" max="85" step="5" aria-label="Camera height angle">°</span></label>
   <button id="dvCopy" title="Copy the camera angle, to paste into feedback">📋 Copy angle</button></div>
  <div id="devPanel"><h3>🛠 Model viewer</h3>
-  <div class="goofy"><div class="gtop"><span id="dvMeterLabel">🤪 Goofy meter</span><b id="dvGoofyName">0 · Normal</b></div>
+  <label>Show<select id="dvModel"><option value="">🧽 Character</option>${Object.entries(env.models).map(([k,m])=>`<option value="${k}">${m.name}</option>`).join('')}</select></label>
+  <label class="forModel">Variant<input type="number" id="dvVariant" min="0" max="11" value="0" style="width:56px" aria-label="Colour variant"></label>
+  <div class="goofy forChar"><div class="gtop"><span id="dvMeterLabel">🤪 Goofy meter</span><b id="dvGoofyName">0 · Normal</b></div>
    <input type="range" id="dvGoofy" min="0" max="6" step="1" value="0" aria-label="Goofy meter level">
    <div class="gbar" id="dvGoofyBar">${'<i></i>'.repeat(7)}</div></div>
-  <label>Character<select id="dvChar">${SKINS.filter(k=>k.type==='character').map(k=>`<option value="${k.char}">${k.pic} ${k.name}</option>`).join('')}</select></label>
-  <label>Outfit<select id="dvOutfit"></select></label>
-  <label>Face<select id="dvFace"><option value="happy">😁 Smiling (Plankton: evil)</option><option value="scared">😱 Scared</option><option value="sad">😢 Sad</option></select></label>
+  <label class="forChar">Character<select id="dvChar">${SKINS.filter(k=>k.type==='character').map(k=>`<option value="${k.char}">${k.pic} ${k.name}</option>`).join('')}</select></label>
+  <label class="forChar">Outfit<select id="dvOutfit"></select></label>
+  <label class="forChar">Face<select id="dvFace"><option value="happy">😁 Smiling (Plankton: evil)</option><option value="scared">😱 Scared</option><option value="sad">😢 Sad</option></select></label>
   <label>Animate<input type="checkbox" id="dvPlay" checked></label>
   <label>Speed<input type="range" id="dvSpeed" min="0.1" max="3" step="0.1" value="1"></label>
-  <label>Pose<input type="range" id="dvPhase" min="0" max="6.283" step="0.01" value="0"></label>
-  <label>World<input type="checkbox" id="dvWorld" checked></label>
-  <label>Show body<input type="checkbox" id="dvSponge" checked></label>
+  <label class="forChar">Pose<input type="range" id="dvPhase" min="0" max="6.283" step="0.01" value="0"></label>
+  <label class="forChar">World<input type="checkbox" id="dvWorld" checked></label>
+  <label class="forChar">Show body<input type="checkbox" id="dvSponge" checked></label>
   <label>Ink outlines<input type="checkbox" id="dvInk" checked></label>
   <label>Wireframe<input type="checkbox" id="dvWire"></label>
-  <button id="dvFall">Play fall + stand up</button><button id="dvReset">Reset camera</button><button id="dvGif" data-gif="🎞 Export GIF" title="Record one walk cycle of the 3D view and download it as an animated GIF (3)">🎞 Export GIF</button><button id="dvSteps">👣 +10,000 steps</button><button id="dvRestart" style="background:#7a2020">🔄 Restart game</button><button id="dvClose" style="background:#fff25a;color:#1c1c1c;font-weight:700">⬅ Back to game</button>
+  <label>Sound<select id="dvSound">${['hit','cheer','uber','miss','boing','splat','idle','standUp','record','chime','daily','buy','blip'].map(k=>`<option value="${k}">${k}</option>`).join('')}<option value="music:uber">🎵 Uber beat</option><option value="music:evil">🎵 Uber beat (Plankton)</option><option value="music:sad">🎻 Sad violin</option></select></label>
+  <button id="dvSndPlay">▶ Play sound</button><button id="dvStop">⏹ Stop music</button>
+  <button id="dvFall" class="forChar">Play fall + stand up</button><button id="dvReroll" class="forModel">🎲 New random shape</button><button id="dvReset">Reset camera</button><button id="dvGif" class="forChar" data-gif="🎞 Export GIF" title="Record one walk cycle of the 3D view and download it as an animated GIF (3)">🎞 Export GIF</button><button id="dvSteps">👣 +10,000 steps</button><button id="dvRestart" style="background:#7a2020">🔄 Restart game</button><button id="dvClose" style="background:#fff25a;color:#1c1c1c;font-weight:700">⬅ Back to game</button>
   <div style="margin-top:8px;color:#aaa">Drag: rotate · Scroll: zoom · Right-drag: pan</div></div>`);
  const orbit=new OrbitControls(camera,renderer.domElement);orbit.enabled=false;orbit.enableDamping=true;orbit.target.set(0,1.7,0);
  const home={pos:camera.position.clone(),target:V(0,1.9,0)};
  const rigMeshes=[];[env,plank].forEach(h=>h.rig.root.traverse(o=>{if(o.isMesh)rigMeshes.push(o)}));
- const worldParts=[...scene.children,...world.children].filter(o=>o!==world&&o!==env.rig.root&&o!==plank.rig.root&&!o.isLight);
+ const worldParts=[...scene.children,...world.children].filter(o=>!o.userData.school&&o!==world&&o!==env.rig.root&&o!==plank.rig.root&&!o.isLight);
  const panel=$('devPanel'),dv=id=>$(id);
- const setOn=on=>{viewer.on=on;panel.classList.toggle('open',on);document.body.classList.toggle('viewing',on);orbit.enabled=on;
+ const setOn=on=>{if(!on)setModel('');viewer.on=on;panel.classList.toggle('open',on);document.body.classList.toggle('viewing',on);orbit.enabled=on;
   if(on){viewChar(S.char);home3()}else{viewer.paused=false;viewer.speed=1;dv('dvPlay').checked=true;dv('dvSpeed').value=1;
    camera.position.copy(home.pos);camera.lookAt(home.target);setWorld(true);dv('dvWorld').checked=true;
    {const l=gameGoofy();dv('dvGoofy').value=l;setGoofy(l)}   // back to the game's own goofy level
@@ -940,6 +1089,20 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  const spongeMeshes=rigMeshes.filter(m=>!env.isOutfit(m));let spongeOn=true;   // everything that is not clothing: body, face, yellow limbs, hands, shoes
  const setSponge=v=>{spongeOn=v;spongeMeshes.forEach(m=>m.visible=v&&(!m.userData.line||dv('dvInk').checked));if(v)plank.setFace(plank.mood)};   // mood parts: only the current face may come back
  const setWorld=v=>{worldParts.forEach(o=>o.visible=v);scene.background=v?null:new THREE.Color(0x3a4a5a);scene.fog.far=v?46:1e4};
+ // Show: one background model on its own (world hidden), to check its shape, colours, outlines and texture up close
+ let preview=null;const previewMeshes=()=>{const a=[];preview?.traverse(m=>{if(m.isMesh||m.isSprite)a.push(m)});return a};
+ const styleMesh=m=>{if(m.userData.line)m.visible=dv('dvInk').checked;else if(m.isMesh)[].concat(m.material).forEach(mm=>mm.wireframe=dv('dvWire').checked)};
+ function setModel(id){dv('dvModel').value=id;if(preview){scene.remove(preview);preview=null}
+  [env,plank].forEach(h=>h.rig.root.visible=!id&&h===hero);document.body.classList.toggle('previewing',!!id);
+  if(!id){setWorld(dv('dvWorld').checked);if(viewer.on)home3();return}
+  setWorld(false);buildPreview(id);frameModel()}
+ function buildPreview(id){if(preview)scene.remove(preview);preview=env.models[id].make(+dv('dvVariant').value||0);scene.add(preview);previewMeshes().forEach(styleMesh)}   // variant picks the colour (and shape seed)
+ function frameModel(){const box=new THREE.Box3().setFromObject(preview),c=box.getCenter(V(0,0,0)),r=Math.max(1.5,box.getSize(V(0,0,0)).length());
+  orbit.minDistance=r*.3;orbit.maxDistance=r*8;orbit.target.copy(c);camera.position.set(c.x+r*1.1,c.y+r*.6,c.z+r*2.2);orbit.update()}
+ let modelT=0,lastTick=performance.now();
+ dv('dvVariant').oninput=()=>{if(preview)buildPreview(dv('dvModel').value)};dv('dvVariant').onkeydown=e=>e.stopPropagation();
+ dv('dvReroll').onclick=()=>{if(preview)buildPreview(dv('dvModel').value)};   // every build is a new random shape
+ dv('dvModel').onchange=e=>setModel(e.target.value);
  $('devBtn').onclick=()=>setOn(true);   // only opens; leaving is done with the Back button
  dv('dvClose').onclick=()=>setOn(false);
  dv('dvGif').onclick=exportGif;
@@ -947,7 +1110,7 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  dv('dvRestart').onclick=()=>restartGame();
  const home3=()=>{const v=hero.char.view,c=hero.char.cam;orbit.target.set(0,v.ty,0);camera.position.set(0,c.y,c.z);frame(+dv('dvGoofy').value)};   // start view: the game's own slanted angle (he walks toward you at YAW), sized to the character, so a GIF looks like the game
  viewer.reframe=()=>{if(viewer.on)home3()};
- dv('dvReset').onclick=home3;
+ dv('dvReset').onclick=()=>preview?frameModel():home3();
  const gbars=[...$('dvGoofyBar').children];
  // zoom is shared with the game: the same per-character range (CHARS[..].zoom) and the same saved value, around the viewer's own distance
  const baseDist=()=>hero.char.view.dist*(1+(+dv('dvGoofy').value)*.035);
@@ -958,15 +1121,15 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
  dv('dvPlay').onchange=e=>viewer.paused=!e.target.checked;
  dv('dvSpeed').oninput=e=>viewer.speed=+e.target.value;
  dv('dvPhase').oninput=e=>{viewer.paused=true;dv('dvPlay').checked=false;phase=+e.target.value};
- dv('dvWorld').onchange=e=>setWorld(e.target.checked);
- dv('dvInk').onchange=e=>rigMeshes.forEach(m=>{if(m.userData.line)m.visible=e.target.checked&&(spongeOn||env.isOutfit(m))});
+ dv('dvWorld').onchange=e=>{if(!preview)setWorld(e.target.checked)};   // a single model is always shown on its own
+ dv('dvInk').onchange=e=>{rigMeshes.forEach(m=>{if(m.userData.line)m.visible=e.target.checked&&(spongeOn||env.isOutfit(m))});previewMeshes().forEach(styleMesh)};
  // try any character and any of its outfits, bought or not; the outfit list only holds clothes that fit the chosen character
  const viewChar=c=>{const l=SKINS.filter(k=>k.type==='outfit'&&k.char===c),o=outfitOf(c),sel=dv('dvOutfit');dv('dvChar').value=c;
   sel.innerHTML=l.length?l.map(k=>`<option value="${k.id}">${k.pic} ${k.name}</option>`).join(''):'<option value="">— none yet —</option>';sel.disabled=!l.length;sel.value=o||'';show(c,o);setGoofy(+dv('dvGoofy').value)};   // relabel the meter: goofy or evil
- dv('dvChar').onchange=e=>viewChar(e.target.value);
+ dv('dvChar').onchange=e=>{setModel('');viewChar(e.target.value)};
  dv('dvOutfit').onchange=e=>show(dv('dvChar').value,e.target.value);
  dv('dvSponge').onchange=e=>setSponge(e.target.checked);   // outfit only: review a dress without SpongeBob in it
- dv('dvWire').onchange=e=>rigMeshes.forEach(m=>{if(!m.userData.line)[].concat(m.material).forEach(mm=>mm.wireframe=e.target.checked)});
+ dv('dvWire').onchange=e=>{rigMeshes.forEach(m=>{if(!m.userData.line)[].concat(m.material).forEach(mm=>mm.wireframe=e.target.checked)});previewMeshes().forEach(styleMesh)};
  // Camera angle in the sponge's own frame (0° = front, 90° = his left, 180° = back, 270° = his right), so outfit feedback can name the exact angle
  const DEG=180/Math.PI,ANGLE_NAMES=['front','front, his left','his left side','back, his left','back','back, his right','his right side','front, his right'],camL=V(0,0,0),tgtL=V(0,0,0);
  const showAngle=()=>{const r=hero.rig.root;r.worldToLocal(camL.copy(camera.position));r.worldToLocal(tgtL.copy(orbit.target));camL.sub(tgtL);
@@ -979,7 +1142,9 @@ if(new URLSearchParams(location.search).get('developer-mode')==='true'){
   try{await navigator.clipboard.writeText(txt);b.textContent='✅ Copied'}catch{b.textContent='❌ Copy failed'}setTimeout(()=>b.textContent='📋 Copy angle',1200)};
  dv('dvAz').oninput=dv('dvEl').oninput=setAngle;dv('dvAz').onkeydown=dv('dvEl').onkeydown=e=>e.stopPropagation();   // typing digits here must not trigger the dev keys
  addEventListener('keydown',e=>{if(numKey(e)==='4'&&!e.repeat&&!viewer.on)setOn(true)});
- viewer.tick=()=>{if(viewer.on){orbit.update();showAngle();{const {k,z}=zoomOf();S.zoom[k]=Math.min(z.out,Math.max(z.in,camera.position.distanceTo(orbit.target)/baseDist()))}if(!viewer.paused)dv('dvPhase').value=phase%(Math.PI*2)}};   // viewer zoom carries back to the game
+ viewer.tick=()=>{const now=performance.now(),dtv=Math.min(.1,(now-lastTick)/1000);lastTick=now;
+ if(preview&&!viewer.paused){modelT+=dtv*viewer.speed;preview.userData.anim?.(preview,modelT)}
+ if(viewer.on){orbit.update();showAngle();if(!preview){const {k,z}=zoomOf();S.zoom[k]=Math.min(z.out,Math.max(z.in,camera.position.distanceTo(orbit.target)/baseDist()))}if(!viewer.paused)dv('dvPhase').value=phase%(Math.PI*2)}};   // viewer zoom carries back to the game
 }
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=camera.aspect<1?58:38;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
@@ -992,27 +1157,116 @@ function popText(x,y,text,size=22,color='#ffe14d'){const d=document.createElemen
 // ---------- Key rush: press the keys that pop up to fill the goofy meter; full meter = Uber Goober mode ----------
 const KEYS='ABCDEFGHIJKLMNOPQRSTUVWXYZ';   // every letter; menus use number keys
 const UBER_TIME=12,HIT_FILL=4,KEY_SLOW=1.9,KEY_FAST=.8,FALL_TIME=3;
-const rush={meter:0,level:0,uber:0,cur:null,next:1.5,fall:0};
+const HIT_STEPS=2,UBER_MULT=3,COMBO_CHEERS={10:'Combo ×10!',25:'Combo ×25!! 🔥',50:'COMBO ×50!!! 🤯',100:'COMBO ×100!!!! 👑'};   // a hit gives HIT_STEPS + the goofy level; Uber Goober triples walking steps
+const rush={meter:0,level:0,uber:0,cur:null,next:1.5,fall:0,combo:0,record:false,idle:0};
+const heroId=()=>Object.keys(HEROES).find(c=>HEROES[c]===hero);
+if(!S.best||typeof S.best!=='object')S.best={};   // best combo per character
+// ---------- Sound: made in code with Web Audio, no files; starts on the first key press (browsers block audio before that) ----------
+// every note goes through one master bus with a compressor, so stacked sounds (hit + jingle + fanfare) never clip
+let actx=null,master=null;
+function audio(){if(!actx){actx=new AudioContext();const comp=actx.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;master=actx.createGain();master.gain.value=.7;master.connect(comp).connect(actx.destination)}
+ if(actx.state==='suspended')actx.resume();return actx}
+function tone(f,dur,{type='triangle',vol=.08,slide=0,at=0,bus=null}={}){if(S.muted)return;try{audio();
+ const t=actx.currentTime+at,o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(20,f*slide),t+dur);
+ g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+dur);   // 6 ms fade-in: no click at the start
+ o.connect(g).connect(bus||master);o.start(t);o.stop(t+dur+.02)}catch(e){}}
+// drums: a filtered noise burst (hi-hat, clap) and a pitch-dropping sine (kick)
+let noiseBuf=null;
+function hit808(at,bus,kind){try{audio();const t=actx.currentTime+at,g=actx.createGain();g.connect(bus);
+ if(kind==='kick'){const o=actx.createOscillator();o.type='sine';o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(45,t+.12);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.22,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.28);o.connect(g);o.start(t);o.stop(t+.3);return}
+ if(!noiseBuf){noiseBuf=actx.createBuffer(1,actx.sampleRate*.3,actx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+ const n=actx.createBufferSource(),f=actx.createBiquadFilter(),hat=kind==='hat',len=hat?.05:.16;n.buffer=noiseBuf;f.type=hat?'highpass':'bandpass';f.frequency.value=hat?7000:1500;f.Q.value=hat?.7:.9;
+ g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(hat?.05:.12,t+.003);g.gain.exponentialRampToValueAtTime(.0001,t+len);n.connect(f).connect(g);n.start(t);n.stop(t+len+.02)}catch(e){}}
+// ---------- Uber Goober beat: an original upbeat dance loop (128 BPM, C major) that plays while Uber mode lasts ----------
+// kick on every beat, clap on 2 and 4, off-beat hats, a bouncy off-beat bass and a catchy hook; Plankton gets it in a minor key
+let uberBus=null;const ALT={16:17,14:16,12:14};
+function uberMusic(secs,evil){stopUberMusic();if(S.muted)return;try{audio();uberBus=actx.createGain();uberBus.gain.value=.6;uberBus.connect(master);
+ const B=60/128,E=B/2,start=1,bars=Math.ceil((secs-start)/(B*4)),
+  chords=evil?[[-3,0,4],[-7,-3,0],[-4,0,3],[-5,-1,2]]:[[0,4,7],[-3,0,4],[-7,-3,0],[-5,-1,2]],   // C Am F G  /  Am F Ab G
+  hook=evil?[12,null,15,12,null,10,8,null]:[12,null,16,19,null,16,14,12];   // eight 8ths per bar
+ hit808(start-B/2,uberBus,'hat');hit808(start-B/4,uberBus,'hat');   // pickup into the first downbeat
+ for(let bar=0;bar<bars;bar++){const t0=start+bar*B*4,ch=chords[bar%4];
+  for(let b=0;b<4;b++){const tb=t0+b*B;if(tb>secs)break;hit808(tb,uberBus,'kick');if(b%2)hit808(tb,uberBus,'clap');hit808(tb+E,uberBus,'hat');
+   tone(note(ch[0]-24),E*.7,{vol:.08,at:tb+E,bus:uberBus})}   // off-beat bass pump
+  hook.forEach((n,k)=>{const tt=t0+k*E;if(n!==null&&tt<secs)tone(note((bar%2&&k>4&&!evil?ALT[n]??n:n)-12),E*.6,{type:'square',vol:.03,at:tt,bus:uberBus})});   // plucky square an octave below the hit squeaks; every other bar the ending steps up, staying in key
+  if(bar%2===0)ch.forEach(n=>tone(note(n),B*4*.9,{type:'sine',vol:.02,at:t0,bus:uberBus}))}   // soft pad under it
+}catch(e){}}
+function stopUberMusic(finale){if(!uberBus)return;if(finale&&!S.muted){hit808(0,master,'clap');tone(note(0),.5,{vol:.06})}   // timed out: end on a crash and a C
+ try{const t=actx.currentTime;uberBus.gain.setValueAtTime(uberBus.gain.value,t);uberBus.gain.linearRampToValueAtTime(0,t+.15);const b=uberBus;setTimeout(()=>b.disconnect(),300)}catch(e){}uberBus=null}
+// ---------- sad violin: an original slow lament in C minor, looped while he cries after a fall, until a hit makes him smile ----------
+let sadBus=null,sadTimer=0;
+function violin(n,dur,at,bus,from){try{const t=actx.currentTime+at,fr=note(n),g=actx.createGain(),f=actx.createBiquadFilter(),body=actx.createBiquadFilter(),v=actx.createOscillator(),vg=actx.createGain();
+ f.type='lowpass';f.frequency.value=4500;body.type='peaking';body.frequency.value=2800;body.gain.value=6;body.Q.value=1.2;   // bright, nasal solo-violin tone
+ v.frequency.value=6;vg.gain.setValueAtTime(0,t);vg.gain.linearRampToValueAtTime(fr*.025,t+Math.min(.5,dur*.6));v.start(t);v.stop(t+dur+.05);   // wide, over-the-top vibrato that swells in
+ [1,1.004].forEach(d=>{const o=actx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime((from==null?fr*.97:note(from))*d,t);o.frequency.exponentialRampToValueAtTime(fr*d,t+(from==null?.08:.22));   // melodramatic slide from the previous note
+  v.connect(vg).connect(o.frequency);o.connect(f);o.start(t);o.stop(t+dur+.05)});
+ const a=Math.min(.25,dur*.35),r=Math.min(.3,dur*.35);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.03,t+a);g.gain.setValueAtTime(.03,t+dur-r);g.gain.linearRampToValueAtTime(.0001,t+dur);   // slow bow in and out
+ f.connect(body).connect(g).connect(bus)}catch(e){}}
+const SAD=[[19,2],[20,.5],[19,.5],[17,.5],[15,.5],[14,2.5],[13,.5],[null,1],[15,.75],[14,.25],[12,.5],[11,.5],[12,4],[null,2]];   // [semitones from C5 or a rest, beats]: 16 beats at 66 BPM in C minor; a high solo violin sighing G5 down to a long C5, gliding between notes like the meme
+// the recording in sounds/sad-violin.mp3 (supplied by the owner; the CC0 "Hearts and Flowers" by andyssoundbox on Freesound is kept in sounds/hearts-and-flowers.mp3), looped; the synth version above is the fallback if it can't load
+let sadBuf=null;const sadLoad=fetch('sounds/sad-violin.mp3').then(r=>r.ok?r.arrayBuffer():null).catch(()=>null);
+async function sadFile(bus){const raw=await sadLoad;if(!raw)return false;if(!sadBuf)sadBuf=await actx.decodeAudioData(raw.slice(0)).catch(()=>null);if(!sadBuf)return false;
+ if(sadBus!==bus)return true;const src=actx.createBufferSource();src.buffer=sadBuf;const g=actx.createGain();g.gain.value=.35;src.connect(g).connect(bus);src.start();
+ src.onended=()=>{if(sadBus===bus){stopSadMusic(true);sadDone()}};   // plays once (it doesn't loop cleanly), then he stops crying
+ bus.onstop=()=>{try{src.stop()}catch(e){}};return true}
+// the cry is over: if he's still sad (no hit since), he cheers up on his own
+function sadDone(){if(rush.fall<=0&&!viewer.on)hero.setFace('happy')}
+function sadMusic(){clearTimeout(sadTimer);if(S.muted){sadTimer=setTimeout(sadDone,(sadBuf?.duration||15)*1000);return}if(sadBus)return;try{audio();sadBus=actx.createGain();sadBus.gain.value=1;sadBus.connect(master);const bus=sadBus;
+ sadFile(bus).then(ok=>{if(!ok&&sadBus===bus)sadSynth(bus)})}catch(e){}}
+function sadSynth(bus){try{const B=60/66;let pass=0;
+ const loop=()=>{if(sadBus!==bus)return;let t=pass?.05:.6,prev=null;const t0=0;pass++;   // first pass waits for the slide whistle and SPLAT
+  SAD.forEach(([n,b])=>{if(n!==null){violin(n,b*B*.98,t,bus,prev);prev=n}else prev=null;t+=b*B});
+  sadTimer=setTimeout(()=>{if(sadBus===bus){stopSadMusic(true);sadDone()}},(t-t0+.3)*1000)};   // one pass, then he stops crying
+ loop()}catch(e){}}
+function stopSadMusic(now){clearTimeout(sadTimer);if(!sadBus)return;try{const t=actx.currentTime,b=sadBus;if(now){b.onstop?.();b.disconnect();sadBus=null;return}setTimeout(()=>b.onstop?.(),500);b.gain.cancelScheduledValues(t);b.gain.setValueAtTime(b.gain.value,t);b.gain.linearRampToValueAtTime(0,t+.4);setTimeout(()=>b.disconnect(),500)}catch(e){}sadBus=null}
+const C5=523.25,note=n=>C5*2**(n/12),PENTA=[0,2,4,7,9];   // all jingles share the key of C
+const sfx={
+ hit:c=>{const d=Math.min(Math.floor(c/3),10),f=note(PENTA[d%5]+12*Math.floor(d/5)-12);tone(f,.09,{type:'sine',vol:d>5?.09:.11,slide:1.6})},   // round underwater bubble "bloop", climbs the C pentatonic scale every 3 hits, two octaves at most (a bit softer up high)
+ cheer:()=>[0,4,7,12].forEach((n,i)=>tone(note(n),.12,{vol:.07,at:i*.06})),
+ uber:()=>{[0,4,7,12,16,19,24].forEach((n,i)=>tone(note(n-12),.16,{vol:.08,at:i*.07}));[0,4,7].forEach(n=>tone(note(n),.4,{vol:.05,at:.5}))},   // run up, then a held C chord
+ miss:()=>{tone(330,.18,{vol:.09,slide:.85});tone(247,.3,{vol:.09,slide:.6,at:.2})},   // cartoon "wah-wah"
+ boing:()=>{tone(200,.35,{type:'sine',vol:.12,slide:2.5});tone(1047,.45,{vol:.06,slide:.3,at:.3})},   // boing, then a slide whistle down
+ record:()=>[0,7,12,7,12,16].forEach((n,i)=>tone(note(n),.1,{vol:.06,at:i*.08})),
+ chime:()=>[12,16,19,24].forEach((n,i)=>tone(note(n),.12,{type:'sine',vol:.06,at:i*.05})),   // achievement unlocked
+ daily:()=>{sfx.cheer();tone(note(12),.4,{vol:.07,at:.3})},
+ buy:()=>{tone(note(16),.06,{vol:.07});tone(note(21),.25,{vol:.07,at:.06})},   // coin "ka-ching"
+ blip:()=>tone(note(7),.06,{type:'sine',vol:.05}),   // sound switched back on
+ splat:()=>{hit808(0,master,'kick');hit808(0,master,'clap');tone(180,.25,{type:'sine',vol:.12,slide:.4})},   // SPLAT on the road: thud plus a squishy drop
+ idle:()=>tone(note(-5),.25,{type:'sine',vol:.06,slide:.7}),   // a key timed out while nothing was going on: a soft little "bwoop"
+ standUp:()=>tone(330,.2,{vol:.06,slide:2})};   // springing back up after a fall
+let shake=0,freeze=0,bump=0;   // camera shake, hit-pause and a small zoom kick per hit
+function uberBurst(){for(let i=0;i<14;i++){const a=i/14*Math.PI*2,r=rnd(90,190);setTimeout(()=>popText(innerWidth/2+Math.cos(a)*r-15,innerHeight*.42+Math.sin(a)*r*.7,'✨',rnd(24,40),'#fff'),i*25)}}
+function showCombo(){const el=$('combo'),c=rush.combo,best=S.best[heroId()]||0;el.classList.toggle('on',c>=5);if(c<5)return;
+ const m=comboMult(c);el.innerHTML=`Combo ×${c}${m>1?` <b class="cm">steps ×${m.toFixed(1)}</b>`:''} <small>${rush.record?'🏆 new best!':'best '+best}</small>`;el.classList.toggle('big',c>=25);el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump')}
 gameGoofy=()=>rush.level;
 function syncLevel(){const l=rush.uber>0?6:Math.min(5,Math.floor(rush.meter*6/100));
  if(l!==rush.level){rush.level=l;if(!viewer.on){env.setGoofy(l);plank.setGoofy(l)}}
  $('mName').textContent=`${l} · ${hero.meter.names[l]}`;$('mFill').style.width=(rush.uber>0?rush.uber/UBER_TIME:rush.meter/100)*100+'%'}
 function spawnKey(){const k=KEYS[Math.random()*KEYS.length|0],el=document.createElement('button');el.className='key';el.setAttribute('aria-label',`Press ${k}`);
  el.innerHTML=`${k}<span class="time"><i></i></span>`;
- el.style.left=rnd(24,innerWidth-110)+'px';el.style.top=rnd(110,Math.max(120,innerHeight-260))+'px';
- const life=rush.uber>0?KEY_FAST:KEY_SLOW-(KEY_SLOW-KEY_FAST)*rush.meter/100;   // keys get quicker as the meter fills, never faster than in Uber mode
+ const top=Math.max(...['achBtn','msg','daily'].map(id=>$(id).getBoundingClientRect().bottom))+16;   // keys only pop up below the Achievements button and the message bubble
+ el.style.left=rnd(24,innerWidth-110)+'px';el.style.top=rnd(top,Math.max(top+10,innerHeight-260))+'px';
+ const life=(rush.uber>0?KEY_FAST:KEY_SLOW-(KEY_SLOW-KEY_FAST)*rush.meter/100)*diff().life;   // keys get quicker as the meter fills, never faster than in Uber mode
  el.addEventListener('pointerdown',e=>{e.stopPropagation();if(rush.cur&&rush.cur.el===el)hitKey()});
  $('prompts').appendChild(el);rush.cur={k,el,t:life,life}}
 function clearKey(cls){const c=rush.cur;if(!c)return;c.el.classList.add(cls);c.el.style.pointerEvents='none';setTimeout(()=>c.el.remove(),400);rush.cur=null;rush.next=rnd(.3,1)}
-function hitKey(){const r=rush.cur.el.getBoundingClientRect();popText(r.left+10,r.top-10,(hero===plank?['Mwahaha!','Evil!','Excellent!','Yes!']:['Nice!','Goofy!','Yes!','Wheee!'])[Math.random()*4|0],26);   // keys only fill the meter, no steps
- hero.setFace('happy');   // any hit cheers him up
- if(rush.uber<=0){rush.meter=Math.min(100,rush.meter+HIT_FILL);if(rush.meter>=100){rush.uber=UBER_TIME;rush.next=1;document.body.classList.add('uber');say(`${hero.meter.icon} ${hero.meter.max}!`)}}
+function hitKey(){const r=rush.cur.el.getBoundingClientRect(),c=++rush.combo,id=heroId(),got=Math.round((HIT_STEPS+rush.level+spc()-1)*comboMult(rush.combo));
+ popText(r.left+10,r.top-10,COMBO_CHEERS[c]||(hero===plank?['Mwahaha!','Evil!','Excellent!','Yes!']:['Nice!','Goofy!','Yes!','Wheee!'])[Math.random()*4|0],COMBO_CHEERS[c]?34:26);
+ const m=comboMult(c);gain(got);popText(r.left+30,r.top+90,`+${got} steps${m>1?' ×'+m.toFixed(1):''}`,m>1?Math.min(30,18+(m-1)*6):18,m>1?'#ffe14d':'#fff');   // juicier: the popup grows and turns gold with the combo multiplier
+ if(c%10===0&&m>1)for(let i=0;i<Math.min(16,4+c/5);i++)setTimeout(()=>popText(r.left+rnd(-60,90),r.top+rnd(-50,60),['✨','🧃','⭐'][i%3],rnd(18,30),'#fff'),i*30);   // every 10 in a row: a burst   // skill pays: a hit gives steps, more the goofier he is
+ let big=rush.uber<=0&&rush.meter+HIT_FILL>=100;   // uber starts on this hit: its fanfare replaces the cheer
+ if(c>(S.best[id]||0)){if(!rush.record&&S.best[id]>=5){rush.record=true;big=true;sfx.record();say('🏆 New best combo!')}S.best[id]=c}
+ sfx.hit(c);if(COMBO_CHEERS[c]&&!big)sfx.cheer();showCombo();dailyProgress('hits',1);dailyProgress('combo',c);bump=1;
+ stopSadMusic();rush.idle=0;hero.setFace('happy');   // any hit cheers him up
+ if(rush.uber<=0){rush.meter=Math.min(100,rush.meter+HIT_FILL);if(rush.meter>=100){rush.uber=UBER_TIME;rush.next=1;document.body.classList.add('uber');sfx.uber();uberMusic(UBER_TIME,hero===plank);dailyProgress('uber',1);uberBurst()}}   // the banner itself says Steps ×3, so no message bubble on top of it
  clearKey('hit');syncLevel();render()}
 // a miss resets everything: meter to 0, Uber mode ends, and the sponge falls over and has to get back up
-function missKey(){clearKey('miss');if(rush.meter<=0&&rush.uber<=0)return;   // empty meter: nothing to lose
- if(rush.level<1&&rush.uber<=0){rush.meter=0;say(`Missed! ${hero.meter.name} reset.`);syncLevel();return}   // below level 1: meter resets, but he keeps his feet
- rush.meter=0;if(rush.uber>0){rush.uber=0;document.body.classList.remove('uber')}
- rush.fall=FALL_TIME;rush.next=.6;hero.setFace('scared');say(`Whoops! 💫 ${hero.meter.name} reset…`);syncLevel()}
+function missKey(){clearKey('miss');rush.splat=rush.sprung=false;const c=rush.combo,best=S.best[heroId()]||0;rush.combo=0;rush.record=false;showCombo();
+ const tally=c>=3?` Combo ${c}${c>=best?' 🏆 new best!':` (best: ${best}${best-c<=5?', so close!':''})`}`:'';
+ if(rush.meter<=0&&rush.uber<=0){if(c>=3){sfx.miss();say(`Missed!${tally}`)}else if(++rush.idle<=2)sfx.idle();return}   // empty meter: nothing to lose
+ if(rush.level<1&&rush.uber<=0){rush.meter=0;sfx.miss();say(`Missed! ${hero.meter.name} reset.${tally}`);syncLevel();return}   // below level 1: meter resets, but he keeps his feet
+ rush.meter=0;if(rush.uber>0){rush.uber=0;document.body.classList.remove('uber');stopUberMusic()}
+ rush.fall=FALL_TIME;rush.next=.6;hero.setFace('scared');sfx.boing();sadMusic();say(`Whoops! 💫 ${hero.meter.name} reset…${tally}`);syncLevel()}
 // dizzy stars that circle the head while he's down
 const stars=new THREE.Group();{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.font='52px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('⭐',32,36);
  const m=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true});for(let k=0;k<3;k++){const sp=new THREE.Sprite(m);sp.scale.setScalar(.45);stars.add(sp)}}
@@ -1027,31 +1281,44 @@ function fallPose(){const e=FALL_TIME-rush.fall,FLAT=1.45,P=hero.pose;let a,fl=0
   else if(u<.8){const v=(u-.55)/.25;a=lerp(.95,-.22,ease(v));hop=.55*Math.sin(Math.PI*v);kn=1-v;st=-.16+.34*Math.sin(Math.PI*Math.min(1,v*1.3));ch=Math.min(1,v*2)}   // 3. SPROING: hops up, stretches, arms thrown up
   else{const v=(u-.8)/.2;a=-.22*(1-ease(v));st=-.12*Math.sin(Math.PI*v);kn=.5*Math.sin(Math.PI*v);ch=1-ease(v)}}   // 4. lands with a squash, arms come down
  else{const u=(e-2.65)/.35;a=Math.sin(u*Math.PI)*.07;bz=Math.sin(u*Math.PI*3)*.12*(1-u);st=-.08*Math.sin(Math.PI*u);kn=.4*Math.sin(Math.PI*u)}   // shakes it off                                     // little wobble before walking on
+ if(e>=1.95&&!rush.sprung){rush.sprung=true;sfx.standUp()}   // the SPROING beat of the stand-up
+ if(e>=.35&&!rush.splat){rush.splat=true;shake=.35;freeze=.07;sfx.splat()}   // SPLAT: shake the screen and freeze for a beat
  if(e>=.35)hero.setFace('sad');P.t=e;P.flail=fl;P.plant=pl;P.splat=sp;P.bx=bx;P.by=by;P.bz=bz;P.stretch=st;P.kick=kk;P.trip=tr;P.knee=kn;P.cheer=ch;hero.rig.root.position.y=hop*hero.char.scale;hero.rig.root.rotation.x=a;   // the hop scales with his size
  stars.visible=dz>0;if(dz>0){stars.rotation.y=e*6;stars.children.forEach((s,k)=>{const w=k*2.094;s.position.set(Math.cos(w)*.9,Math.sin(e*8+k)*.08,Math.sin(w)*.9);s.material.opacity=dz})}}
 $('dvFace')?.addEventListener('change',e=>hero.setFace(e.target.value));   // dev viewer: pick the face
-$('dvFall')?.addEventListener('click',()=>{rush.fall=FALL_TIME;hero.setFace('scared')});   // dev viewer: preview the fall
+$('dvSndPlay')?.addEventListener('click',()=>{const v=$('dvSound').value,m=S.muted;S.muted=false;stopUberMusic();stopSadMusic();if(v==='music:sad')sadMusic();else if(v.startsWith('music:'))uberMusic(UBER_TIME,v==='music:evil');else sfx[v](v==='hit'?15:undefined);S.muted=m});   // dev viewer: audition every sound, even while the game is muted
+$('dvStop')?.addEventListener('click',()=>{stopUberMusic();stopSadMusic(true)});   // dev viewer: cut the music right away
+$('dvFall')?.addEventListener('click',()=>{rush.fall=FALL_TIME;rush.splat=rush.sprung=false;hero.setFace('scared')});   // dev viewer: preview the fall
 addEventListener('keydown',e=>{if(viewer.on||e.repeat||!rush.cur||e.metaKey||e.ctrlKey||e.altKey||help.classList.contains('open'))return;const k=e.key.toUpperCase();
  if(k.length!==1||!KEYS.includes(k))return;if(k===rush.cur.k)hitKey();else missKey()});
 // dev only: press 7 to toggle auto mode, which hits every key for you; 8 = +1000 steps, 0 = restart the game
 const DEV=new URLSearchParams(location.search).get('developer-mode')==='true';let autoPlay=false;
 // Esc: key menu with every shortcut; when something is open, Esc closes it instead
 const help=$('helpOverlay'),keyRow=(k,t)=>`<kbd>${k}</kbd><span>${t}</span>`;
-$('helpList').innerHTML=`<h3>🎮 Game</h3><div class="keys">${[['A–Z','Press the key that pops up (or click it)'],['1','Achievements'],['2','Shop'],['3','Save a GIF of the walk'],['Scroll · + −','Zoom in or out (pinch on a touch screen)'],['Esc','This menu · close any window']].map(r=>keyRow(...r)).join('')}</div>`+
+$('helpList').innerHTML=`<div class="menuBtns"><button data-m="ach">🏅 Achievements</button><button data-m="shop">🛍️ Shop</button><button data-m="gif" data-gif="🎞 GIF">🎞 GIF</button><button data-m="snd">🔊 Sound on/off</button></div><h3>🎮 Game</h3><div class="keys">${[['A–Z',matchMedia('(any-pointer:coarse)').matches?'Press the key that pops up (or tap it)':'Press the key that pops up'],['1','Achievements'],['2','Shop'],['3','Save a GIF of the walk'],['5','Sound on/off'],['Scroll · + −','Zoom in or out (pinch on a touch screen)'],['Esc','This menu · close any window']].map(r=>keyRow(...r)).join('')}</div>`+
  (DEV?`<h3>🛠 Developer mode</h3><div class="keys">${[['4','Model viewer'],['7','Auto mode on/off'],['8','+1000 steps'],['0','Restart the game'],['Drag','Model viewer: rotate'],['Scroll','Model viewer: zoom'],['Right-drag','Model viewer: pan']].map(r=>keyRow(...r)).join('')}</div>`:'');
 const toggleHelp=open=>help.classList.toggle('open',open??!help.classList.contains('open'));
 addEventListener('keydown',e=>{if(e.repeat)return;
  if(e.key==='Escape'){if([overlay,shop,help].some(o=>o.classList.contains('open'))){toggleAch(false);toggleShop(false);toggleHelp(false)}else toggleHelp(true)}
  else if('1234'.includes(numKey(e)||'x'))toggleHelp(false);   // another window's key takes over from the menu
- if(numKey(e)==='3')exportGif()});
+ if(numKey(e)==='3')exportGif();if(numKey(e)==='5')toggleSound()});
 help.addEventListener('pointerdown',e=>{if(e.target===help)toggleHelp(false)});
+document.querySelectorAll('.xBtn').forEach(b=>b.onclick=()=>{toggleAch(false);toggleShop(false);toggleHelp(false)});
+let dailyT=0;$('daily').onclick=e=>{e.stopPropagation();const d=$('daily');d.classList.toggle('open');clearTimeout(dailyT);dailyT=setTimeout(()=>d.classList.remove('open'),4000)};   // phones: tap the badge to see the whole goal
+$('menuBtn').onclick=e=>{e.stopPropagation();toggleHelp()};
+const sndIcon=()=>{$('sndBtn').textContent=S.muted?'🔇 Sound off':'🔊 Sound on';document.querySelectorAll('[data-m="snd"]').forEach(b=>b.textContent=$('sndBtn').textContent)};   // the button shows the current state; tap to switch
+sndIcon();
+const toggleSound=()=>{S.muted=!S.muted;if(S.muted){stopUberMusic();stopSadMusic()}sndIcon();say(S.muted?'🔇 Sound off (press 5)':'🔊 Sound on');if(!S.muted)sfx.blip()};
+$('sndBtn').onclick=e=>{e.stopPropagation();toggleSound()};
+$('helpList').addEventListener('click',e=>{const m=e.target.closest('[data-m]')?.dataset.m;if(!m)return;toggleHelp(false);
+ if(m==='ach')toggleAch(true);else if(m==='shop')toggleShop(true);else if(m==='gif')exportGif();else toggleSound()});
 function restartGame(){if(!confirm('Restart the game? All steps, upgrades, outfits and achievements are wiped.'))return;   // dev only: start over from a fresh save
  restarting=true;try{localStorage.removeItem('goofysponge')}catch(e){}location.reload()}
 if(DEV)addEventListener('keydown',e=>{if(e.repeat)return;const n=numKey(e);if(n==='7'){autoPlay=!autoPlay;say(autoPlay?'🤖 Auto mode ON (press 7 to stop)':'🤖 Auto mode OFF')}
  else if(n==='8'){S.steps+=1000;say('🤖 +1000 steps (dev)');render()}else if(n==='0')restartGame()});
 function rushTick(dt){if((viewer.on||viewer.fixedDt)&&rush.fall<=0||overlay.classList.contains('open')||help.classList.contains('open'))return;   // paused while viewing, recording a GIF, or reading achievements or the key menu
  if(rush.fall>0){rush.fall=Math.max(0,rush.fall-dt);fallPose();if(rush.fall<=0){[env,plank].forEach(h=>{Object.assign(h.pose,{flail:0,plant:0,splat:0,bx:0,by:0,bz:0,stretch:0,kick:0,trip:0,knee:0,cheer:0});h.rig.root.position.y=0;h.rig.root.rotation.x=0});stars.visible=false}return}                              // no keys while he's on the ground
- if(rush.uber>0){S.uberTime=(S.uberTime||0)+Math.min(dt,rush.uber);rush.uber-=dt;if(rush.uber<=0){rush.uber=0;rush.meter=0;document.body.classList.remove('uber');say('Phew… back to normal walking.')}syncLevel()}
+ if(rush.uber>0){S.uberTime=(S.uberTime||0)+Math.min(dt,rush.uber);rush.uber-=dt;if(rush.uber<=0){rush.uber=0;rush.meter=0;document.body.classList.remove('uber');stopUberMusic(true);say(`Phew… back to normal walking. Combo ×${rush.combo} still going!`)}syncLevel()}
  if(rush.uber>0){if(rush.cur)clearKey('hit');if(hero===plank)haTick();return}   // Uber Goober: no keys to press, so no misses and no falls; Plankton cackles
 
  const c=rush.cur;if(c&&autoPlay&&c.life-c.t>.25){hitKey();return}   // dev auto mode: hits every key after a short beat
@@ -1079,7 +1346,7 @@ addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey)return;if(e.key
  const up=e=>{pts.delete(e.pointerId);pinch=0};renderer.domElement.addEventListener('pointerup',up);renderer.domElement.addEventListener('pointercancel',up)}
 
 const clock=new THREE.Clock();let acc=0,gameT=0;
-renderer.setAnimationLoop(()=>{const real=Math.min(.1,clock.getDelta()),dt=viewer.fixedDt||real,t=gameT+=dt;   // the GIF export sets a fixed step
+renderer.setAnimationLoop(()=>{const real=Math.min(.1,clock.getDelta()),dt=viewer.fixedDt||(freeze>0?(freeze-=real,real*.05):real),t=gameT+=dt;   // the GIF export sets a fixed step
  gain(sps()*dt);acc+=dt;if(acc>.25){acc=0;render()}
  // walks faster with more steps/s and briefly after a click; road speed scales with it so the feet stay planted
  const mult=(1+Math.min(1.2,Math.log10(1+sps())*.25))*(1+camL*.1);   // goofier = walks a bit faster (up to +60% at level 6)
@@ -1087,10 +1354,11 @@ renderer.setAnimationLoop(()=>{const real=Math.min(.1,clock.getDelta()),dt=viewe
  rushTick(dt);
  if(!viewer.on){camL+=(rush.level-camL)*(1-Math.exp(-dt*3));const c=hero.char.cam,f=hero.char.height/CHARS.sponge.height;   // framing per character; goofy pull-back scales with his size
   const zt=zoomOf().v;zoomC=zoomC===null||zoomC.h!==hero?{h:hero,v:zt}:{h:hero,v:zoomC.v+(zt-zoomC.v)*(1-Math.exp(-real*10))};   // eases to the chosen zoom; jumps when the character changes
-  const ly=c.ly+camL*.22*f;camera.position.set(0,ly+(c.y+camL*.25*f-ly)*zoomC.v,c.z*(1+camL*.07)*zoomC.v);camera.lookAt(0,ly,0)}   // zoom moves the camera along its line to the look point
+  const ly=c.ly+camL*.22*f;camera.position.set(0,ly+(c.y+camL*.25*f-ly)*zoomC.v,c.z*(1+camL*.07)*zoomC.v);camera.lookAt(0,ly,0);
+  bump*=Math.exp(-real*12);camera.position.z-=bump*.25;if(shake>0){shake=Math.max(0,shake-real);const k=shake*.5;camera.position.x+=(Math.random()-.5)*k;camera.position.y+=(Math.random()-.5)*k}}   // zoom moves the camera along its line to the look point
  if(rush.fall>0)vs=0;                                       // lying down: no walking, road stops
  phase=viewer.gifPh??phase+dt*hero.omega*mult*vs;   // GIF export pins the exact phase of each frame
- {const n=Math.floor(phase/Math.PI);if(n>lastStep&&!viewer.on)gain(n-lastStep);lastStep=n}   // one step per footfall (two per walk cycle)
+ {const n=Math.floor(phase/Math.PI);if(n>lastStep&&!viewer.on)gain((n-lastStep)*(rush.uber>0?UBER_MULT:1));lastStep=n}   // one step per footfall (two per walk cycle)
  hero.walk(hero.rig,phase,dt*(vs||1));env.update(dt,t,dt*hero.speed*mult*vs);viewer.tick?.();   // env.update rolls the road at the hero's own walking speed
  renderer.render(scene,camera);viewer.afterRender?.()});   // the GIF export grabs the frame right after it is drawn
 
