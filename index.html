@@ -201,15 +201,10 @@ body.evil.uber::after{box-shadow:inset 0 0 80px 22px #d8262e;animation:none}
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {COIN_PACKS,PREMIUM_ITEMS,premiumById,returnValue,RETURN_SHARE,WITHDRAW_DAYS} from './catalogue.js';
+import {COIN_PACKS,PREMIUM_ITEMS,premiumById,returnValue,RETURN_SHARE,WITHDRAW_DAYS,UPGRADES,STEP_ITEMS} from './catalogue.js';
 
 // ---------- Idle game state ----------
-const UPS=[   // bought with steps in the shop; each one costs 15% more than the last
- {id:'shoes',name:'👟 Squeakier shoes',desc:'+1 step for every letter you hit',base:60,click:1},
- {id:'stride',name:'🦵 Longer stride',desc:'+0.5 steps per second, even while you are away',base:250,sps:.5},
- {id:'jelly',name:'🪼 Jellyfish buddy',desc:'+3 steps per second, even while you are away',base:2500,sps:3},
- {id:'juice',name:'🧃 Juicier combos',desc:'Every 10 in a row adds +10% more steps per hit',base:1500},
- {id:'diff',name:'🌶️ Spicier keys',desc:'Unlocks the next difficulty: faster keys, bigger combo multiplier',base:5000,max:3,grow:4}];
+const UPS=UPGRADES;   // bought with steps in the shop (catalogue.js)
 // difficulty: keys last shorter, and each 10 in a row is worth more (the combo bonus is multiplied)
 const DIFFS=[{name:'Normal',life:1,mult:1},{name:'🌶️ Hard',life:.8,mult:1.5},{name:'🌶️🌶️ Expert',life:.65,mult:2},{name:'🌶️🌶️🌶️ Insane',life:.5,mult:3}];
 const diff=()=>DIFFS[Math.min(S.diff||0,cnt('diff'))];
@@ -228,7 +223,18 @@ const ACH_CATS=[
 const ACH=ACH_CATS.flatMap(c=>c.list.map(([n,t])=>({cat:c,n,t})));
 const QUIPS=["I'm ready! I'm ready! I'm ready!","Squeak. Squeak. Squeak.","Knees? Never heard of 'em.","A fish stares. You strut harder.","Your shoes are 60% squeak by now.","Is it cardio if you're underwater?","Left, right, wiggle, wiggle, right!","Somewhere, a grumpy neighbor sighs."];
 let S={steps:0,total:0,owned:{}};
-try{Object.assign(S,JSON.parse(localStorage.getItem('goofysponge')||'{}'))}catch(e){}
+// ---------- Saved progress: kept on the server against the Player's id, never in the browser (lib/progress.js) ----------
+// Every Player gets an id: an anonymous Supabase sign-in on the first visit, kept by Supabase in this browser. Giving an email later keeps the same id.
+// Without a server (local play) progress lives only in memory and is gone on reload.
+let supa=null;
+async function token(){const {data}=await supa.auth.getSession();return data.session?.access_token}
+async function startPlayer(){const cfg=await fetch('/api/config').then(r=>r.ok?r.json():{});if(!cfg.supabaseUrl)return;
+ const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/+esm');
+ supa=createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);
+ if(!await token()){const {error}=await supa.auth.signInAnonymously();if(error)throw error}
+ const r=await fetch('/api/progress',{headers:{authorization:'Bearer '+await token()}});if(!r.ok)throw new Error('progress '+r.status);
+ const {state}=await r.json();if(state)Object.assign(S,state)}
+try{await Promise.race([startPlayer(),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),8000))])}catch(e){console.warn('Playing without saving:',e.message)}
 if(S.dist==null)S.dist=S.total*STEP_M;   // old saves: distance was steps × 0.3 m
 const $=id=>document.getElementById(id);
 const fmt=n=>n<1e3?Math.floor(n)+'':n<1e6?(n/1e3).toFixed(1)+'K':n<1e9?(n/1e6).toFixed(2)+'M':(n/1e9).toFixed(2)+'B';
@@ -895,12 +901,7 @@ const SKIN_ICON={   // a drawn icon per outfit: you see what kind of outfit it i
   <circle cx="33" cy="37" r="8" fill="#ffc2e0"/><circle cx="67" cy="37" r="8" fill="#ffc2e0"/><path d="M37 35Q43 28 50 34Q57 28 63 35L62 52H38Z" fill="#ff8cc6"/><path d="M37 48H63V54H37Z" fill="#e0558f"/>
   <path d="M39 24L40 15L45 20L50 12L55 20L60 15L61 24Z" fill="#ffd23f" stroke-width="3"/><path d="M50 10C46 7 47 3 50 5C53 3 54 7 50 10Z" fill="#ff4f9a" stroke-width="2.5"/></g></svg>`};
 // Shop items. type: 'character' (a whole other hero) or 'outfit' (clothes). char: the character it belongs to; clothes only fit their own character.
-const SKINS=[
- {id:'sponge',type:'character',char:'sponge',name:'Sponge',pic:'🧽',paper:'#fff25a',desc:'The goofy yellow sponge himself.',price:0},
- {id:'plankton',type:'character',char:'plankton',name:'Plankton',pic:'🦠',paper:'#7fcf6a',desc:'A new character: tiny, one-eyed and full of evil plans. His steps are tiny too, so the distance goes up slowly.',price:5000},
- {id:'classic',type:'outfit',char:'sponge',name:'Classic Sponge',pic:'👔',paper:'#5fb4ea',desc:'White shirt, red tie and square brown pants.',price:0},
- {id:'princess',type:'outfit',char:'sponge',name:'Princess',pic:'👸',paper:'#ff9fcf',desc:'Pink ball gown with big puff sleeves and a heart diamond tiara.',price:1000},
-];
+const SKINS=STEP_ITEMS;   // characters and outfits bought with steps (catalogue.js)
 const item=id=>SKINS.find(k=>k.id===id);
 // save: S.skins = bought items, S.char = character playing, S.outfits = the outfit each character wears
 if(!Array.isArray(S.skins))S.skins=[];['sponge','classic'].forEach(id=>{if(!S.skins.includes(id))S.skins.push(id)});   // free starters
@@ -940,11 +941,11 @@ addEventListener('keydown',e=>{if(e.repeat||viewer.on)return;if(numKey(e)==='2')
 shop.addEventListener('pointerdown',e=>{if(e.target===shop)toggleShop(false)});
 // ---------- Coins: bought with real money, kept on the server against an Account (docs/specs/buy-coins.md) ----------
 // The browser only shows and asks; the server decides every balance, Return and Withdrawal.
-const coins={on:false,player:null,acct:null,packs:false,busy:false,note:'',waiver:false};let supa=null;
+const coins={on:false,player:null,acct:null,packs:false,busy:false,note:'',waiver:false};
 const esc=t=>String(t).replace(/[&<>"']/g,c=>`&#${c.charCodeAt(0)};`);   // text from outside (email, error messages) never becomes HTML
 const euro=c=>'€'+(c/100).toFixed(2).replace('.',',');
 const ownsPremium=id=>!!coins.acct?.owned.includes(id);
-async function api(path,body){const {data}=await supa.auth.getSession(),t=data.session?.access_token;
+async function api(path,body){const t=await token();
  const r=await fetch('/api/'+path,{method:body?'POST':'GET',headers:{'content-type':'application/json',...(t?{authorization:'Bearer '+t}:{})},body:body&&JSON.stringify(body)});
  const j=await r.json().catch(()=>({error:'server_error'}));if(!r.ok)throw new Error(j.error||'server_error');return j}
 const WHY={not_enough_coins:'Not enough Coins. Buy more below!',negative_balance:'Your Coin balance is negative after a reversed payment. Buy a Coin pack before buying Premium items.',already_owned:'You already own that.',not_withdrawable:'That pack can no longer be withdrawn.',sign_in_required:'Please sign in first.',waiver_required:'Tick the box above the packs first.'};
@@ -952,8 +953,10 @@ async function loadAccount(){if(!coins.player){coins.acct=null;dropUnowned();ret
  try{coins.acct=await api('account')}catch(e){coins.note='Could not load your Coins: '+(WHY[e.message]||e.message)}dropUnowned();renderCoins()}
 function dropUnowned(){let changed=false;for(const c in S.outfits)if(premiumById(S.outfits[c])&&!ownsPremium(S.outfits[c])){delete S.outfits[c];changed=true}if(changed)showSaved()}   // never wear something the Account doesn't own
 async function act(fn,done){if(coins.busy)return;coins.busy=true;coins.note='';renderCoins();try{await fn();if(done)coins.note=done}catch(e){coins.note=WHY[e.message]||'Something went wrong: '+e.message}coins.busy=false;renderCoins()}
-async function signIn(){const email=prompt('Your email address: we send you a sign-in link (no password needed).');if(!email)return;
- await act(async()=>{const {error}=await supa.auth.signInWithOtp({email:email.trim(),options:{emailRedirectTo:location.origin+location.pathname+'?shop=open'}});if(error)throw error},'📧 Check your email for the sign-in link.')}
+async function signIn(){const email=prompt('Your email address: we send you a sign-in link (no password needed).');if(!email)return;const to=location.origin+location.pathname+'?shop=open';
+ await act(async()=>{const {data}=await supa.auth.getSession();
+  if(data.session?.user?.is_anonymous){const {error}=await supa.auth.updateUser({email:email.trim()},{emailRedirectTo:to});if(!error)return}   // adds the email to this anonymous id, so the progress stays
+  const {error}=await supa.auth.signInWithOtp({email:email.trim(),options:{emailRedirectTo:to}});if(error)throw error},'📧 Check your email for the sign-in link.')}   // the email already has an Account: sign in to that one (and its progress)
 function renderCoins(){const box=$('coinBox');
  if(!coins.on){box.innerHTML=`<div class="ctop"><b>🪙 Coins</b><small>Coins aren't available here yet.</small></div>`;return}
  const a=coins.acct,d=coins.busy?' disabled':'',ch=S.char;
@@ -969,7 +972,7 @@ $('coinBox').addEventListener('change',e=>{if('waiver' in e.target.dataset){coin
 $('coinBox').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const ds=b.dataset;
  if('packs' in ds){coins.packs=!coins.packs;return renderCoins()}
  if('signin' in ds)return signIn();
- if('signout' in ds)return act(async()=>{await supa.auth.signOut()});
+ if('signout' in ds)return act(async()=>{restarting=true;await supa.auth.signOut();location.reload()});   // the reload starts a fresh anonymous id
  const needPlayer=()=>{if(!coins.player){signIn();return false}return true};
  if(ds.pack){if(!coins.waiver){coins.note=WHY.waiver_required;return renderCoins()}if(needPlayer())act(async()=>{const {url}=await api('checkout',{packId:ds.pack,waiver:true});location.href=url});return}
  if(ds.premium){if(!needPlayer())return;const k=premiumById(ds.premium);
@@ -982,10 +985,11 @@ $('coinBox').addEventListener('click',e=>{const b=e.target.closest('button');if(
  if(ds.withdraw){if(!confirm('Withdraw this Coin pack? Its Coins are removed and the money goes back to how you paid.'))return;
   return act(async()=>{coins.acct={...coins.acct,...await api('withdraw',{session:ds.withdraw})}},'💶 Withdrawn: the refund is on its way.')}});
 (async()=>{const q=new URLSearchParams(location.search);
- try{const cfg=await fetch('/api/config').then(r=>r.ok?r.json():{});if(!cfg.supabaseUrl){dropUnowned();return renderCoins()}
-  const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/+esm');
-  supa=createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);coins.on=true;   // the session is kept in this browser, so Players stay signed in
-  supa.auth.onAuthStateChange((ev,session)=>{const u=session?.user;const was=coins.player?.id;coins.player=u?{id:u.id,email:u.email}:null;if(coins.player?.id!==was)loadAccount()});
+ try{if(!supa){dropUnowned();return renderCoins()}
+  coins.on=true;   // the session is kept in this browser, so Players stay signed in
+  let id=(await supa.auth.getSession()).data.session?.user.id;
+  supa.auth.onAuthStateChange((ev,session)=>{const u=session?.user;if(u&&u.id!==id){restarting=true;location.reload();return}   // another id (signed in to an existing Account): load its progress
+   const was=coins.player?.id;coins.player=u&&!u.is_anonymous?{id:u.id,email:u.email}:null;if(coins.player?.id!==was)loadAccount()});
   if(q.get('coins')==='paid'){coins.note='✅ Payment received! Your Coins appear in a moment.';const before=coins.acct?.balance;let got=false;
    for(let i=0;i<8&&!got;i++){await new Promise(r=>setTimeout(r,2000));await loadAccount();got=!!coins.acct&&coins.acct.balance!==before}
    coins.note=got?'✅ Your Coins have arrived!':'⏳ Your Coins are still on their way. Reopen the shop in a minute.';renderCoins()}
@@ -1332,7 +1336,7 @@ $('sndBtn').onclick=e=>{e.stopPropagation();toggleSound()};
 $('helpList').addEventListener('click',e=>{const m=e.target.closest('[data-m]')?.dataset.m;if(!m)return;toggleHelp(false);
  if(m==='ach')toggleAch(true);else if(m==='shop')toggleShop(true);else if(m==='gif')exportGif();else toggleSound()});
 function restartGame(){if(!confirm('Restart the game? All steps, upgrades, outfits and achievements are wiped.'))return;   // dev only: start over from a fresh save
- restarting=true;try{localStorage.removeItem('goofysponge')}catch(e){}location.reload()}
+ restarting=true;(supa?token().then(t=>fetch('/api/reset',{method:'POST',headers:{authorization:'Bearer '+t}})):Promise.resolve()).finally(()=>location.reload())}
 if(DEV)addEventListener('keydown',e=>{if(e.repeat)return;const n=numKey(e);if(n==='7'){autoPlay=!autoPlay;say(autoPlay?'🤖 Auto mode ON (press 7 to stop)':'🤖 Auto mode OFF')}
  else if(n==='8'){S.steps+=1000;say('🤖 +1000 steps (dev)');render()}else if(n==='0')restartGame()});
 function rushTick(dt){if((viewer.on||viewer.fixedDt)&&rush.fall<=0||overlay.classList.contains('open')||help.classList.contains('open'))return;   // paused while viewing, recording a GIF, or reading achievements or the key menu
@@ -1381,7 +1385,11 @@ renderer.setAnimationLoop(()=>{const real=Math.min(.1,clock.getDelta()),dt=viewe
  hero.walk(hero.rig,phase,dt*(vs||1));env.update(dt,t,dt*hero.speed*mult*vs);viewer.tick?.();   // env.update rolls the road at the hero's own walking speed
  renderer.render(scene,camera);viewer.afterRender?.()});   // the GIF export grabs the frame right after it is drawn
 
-let restarting=false;setInterval(()=>{if(restarting)return;try{localStorage.setItem('goofysponge',JSON.stringify({...S,saved:Date.now()}))}catch(e){}},5000);
+// saves every 5 s; a save the server refuses (edited numbers) puts the saved progress back
+let restarting=false;async function save(keepalive){if(restarting||!supa)return;try{const t=await token();if(!t)return;
+ const r=await fetch('/api/save',{method:'POST',keepalive,headers:{'content-type':'application/json',authorization:'Bearer '+t},body:JSON.stringify({state:{...S,saved:Date.now()}})});
+ if(r.status===409){const j=await r.json();if(j.error!=='conflict'){restarting=true;location.reload()}}}catch(e){}}   // conflict: another tab saved first, try again next time
+setInterval(save,5000);addEventListener('pagehide',()=>save(true));
 if(S.saved){const off=Math.min(8*3600,(Date.now()-S.saved)/1000),g=sps()*off;if(g>0){gain(g);say(`While you were away, you strutted ${fmt(g)} steps. Squeak!`)}}
 render();
 </script>

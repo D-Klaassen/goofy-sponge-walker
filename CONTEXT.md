@@ -21,7 +21,7 @@ A shop item priced in Coins instead of Steps.
 _Avoid_: paid item, pro item
 
 **Player**:
-Anyone playing the game. Anonymous until they buy something.
+Anyone playing the game. Gets an anonymous id on the first visit; anonymous until they give an email (needed to buy something).
 
 **Account**:
 What a Player gets by signing in, required at the moment of buying a Coin pack. Owns the Player's Coins and Premium items, so they survive on any device.
@@ -47,7 +47,8 @@ _Avoid_: dispute, withdrawal
 - Steps and Coins are separate currencies; one never converts into the other.
 - A **Coin pack** is the only way to get **Coins**.
 - Coins buy only **Premium items**; existing items stay priced in Steps.
-- **Coins** and **Premium items** belong to an **Account**; Steps and step-bought items stay with the browser.
+- **Coins** and **Premium items** belong to an **Account**.
+- **Progress** (Steps, upgrades, step-bought items, records) is saved on the server against the Player's id, never in the browser. The server only accepts a save that could really have happened since the last one; giving an email keeps the same id and its progress.
 - A **Return** gives back Coins, never money; a **Withdrawal** gives back money, never Coins.
 - While an **Account** has a negative Coin balance it can't buy **Premium items**.
 - Anonymous Players can see **Premium items** and **Coin packs**; buying either asks them to sign in first.
