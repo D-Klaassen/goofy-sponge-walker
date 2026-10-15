@@ -1257,7 +1257,7 @@ const sfx={
  idle:()=>tone(note(-5),.25,{type:'sine',vol:.06,slide:.7}),   // a key timed out while nothing was going on: a soft little "bwoop"
  evil:()=>evilLaugh(),   // MUAHAHA for all of his Uber mode (Plankton gets no fanfare or beat)
  standUp:()=>tone(330,.2,{vol:.06,slide:2})};   // springing back up after a fall
-let shake=0,freeze=0,bump=0;   // camera shake, hit-pause and a small zoom kick per hit
+let shake=0,freeze=0;   // camera shake and hit-pause
 function uberBurst(){for(let i=0;i<14;i++){const a=i/14*Math.PI*2,r=rnd(90,190);setTimeout(()=>popText(innerWidth/2+Math.cos(a)*r-15,innerHeight*.42+Math.sin(a)*r*.7,'✨',rnd(24,40),'#fff'),i*25)}}
 function showCombo(){const el=$('combo'),c=rush.combo,best=S.best[heroId()]||0;el.classList.toggle('on',c>=5);if(c<5)return;
  const m=comboMult(c);el.innerHTML=`Combo ×${c}${m>1?` <b class="cm">steps ×${m.toFixed(1)}</b>`:''} <small>${rush.record?'🏆 new best!':'best '+best}</small>`;el.classList.toggle('big',c>=25);el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump')}
@@ -1279,7 +1279,7 @@ function hitKey(){const r=rush.cur.el.getBoundingClientRect(),c=++rush.combo,id=
  if(c%10===0&&m>1)for(let i=0;i<Math.min(16,4+c/5);i++)setTimeout(()=>popText(r.left+rnd(-60,90),r.top+rnd(-50,60),['✨','🧃','⭐'][i%3],rnd(18,30),'#fff'),i*30);   // every 10 in a row: a burst   // skill pays: a hit gives steps, more the goofier he is
  let big=rush.uber<=0&&rush.meter+HIT_FILL>=100;   // uber starts on this hit: its fanfare replaces the cheer
  if(c>(S.best[id]||0)){if(!rush.record&&S.best[id]>=5){rush.record=true;big=true;sfx.record();say('🏆 New best combo!')}S.best[id]=c}
- sfx.hit(c);if(COMBO_CHEERS[c]&&!big)sfx.cheer();showCombo();dailyProgress('hits',1);dailyProgress('combo',c);bump=1;
+ sfx.hit(c);if(COMBO_CHEERS[c]&&!big)sfx.cheer();showCombo();dailyProgress('hits',1);dailyProgress('combo',c);
  stopSadMusic();rush.idle=0;hero.setFace('happy');   // any hit cheers him up
  if(rush.uber<=0){rush.meter=Math.min(100,rush.meter+HIT_FILL);if(rush.meter>=100){rush.uber=UBER_TIME;rush.next=1;document.body.classList.add('uber');if(hero===plank)sfx.evil();else{sfx.uber();uberMusic(UBER_TIME,false)}dailyProgress('uber',1);uberBurst()}}   // the banner itself says Steps ×3, so no message bubble on top of it
  clearKey('hit');syncLevel();render()}
@@ -1378,7 +1378,7 @@ renderer.setAnimationLoop(()=>{const real=Math.min(.1,clock.getDelta()),dt=viewe
  if(!viewer.on){camL+=(rush.level-camL)*(1-Math.exp(-dt*3));const c=hero.char.cam,f=hero.char.height/CHARS.sponge.height;   // framing per character; goofy pull-back scales with his size
   const zt=zoomOf().v;zoomC=zoomC===null||zoomC.h!==hero?{h:hero,v:zt}:{h:hero,v:zoomC.v+(zt-zoomC.v)*(1-Math.exp(-real*10))};   // eases to the chosen zoom; jumps when the character changes
   const ly=c.ly+camL*.22*f;camera.position.set(0,ly+(c.y+camL*.25*f-ly)*zoomC.v,c.z*(1+camL*.07)*zoomC.v);camera.lookAt(0,ly,0);
-  bump*=Math.exp(-real*12);camera.position.z-=bump*.25;if(shake>0){shake=Math.max(0,shake-real);const k=shake*.5;camera.position.x+=(Math.random()-.5)*k;camera.position.y+=(Math.random()-.5)*k}}   // zoom moves the camera along its line to the look point
+  if(shake>0){shake=Math.max(0,shake-real);const k=shake*.5;camera.position.x+=(Math.random()-.5)*k;camera.position.y+=(Math.random()-.5)*k}}   // zoom moves the camera along its line to the look point
  if(rush.fall>0)vs=0;                                       // lying down: no walking, road stops
  phase=viewer.gifPh??phase+dt*hero.omega*mult*vs;   // GIF export pins the exact phase of each frame
  {const n=Math.floor(phase/Math.PI);if(n>lastStep&&!viewer.on)gain((n-lastStep)*(rush.uber>0?UBER_MULT:1));lastStep=n}   // one step per footfall (two per walk cycle)
